@@ -1,7 +1,8 @@
 # Dockentra — рекламный ролик 9:16 «Batch photo»
 
 Готовый ролик: [`video/out/dockentra-batch-photo-9x16.mp4`](video/out/dockentra-batch-photo-9x16.mp4)
-(1080×1920, 30 fps, 30 с, H.264 + беззвучная AAC-дорожка, 1,3 МБ).
+(1080×1920, 30 fps, 30 с, H.264 + AAC 192 kbps, фоновая музыка −17 LUFS).
+Версия без звука (под трендовый звук в TikTok): [`video/out/dockentra-batch-photo-9x16-silent.mp4`](video/out/dockentra-batch-photo-9x16-silent.mp4).
 Субтитры для загрузки в платформу: [`video/out/dockentra-batch-photo-9x16.en.srt`](video/out/dockentra-batch-photo-9x16.en.srt).
 
 Это версия v1 **без съёмки**: моушн-типографика на цветах, шрифтах и логотипе сайта.
@@ -93,12 +94,21 @@ Storage · Pick & Pack · Kitting & Bundling · Returns. **Каналы:** TikTo
 Нельзя: транспорт, стеллажи до горизонта, погрузчики, каски и планшеты с улыбками, рукопожатия, графики,
 изометрия, повреждённая упаковка, чужой товар без согласия.
 
-## 4. Пересборка
+## 4. Музыка
+
+Трек оригинальный: синтезирован кодом (`video/gen_music.py`), без сэмплов и чужих записей, поэтому
+лицензионных ограничений нет. Спокойный пэд, мягкое арпеджио и суб-бас в ре мажоре, 96 BPM.
+Арпеджио вступает вместе со сценой процесса (3,2 с). Прогрессия Dmaj9 → Bm7 → Gmaj7 → Em7 → Asus4 → A
+разрешается в тонику ровно на CTA (24 с). На сменах сцен — очень тихий «воздушный» подъём, финал затухает.
+Громкость выровнена до −17 LUFS, true peak −1,5 dBTP: тише типичной рекламы, голос платформы не перекрывает.
+
+## 5. Пересборка
 
 ```bash
 cd video
 npm i playwright @fontsource/manrope @fontsource/inter @fontsource/ibm-plex-mono   # шрифты уже лежат в src/assets
 pip install imageio-ffmpeg        # или любой ffmpeg с libx264
+pip install numpy && python3 gen_music.py   # музыка -> out/music.wav
 FFMPEG=$(python3 -c "import imageio_ffmpeg as i;print(i.get_ffmpeg_exe())") node render.mjs
 node render.mjs --stills 2,8,13,22,28                                             # только PNG-кадры
 ```

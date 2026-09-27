@@ -1,11 +1,12 @@
 // Renders video/src/ad.html frame by frame with headless Chromium and
-// encodes it to an H.264 MP4 (1080x1920, 30 fps) with a silent AAC track.
+// encodes it to an H.264 MP4 (1080x1920, 30 fps) with the music from
+// gen_music.py (out/music.wav) or, if that is missing, a silent AAC track.
 //
 //   FFMPEG=/path/to/ffmpeg node video/render.mjs            # full video
 //   node video/render.mjs --stills 1.5,7,12,20,27           # PNG stills only
 import { chromium } from "playwright";
 import { spawn } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -32,14 +33,21 @@ if (stillsArg !== -1) {
   process.exit(0);
 }
 
+// Background music from gen_music.py if it has been generated, else silence.
+const music = path.join(OUT, "music.wav");
+const audioIn = existsSync(music)
+  ? ["-i", music]
+  : ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000"];
+const audioFx = existsSync(music) ? ["-af", "loudnorm=I=-17:TP=-1.5:LRA=11", "-ar", "48000"] : [];
+
 const ffmpeg = spawn(process.env.FFMPEG || "ffmpeg", [
   "-y",
   "-f", "image2pipe", "-framerate", String(FPS), "-i", "-",
-  "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
-  "-map", "0:v", "-map", "1:a",
+  ...audioIn,
+  "-map", "0:v", "-map", "1:a", ...audioFx,
   "-c:v", "libx264", "-profile:v", "high", "-pix_fmt", "yuv420p", "-crf", "17", "-preset", "slow",
   "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
-  "-c:a", "aac", "-b:a", "128k", "-shortest",
+  "-c:a", "aac", "-b:a", "192k", "-shortest",
   "-movflags", "+faststart",
   path.join(OUT, "dockentra-batch-photo-9x16.mp4"),
 ], { stdio: ["pipe", "inherit", "inherit"] });
