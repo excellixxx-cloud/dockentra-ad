@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dockentra — Same order, three ways (9:16)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=block" rel="stylesheet">
+<style>
+  /* Palette — the five brand colours, nothing else. Lower-emphasis text is
+     white at reduced opacity, not a new hue. */
+  :root {
+    --ink: #0B0D10;
+    --mint: #4FDCA9;
+    --green: #0F5F4A;
+    --grey: #F5F7F8;
+    --white: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--ink); }
+  body { font-family: "Inter", sans-serif; -webkit-font-smoothing: antialiased; color: var(--white); }
+
+  #stage { position: absolute; inset: 0; overflow: hidden; }
+  #grid { position: absolute; inset: -80px; background-image: radial-gradient(circle, var(--green) 2.2px, transparent 2.6px); background-size: 56px 56px; opacity: .55; }
+  #light { position: absolute; inset: 0; background: var(--grey); clip-path: inset(100% 0 0 0); }
+
+  .abs { position: absolute; }
+  .line { position: absolute; left: 96px; white-space: nowrap; }
+  .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 0 .12em; margin-bottom: -.12em; }
+  .w > span { display: inline-block; will-change: transform; }
+  .display { font-family: "Manrope"; font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
+  .mono { font-family: "IBM Plex Mono"; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+  .mint { color: var(--mint); }
+  .caret { display: inline-block; width: .08em; height: .82em; background: var(--white); margin-left: .06em; vertical-align: -.04em; }
+
+  .chip { position: absolute; font-family: "IBM Plex Mono"; font-weight: 500; font-size: 28px; letter-spacing: .08em;
+          padding: 12px 20px; border: 2px solid rgba(255,255,255,.85); border-radius: 12px; white-space: nowrap; }
+  .row { position: absolute; left: 96px; display: flex; align-items: center; gap: 18px; white-space: nowrap;
+         font-family: "IBM Plex Mono"; font-weight: 500; font-size: 30px; letter-spacing: .05em; text-transform: uppercase; }
+  .row .k { opacity: .6; }
+  .row svg { flex: none; }
+
+  .icon { position: absolute; left: 0; top: 0; width: 240px; height: 240px; will-change: transform, opacity; }
+  .icon svg { width: 100%; height: 100%; overflow: visible; }
+  svg .s { fill: none; stroke: var(--white); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  svg .m { fill: none; stroke: var(--mint); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .ilabel { position: absolute; left: 0; top: 0; width: 300px; text-align: center; font-family: "IBM Plex Mono"; font-weight: 500;
+            font-size: 26px; letter-spacing: .1em; text-transform: uppercase; }
+
+  /* Subtitles: bottom edge 320px above the frame edge (brief: >= 240px). */
+  #subs { position: absolute; left: 90px; width: 900px; bottom: 320px; text-align: center; }
+  #subs .sub { position: absolute; left: 0; right: 0; bottom: 0; font-family: "Inter"; font-weight: 600; font-size: 42px; line-height: 1.3; }
+
+  #logo { position: absolute; left: 340px; top: 600px; width: 400px; }
+  #logo img { display: block; width: 100%; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="light"></div>
+  <div id="layer"></div>
+  <div id="icons"></div>
+  <div id="logo"><img src="../src/assets/dockentra-logo-transparent.png" alt="Dockentra"></div>
+  <div id="url" class="abs mono" style="left:0;width:1080px;top:1110px;text-align:center;font-size:30px;color:var(--ink);letter-spacing:.08em;text-transform:none">dockentra.ie</div>
+  <div id="subs"></div>
+</div>
+
+<script>
+/* ================================================================
+   Timing helpers
+   ================================================================ */
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const prog = (t, a, d) => clamp((t - a) / d);
+const outCubic = (x) => 1 - Math.pow(1 - x, 3);
+const outExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x));
+const inOutCubic = (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+// Damped spring 0 -> 1 with overshoot (used only for the mailer).
+const spring = (s) => (s <= 0 ? 0 : 1 - Math.exp(-5.5 * s) * Math.cos(11 * s));
+// Gravity drop with one small settle (icons "falling" into the row).
+const drop = (x) => { if (x <= 0) return 0; if (x >= 1) return 1; const b = outCubic(x); return b + Math.sin(x * Math.PI) * 0.06 * (1 - x); };
+
+// CSS cubic-bezier(x1,y1,x2,y2) evaluator (for the logo fill spec).
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+  const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (u) => ((ax * u + bx) * u + cx) * u;
+  const sy = (u) => ((ay * u + by) * u + cy) * u;
+  const dx = (u) => (3 * ax * u + 2 * bx) * u + cx;
+  return (x) => {
+    let u = x;
+    for (let i = 0; i < 8; i++) { const e = sx(u) - x; const d = dx(u); if (Math.abs(e) < 1e-6 || !d) break; u -= e / d; }
+    return sy(clamp(u));
+  };
+}
+const logoEase = bezier(.22, 1, .36, 1);
+
+/* ================================================================
+   Kinetic text builders
+   ================================================================ */
+const layer = document.getElementById("layer");
+const items = [];
+
+// Word-by-word: each word rises out of its own mask ("slide") or
+// scales down into place ("scale"). mint = array of words to accent.
+function words({ lines, top, size, lh = 1.08, tin, tout, stagger = .12, mode = "slide", mint = [], color = "var(--white)" }) {
+  let k = 0;
+  lines.forEach((ln, li) => {
+    const div = document.createElement("div");
+    div.className = "line display";
+    div.style.cssText = `top:${top + li * size * lh}px;font-size:${size}px;color:${color}`;
+    ln.split(" ").forEach((word, wi) => {
+      const w = document.createElement("span");
+      w.className = "w";
+      const inner = document.createElement("span");
+      inner.textContent = word;
+      if (mint.includes(word.replace(/[.,?]/g, ""))) inner.classList.add("mint");
+      w.appendChild(inner);
+      div.appendChild(w);
+      if (wi < ln.split(" ").length - 1) div.appendChild(document.createTextNode(" "));
+      items.push({ el: inner, t0: tin + k * stagger, tout, mode, size });
+      k++;
+    });
+    layer.appendChild(div);
+  });
+}
+
+// Typewriter title with a caret.
+function typewriter({ text, top, size, tin, tout, cps = 16 }) {
+  const div = document.createElement("div");
+  div.className = "line display";
+  div.style.cssText = `top:${top}px;font-size:${size}px`;
+  const txt = document.createElement("span");
+  const caret = document.createElement("span");
+  caret.className = "caret";
+  div.append(txt, caret);
+  layer.appendChild(div);
+  items.push({ type: "type", div, txt, caret, text, tin, tout, cps });
+}
+
+// Mono chip sliding in from the left.
+function chip({ text, left, top, tin, tout, dx = -60 }) {
+  const el = document.createElement("div");
+  el.className = "chip";
+  el.textContent = text;
+  el.style.left = left + "px";
+  el.style.top = top + "px";
+  layer.appendChild(el);
+  items.push({ type: "chip", el, tin, tout, dx });
+}
+
+const CHECK = `<svg width="40" height="40" viewBox="0 0 24 24"><circle class="s" cx="12" cy="12" r="10"/><path class="s" d="M7.5 12.5l3 3 6-6.5"/></svg>`;
+const CROSS = `<svg width="40" height="40" viewBox="0 0 24 24"><circle class="s" cx="12" cy="12" r="10"/><path class="s" d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></svg>`;
+
+// Verdict row: ✓/✗ + key + value, revealed left to right.
+function row({ mark, k, v, top, tin, tout, mintKey = false }) {
+  const el = document.createElement("div");
+  el.className = "row";
+  el.style.top = top + "px";
+  el.innerHTML = `${mark === "ok" ? CHECK : CROSS}<span class="k${mintKey ? " mint" : ""}" style="${mintKey ? "opacity:1" : ""}">${k}</span><span class="v">${v}</span>`;
+  layer.appendChild(el);
+  items.push({ type: "row", el, tin, tout });
+}
+
+/* ================================================================
+   Icons — 64-unit grid, 2px stroke, rounded joins, one mint element each
+   ================================================================ */
+const iconsEl = document.getElementById("icons");
+function makeIcon(id, svg, label) {
+  const wrap = document.createElement("div");
+  wrap.className = "icon";
+  wrap.id = id;
+  wrap.innerHTML = `<svg viewBox="0 0 64 64">${svg}</svg>`;
+  iconsEl.appendChild(wrap);
+  const lab = document.createElement("div");
+  lab.className = "ilabel";
+  lab.textContent = label;
+  iconsEl.appendChild(lab);
+  return { wrap, lab, g: wrap.querySelector("g.body") };
+}
+
+const polybag = makeIcon("polybag", `
+  <g class="body">
+    <path class="s" d="M17 12h30a2 2 0 0 1 2 2l2 37a3 3 0 0 1-3 3.2H16a3 3 0 0 1-3-3.2l2-37a2 2 0 0 1 2-2z"/>
+    <path class="m" d="M16 19h32"/>
+    <path id="crinkA" class="s" d="M24 29c2 3 -1 6 1 10"/>
+    <path id="crinkB" class="s" d="M40 27c-2 4 2 7 0 12"/>
+    <path class="s" d="M29 15.5h6"/>
+  </g>`, "Polybag");
+
+const mailer = makeIcon("mailer", `
+  <g class="body">
+    <rect class="s" x="8" y="17" width="48" height="32" rx="3"/>
+    <path class="m" d="M8.8 18.5L32 34l23.2-15.5"/>
+    ${[0, 1, 2, 3, 4].map((i) => `<circle class="s bub" cx="${16 + i * 8}" cy="42.5" r="1.9"/>`).join("")}
+  </g>`, "Mailer");
+
+const box = makeIcon("box", `
+  <g class="body">
+    <path id="flapL" class="s" d="M12 24L32 24L32 24L12 24Z"/>
+    <path id="flapR" class="s" d="M32 24L52 24L52 24L32 24Z"/>
+    <rect class="s" x="12" y="24" width="40" height="28" rx="2"/>
+    <path id="tape" class="m" d="M32 24V35"/>
+    <path id="xray" class="s" d="M26 48V38c0-2 1.5-3 3-3h6c1.5 0 3 1 3 3v10z" stroke-dasharray="1.5 2.5" opacity="0"/>
+    <g id="lock" opacity="0">
+      <path class="s" d="M6 13v-4h4M58 13v-4h-4M6 55v4h4M58 55v4h-4"/>
+    </g>
+  </g>`, "Box");
+
+// Pressure arrow used on the polybag ("no protection" metaphor).
+const press = document.createElement("div");
+press.className = "icon";
+press.innerHTML = `<svg viewBox="0 0 64 64"><path class="s" d="M32 6v22M24 20l8 8 8-8"/><path class="s" d="M18 34h28"/></svg>`;
+iconsEl.appendChild(press);
+
+// Ground line for the mailer drop test.
+const ground = document.createElement("div");
+ground.className = "abs";
+ground.style.cssText = "left:300px;width:480px;height:2px;background:var(--white);top:1210px;transform-origin:center";
+iconsEl.appendChild(ground);
+const dropLabel = document.createElement("div");
+dropLabel.className = "abs mono";
+dropLabel.style.cssText = "left:0;width:1080px;text-align:center;top:1232px;font-size:26px;letter-spacing:.14em";
+dropLabel.textContent = "Drop test · glass / ceramic";
+iconsEl.appendChild(dropLabel);
+
+// Category chips for the recap.
+function catChip(text) {
+  const el = document.createElement("div");
+  el.className = "chip";
+  el.textContent = text;
+  iconsEl.appendChild(el);
+  return el;
+}
+const chipCos = catChip("COSMETICS");
+const chipBook = catChip("BOOK");
+function verdict(text) {
+  const el = document.createElement("div");
+  el.className = "abs mono";
+  el.style.cssText = "width:340px;text-align:center;font-size:26px;letter-spacing:.1em;display:flex;gap:10px;align-items:center;justify-content:center";
+  el.innerHTML = `${CROSS.replace('width="40" height="40"', 'width="30" height="30"')}<span>${text}</span>`;
+  iconsEl.appendChild(el);
+  return el;
+}
+const vRefund = verdict("Refund request");
+const vOverpay = verdict("Overpay");
+
+/* ================================================================
+   Script — text timeline
+   ================================================================ */
+// 0:00–0:04 Hook
+words({ lines: ["Same order,", "three ways."], top: 230, size: 124, tin: .15, tout: 4.0, stagger: .16 });
+words({ lines: ["Two of these", "are wrong for", "your category."], top: 540, size: 76, tin: 1.25, tout: 4.0, stagger: .1, mint: ["wrong"] });
+
+// 0:04–0:12 Polybag
+typewriter({ text: "Polybag.", top: 210, size: 124, tin: 4.25, tout: 12.0 });
+chip({ text: "CHEAPEST", left: 96, top: 380, tin: 5.0, tout: 12.0 });
+chip({ text: "THINNEST", left: 340, top: 380, tin: 5.35, tout: 12.0 });
+chip({ text: "FASTEST TO PACK", left: 584, top: 380, tin: 5.7, tout: 12.0 });
+row({ mark: "ok", k: "Fine for", v: "a T-shirt", top: 486, tin: 7.0, tout: 12.0 });
+row({ mark: "no", k: "Useless for", v: "leaks · breaks · hard edges", top: 548, tin: 8.7, tout: 12.0, mintKey: true });
+
+// 0:12–0:20 Padded mailer
+typewriter({ text: "Padded mailer.", top: 210, size: 112, tin: 12.25, tout: 20.0, cps: 20 });
+chip({ text: "SOME CUSHIONING", left: 96, top: 380, tin: 13.2, tout: 20.0 });
+chip({ text: "SOME STRUCTURE", left: 470, top: 380, tin: 13.55, tout: 20.0 });
+row({ mark: "ok", k: "Good for", v: "soft goods · small electronics", top: 486, tin: 14.9, tout: 20.0 });
+row({ mark: "no", k: "Won’t survive", v: "a real drop · glass · ceramic", top: 548, tin: 17.2, tout: 20.0, mintKey: true });
+
+// 0:20–0:27 Box
+typewriter({ text: "Box.", top: 210, size: 124, tin: 20.25, tout: 27.0 });
+chip({ text: "RIGID", left: 96, top: 380, tin: 20.9, tout: 27.0 });
+chip({ text: "HEAVIEST", left: 262, top: 380, tin: 21.2, tout: 27.0 });
+chip({ text: "MOST EXPENSIVE", left: 506, top: 380, tin: 21.5, tout: 27.0 });
+words({ lines: ["Protects a shape,", "not just a surface."], top: 488, size: 64, tin: 23.3, tout: 27.0, stagger: .1, mint: ["shape"] });
+
+// 0:27–0:33 Recap (text starts after the 0.5 s static pause)
+words({ lines: ["Pick by category,", "not by habit."], top: 230, size: 100, tin: 27.65, tout: 33.0, stagger: .12, mint: ["category"] });
+
+// 0:33–0:36 Question, then logo
+words({ lines: ["Which one", "are you", "actually using?"], top: 520, size: 128, tin: 33.05, tout: 34.55, stagger: .09, mode: "scale", mint: ["actually"] });
+
+/* ================================================================
+   Subtitles (full script)
+   ================================================================ */
+const SUBS = [
+  [0.2, 2.0, "Same order, three ways."],
+  [2.0, 4.0, "Two of these are wrong for your category."],
+  [4.2, 6.8, "Polybag. Cheapest, thinnest, fastest to pack."],
+  [6.8, 8.6, "Fine for a T-shirt."],
+  [8.6, 12.0, "Useless for anything that leaks, breaks, or has a hard edge."],
+  [12.2, 14.8, "Padded mailer. Some cushioning, some structure."],
+  [14.8, 17.2, "Good for most soft goods and small electronics."],
+  [17.2, 20.0, "Still won’t survive a real drop with anything glass or ceramic."],
+  [20.2, 23.2, "Box. Rigid, heaviest, most expensive."],
+  [23.2, 27.0, "The only one of the three that protects a shape, not just a surface."],
+  [27.6, 29.0, "Pick by category, not by habit."],
+  [29.0, 31.0, "Cosmetics in a polybag is how you get a refund request."],
+  [31.0, 33.0, "A book in a box is how you overpay on every order."],
+  [33.0, 36.0, "Which one are you actually using?"],
+];
+const subsEl = document.getElementById("subs");
+const subEls = SUBS.map(([a, b, text]) => {
+  const d = document.createElement("div");
+  d.className = "sub";
+  d.textContent = text;
+  subsEl.appendChild(d);
+  return { d, a, b };
+});
+
+/* ================================================================
+   Icon choreography
+   ================================================================ */
+const ROW_Y = 1150, SLOTS = [230, 540, 850];
+const FOCUS = { x: 540, y: 930, s: 1.75 };
+const MINI_Y = 1330, MINI_S = .42;
+// Where the two non-focused icons sit during a focus scene.
+const MINI_X = { polybag: [0, 700, 860], mailer: [220, 0, 860], box: [220, 380, 0] };
+const ORDER = ["polybag", "mailer", "box"];
+const IC = { polybag, mailer, box };
+
+// Base layout for icon i at time t -> {x, y, s, o}
+function layout(name, t) {
+  const i = ORDER.indexOf(name);
+  const row = { x: SLOTS[i], y: ROW_Y, s: 1, o: 1 };
+  const focusOf = t < 4 ? null : t < 12 ? "polybag" : t < 20 ? "mailer" : t < 26.6 ? "box" : null;
+  const segStart = { polybag: 4.0, mailer: 12.0, box: 20.0 };
+
+  // Hook: drop in from above, staggered.
+  if (t < 4.0) {
+    const k = drop(prog(t, 2.0 + i * .22, .7));
+    return { x: row.x, y: lerp(-300, ROW_Y, k), s: 1, o: k > 0 ? 1 : 0 };
+  }
+  // Recap: everyone flies back to the row by 27.0, then holds still.
+  if (t >= 26.6) {
+    const k = inOutCubic(prog(t, 26.6, .4));
+    const from = layoutAt(name, 26.599);
+    return { x: lerp(from.x, row.x, k), y: lerp(from.y, row.y, k), s: lerp(from.s, row.s, k), o: lerp(from.o, 1, k) };
+  }
+  return layoutAt(name, t);
+
+  function layoutAt(name, t) {
+    const focus = t < 12 ? "polybag" : t < 20 ? "mailer" : "box";
+    const prev = t < 12 ? null : t < 20 ? "polybag" : "mailer";
+    const s0 = segStart[focus];
+    const move = inOutCubic(prog(t, s0, .6));
+    const target = name === focus
+      ? { x: FOCUS.x, y: FOCUS.y, s: FOCUS.s, o: 1 }
+      : { x: MINI_X[focus][i], y: MINI_Y, s: MINI_S, o: .35 };
+    let from;
+    if (!prev) from = { x: SLOTS[i], y: ROW_Y, s: 1, o: 1 };
+    else {
+      const pf = prev;
+      from = name === pf ? { x: FOCUS.x, y: FOCUS.y, s: FOCUS.s, o: 1 } : { x: MINI_X[pf][i], y: MINI_Y, s: MINI_S, o: .35 };
+    }
+    const k = name === "mailer" && focus === "mailer" ? spring(t - s0) : name === "box" && focus === "box" ? outExpo(prog(t, s0, .45)) : move;
+    return { x: lerp(from.x, target.x, k), y: lerp(from.y, target.y, k), s: lerp(from.s, target.s, k), o: lerp(from.o, target.o, clamp(move * 1.4)) };
+  }
+}
+
+const PAUSE_A = 27.0, PAUSE_B = 27.5;   // the deliberate static half-second
+const inPause = (t) => t >= PAUSE_A && t < PAUSE_B;
+
+function placeIcon(ic, L, extra = "") {
+  ic.wrap.style.opacity = L.o;
+  ic.wrap.style.transform = `translate(${L.x - 120}px, ${L.y - 120}px) scale(${L.s}) ${extra}`;
+  ic.wrap.style.transformOrigin = "120px 120px";
+}
+
+function renderIcons(t) {
+  const live = !inPause(t) && t < 26.6 || t >= PAUSE_B;   // idle motion off during the fly-back and the pause
+  const idle = (ph) => (live && t > 3 ? Math.sin(t * 2.1 + ph) * 5 : 0);
+
+  // ---- Polybag: squash on each "press" ----
+  let L = layout("polybag", t);
+  let sx = 1, sy = 1, skew = 0;
+  for (const p of [6.1, 9.4, 10.7]) {
+    const k = prog(t, p, .55);
+    if (k > 0 && k < 1) {
+      const d = Math.sin(k * Math.PI);
+      sy -= .2 * d; sx += .12 * d; skew += Math.sin(k * Math.PI * 3) * 3 * d;
+    }
+  }
+  placeIcon(polybag, { ...L, y: L.y + idle(0) });
+  const pbSvg = polybag.wrap.querySelector("svg");
+  pbSvg.style.transformOrigin = "50% 85%";
+  pbSvg.style.transform = `scale(${sx}, ${sy}) skewX(${skew}deg)`;
+  // mint seal line "highlight" while in focus: thicker stroke
+  const pbFocus = t >= 4.3 && t < 12;
+  polybag.wrap.querySelector(".m").style.strokeWidth = pbFocus ? 2 + .8 * (0.5 + 0.5 * Math.sin(t * 4)) : 2;
+  for (const id of ["crinkA", "crinkB"]) {
+    const el = polybag.wrap.querySelector("#" + id);
+    el.style.transform = `translateX(${pbFocus ? Math.sin(t * 7 + (id === "crinkA" ? 0 : 2)) * .6 : 0}px)`;
+  }
+
+  // press arrow above the polybag
+  let po = 0, py = 0;
+  for (const p of [6.1, 9.4, 10.7]) {
+    const a = prog(t, p - .35, .35), b = prog(t, p + .55, .3);
+    if (a > 0 && b < 1) { po = Math.max(po, outCubic(a) * (1 - b)); py = lerp(-30, 0, outCubic(a)) + Math.sin(prog(t, p, .55) * Math.PI) * 26; }
+  }
+  press.style.opacity = po;
+  press.style.transform = `translate(${FOCUS.x - 60}px, ${600 + py}px) scale(.5)`;
+  press.style.transformOrigin = "0 0";
+
+  // ---- Mailer: spring entrance, bubbles inflate, drop test ----
+  L = layout("mailer", t);
+  let dy = 0;
+  if (t >= 17.4 && t < 20) {
+    const up = inOutCubic(prog(t, 17.4, .5));
+    const fall = prog(t, 17.9, .35);
+    const land = t - 18.25;
+    dy = -110 * up + 110 * (fall * fall);
+    if (land > 0) dy += -Math.exp(-7 * land) * Math.abs(Math.sin(land * 14)) * 22;   // bounce (it is soft)
+  }
+  const mIdle = t >= 12 && t < 17.4 ? idle(1) : 0;
+  placeIcon(mailer, { ...L, y: L.y + dy + mIdle });
+  mailer.wrap.querySelectorAll(".bub").forEach((b, i) => {
+    const k = t < 12 ? 1 : outCubic(prog(t, 12.8 + i * .18, .35));
+    const r = 0.4 + 1.5 * k + (t >= 12 && t < 20 ? Math.sin(t * 5 + i) * .15 : 0);
+    b.setAttribute("r", r.toFixed(3));
+  });
+  const gk = t >= 17.3 && t < 20 ? outCubic(prog(t, 17.3, .4)) * (1 - prog(t, 19.7, .3)) : 0;
+  ground.style.opacity = gk;
+  ground.style.transform = `scaleX(${gk})`;
+  dropLabel.style.opacity = t >= 18.3 && t < 20 ? outCubic(prog(t, 18.3, .3)) * (1 - prog(t, 19.7, .3)) : 0;
+
+  // ---- Box: rigid lock, flaps close, tape, x-ray shape ----
+  L = layout("box", t);
+  placeIcon(box, { ...L, y: L.y + (t < 20 ? idle(2) : 0) });
+  const fk = inOutCubic(prog(t, 20.45, .6));   // flaps open at 0, closed at 1
+  const open = 1 - fk;
+  box.wrap.querySelector("#flapL").setAttribute("d", `M12 24L32 24L${32 - 4 * open} ${24 - 12 * open}L${12 - 6 * open} ${24 - 10 * open}Z`);
+  box.wrap.querySelector("#flapR").setAttribute("d", `M32 24L52 24L${52 + 6 * open} ${24 - 10 * open}L${32 + 4 * open} ${24 - 12 * open}Z`);
+  const tk = outCubic(prog(t, 21.05, .4));
+  box.wrap.querySelector("#tape").setAttribute("d", `M32 24V${(24 + 11 * tk).toFixed(2)}`);
+  box.wrap.querySelector("#tape").style.opacity = tk > .02 ? 1 : 0;
+  const lk = t >= 21.45 && t < 26.6 ? outExpo(prog(t, 21.45, .25)) : 0;
+  const lockG = box.wrap.querySelector("#lock");
+  lockG.setAttribute("opacity", lk);
+  lockG.setAttribute("transform", `translate(32 32) scale(${1.15 - .15 * lk}) translate(-32 -32)`);
+  const xk = t >= 23.5 && t < 26.6 ? outCubic(prog(t, 23.5, .6)) * (1 - prog(t, 26.3, .3)) : 0;
+  const xray = box.wrap.querySelector("#xray");
+  xray.setAttribute("opacity", xk);
+  xray.style.strokeDashoffset = -t * 4;
+  // rigid scene keeps moving through a slow push-in, not a wobble
+  if (t >= 21.5 && t < 26.6) box.wrap.style.transform += ` scale(${1 + .04 * prog(t, 21.5, 5)})`;
+
+  // ---- Labels under icons in row states ----
+  ORDER.forEach((n) => {
+    const ic = IC[n], Lr = layout(n, t);
+    const show = (t >= 3.0 && t < 4.0) || t >= 27.0 && t < 33.0;
+    const a = t < 4 ? outCubic(prog(t, 3.0 + ORDER.indexOf(n) * .1, .3)) * (1 - prog(t, 3.8, .2)) : outCubic(prog(t, 27.0, .01)) * (1 - prog(t, 32.8, .2));
+    ic.lab.style.opacity = show ? a : 0;
+    ic.lab.style.color = "var(--white)";
+    ic.lab.style.transform = `translate(${Lr.x - 150}px, ${Lr.y + 132}px)`;
+  });
+
+  // ---- Recap: category chips travel to their icon, verdicts appear ----
+  const cA = inOutCubic(prog(t, 29.1, .8));
+  chipCos.style.opacity = t >= 29.0 && t < 33 ? clamp((t - 29.0) / .2) * (1 - prog(t, 32.8, .2)) : 0;
+  chipCos.style.transform = `translate(${lerp(-280, SLOTS[0] - 108, cA)}px, ${ROW_Y - 230}px)`;
+  const cB = inOutCubic(prog(t, 31.1, .8));
+  chipBook.style.opacity = t >= 31.0 && t < 33 ? clamp((t - 31.0) / .2) * (1 - prog(t, 32.8, .2)) : 0;
+  chipBook.style.transform = `translate(${lerp(1180, SLOTS[2] - 55, cB)}px, ${ROW_Y - 230}px)`;
+  const vA = outCubic(prog(t, 30.0, .35));
+  vRefund.style.opacity = t < 33 ? vA * (1 - prog(t, 32.8, .2)) : 0;
+  vRefund.style.transform = `translate(${SLOTS[0] - 170}px, ${ROW_Y + 190 + (1 - vA) * 20}px)`;
+  const vB = outCubic(prog(t, 32.0, .35));
+  vOverpay.style.opacity = t < 33 ? vB * (1 - prog(t, 32.8, .2)) : 0;
+  vOverpay.style.transform = `translate(${SLOTS[2] - 170}px, ${ROW_Y + 190 + (1 - vB) * 20}px)`;
+  // the icon that gets a verdict nudges once (small shake = "wrong")
+  for (const [n, at] of [["polybag", 30.0], ["box", 32.0]]) {
+    const k = prog(t, at, .4);
+    if (k > 0 && k < 1) IC[n].wrap.style.transform += ` translateX(${Math.sin(k * Math.PI * 4) * 6 * (1 - k)}px)`;
+  }
+
+  // ---- Everything leaves before the question ----
+  const out = outCubic(prog(t, 33.0, .35));
+  if (t >= 33.0) {
+    ORDER.forEach((n, i) => { IC[n].wrap.style.opacity = 1 - out; IC[n].wrap.style.transform += ` translateY(${out * 80}px)`; });
+  }
+}
+
+/* ================================================================
+   Frame renderer
+   ================================================================ */
+const gridEl = document.getElementById("grid");
+const lightEl = document.getElementById("light");
+const logoEl = document.getElementById("logo");
+const urlEl = document.getElementById("url");
+
+// "Grid time" freezes during the static pause so that half-second is truly still.
+const gridTime = (t) => (t < PAUSE_A ? t : t < PAUSE_B ? PAUSE_A : t - (PAUSE_B - PAUSE_A));
+
+window.render = function (t) {
+  const gt = gridTime(t);
+  gridEl.style.transform = `translate(${-(gt * 9) % 56}px, ${-(gt * 14) % 56}px)`;
+
+  for (const it of items) {
+    if (it.type === "type") {
+      const n = Math.floor(clamp((t - it.tin) * it.cps, 0, it.text.length));
+      it.txt.textContent = it.text.slice(0, n);
+      const blink = n < it.text.length || Math.floor(t * 2.5) % 2 === 0;
+      it.caret.style.opacity = t >= it.tin && blink ? 1 : 0;
+      const o = prog(t, it.tout - .3, .3);
+      it.div.style.opacity = t >= it.tin && t < it.tout ? 1 - o : 0;
+      it.div.style.transform = `translateY(${-o * 40}px)`;
+    } else if (it.type === "chip") {
+      const k = outCubic(prog(t, it.tin, .35)), o = prog(t, it.tout - .3, .3);
+      it.el.style.opacity = t >= it.tin && t < it.tout ? k * (1 - o) : 0;
+      it.el.style.transform = `translateX(${(1 - k) * it.dx}px) translateY(${-o * 40}px)`;
+    } else if (it.type === "row") {
+      const k = outCubic(prog(t, it.tin, .5)), o = prog(t, it.tout - .3, .3);
+      it.el.style.opacity = t >= it.tin && t < it.tout ? 1 - o : 0;
+      it.el.style.clipPath = `inset(0 ${(1 - k) * 100}% 0 0)`;
+      it.el.style.transform = `translateY(${-o * 40}px)`;
+    } else {
+      // word
+      const k = prog(t, it.t0, .45), o = prog(t, it.tout - .3, .3);
+      const vis = t >= it.t0 && t < it.tout;
+      if (it.mode === "scale") {
+        const e = outExpo(k);
+        it.el.style.transform = `scale(${1.6 - .6 * e}) translateY(${-o * 60}px)`;
+        it.el.style.opacity = vis ? clamp(k * 2.5) * (1 - o) : 0;
+        it.el.style.transformOrigin = "left bottom";
+      } else {
+        const e = outCubic(k);
+        it.el.style.transform = `translateY(${(1 - e) * 110 - o * 110}%)`;
+        it.el.style.opacity = vis ? 1 : 0;
+      }
+    }
+  }
+
+  renderIcons(t);
+
+  // Subtitles: slide up 24px while fading in; white on ink, ink on grey.
+  const onLight = t >= 34.55;
+  for (const s of subEls) {
+    const k = outCubic(prog(t, s.a, .25)), o = prog(t, s.b - .15, .15);
+    const vis = t >= s.a && t < s.b;
+    s.d.style.opacity = vis ? k * (s.b >= 36 ? 1 : 1 - o) : 0;
+    s.d.style.transform = `translateY(${(1 - k) * 24}px)`;
+    s.d.style.color = onLight ? "var(--ink)" : "var(--white)";
+  }
+
+  // Final: Bay Grey wipes up from the bottom, then the logo fill.
+  const wk = inOutCubic(prog(t, 34.55, .35));
+  lightEl.style.clipPath = `inset(${(1 - wk) * 100}% 0 0 0)`;
+  gridEl.style.opacity = .55 * (1 - wk);
+  // Logo: one animation — diagonal fill, bottom-left to top-right, 600 ms, cubic-bezier(.22,1,.36,1).
+  const lf = t < 34.9 ? 0 : logoEase(clamp((t - 34.9) / .6));
+  const edge = -20 + lf * 140;   // % along the diagonal
+  const mask = `linear-gradient(45deg, #000 ${edge}%, transparent ${edge + 1}%)`;
+  logoEl.style.webkitMaskImage = mask;
+  logoEl.style.maskImage = mask;
+  logoEl.style.opacity = t >= 34.9 ? 1 : 0;
+  urlEl.style.opacity = t >= 35.3 ? outCubic(prog(t, 35.3, .3)) : 0;
+};
+
+window.render(0);
+</script>
+</body>
+</html>

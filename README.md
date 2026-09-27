@@ -1,5 +1,7 @@
 # Dockentra — рекламный ролик 9:16 «Batch photo»
 
+> **Второй ролик — «Same order, three ways»** (motion graphics, 36 с): см. [`video/three-ways/README.md`](video/three-ways/README.md).
+
 Готовый ролик: [`video/out/dockentra-batch-photo-9x16.mp4`](video/out/dockentra-batch-photo-9x16.mp4)
 (1080×1920, 30 fps, 30 с, H.264 + AAC 192 kbps, фоновая музыка −17 LUFS).
 Версия без звука (под трендовый звук в TikTok): [`video/out/dockentra-batch-photo-9x16-silent.mp4`](video/out/dockentra-batch-photo-9x16-silent.mp4).
