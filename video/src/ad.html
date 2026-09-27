@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dockentra — batch photo ad (9:16)</title>
+<style>
+  /* Fonts: the three families dockentra.ie loads (src/app/layout.tsx). */
+  @font-face { font-family: "Manrope"; font-weight: 800; src: url(assets/manrope-latin-800-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Manrope"; font-weight: 700; src: url(assets/manrope-latin-700-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 400; src: url(assets/inter-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 500; src: url(assets/inter-latin-500-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Inter"; font-weight: 600; src: url(assets/inter-latin-600-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Plex"; font-weight: 500; src: url(assets/ibm-plex-mono-latin-500-normal.woff2) format("woff2"); }
+
+  /* Colour tokens: exactly the ones in dockentra.ie globals.css / BRAND_SYSTEM.md. */
+  :root {
+    --navy: #16254c;
+    --navy-deep: #0d1730;
+    --green-dark: #14533f;
+    --green: #1e7d61;
+    --teal: #2b9c77;
+    --mint: #86e7ae;
+    --mint-soft: #e9f8f0;
+    --surface: #ffffff;
+    --surface-soft: #f5f9f7;
+    --border: #e2eae6;
+    --text: #24324e;
+    --muted: #5b6779;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--navy-deep); }
+  body { font-family: "Inter", sans-serif; -webkit-font-smoothing: antialiased; }
+
+  .scene { position: absolute; inset: 0; opacity: 0; }
+  .bg-dark { background: var(--navy-deep); }
+  .bg-soft { background: var(--surface-soft); }
+  .bg-white { background: var(--surface); }
+
+  /* Everything that moves is an .el with data-in / data-out (seconds). */
+  .el { position: absolute; left: 96px; width: 820px; opacity: 0; will-change: transform, opacity; }
+
+  .eyebrow { font-family: "Plex"; font-weight: 500; font-size: 28px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .h-xl { font-family: "Manrope"; font-weight: 800; font-size: 104px; line-height: 1.02; letter-spacing: -0.035em; }
+  .h-l  { font-family: "Manrope"; font-weight: 800; font-size: 84px;  line-height: 1.05; letter-spacing: -0.03em; }
+  .h-m  { font-family: "Manrope"; font-weight: 800; font-size: 60px;  line-height: 1.1;  letter-spacing: -0.025em; }
+  .body-l { font-family: "Inter"; font-weight: 500; font-size: 44px; line-height: 1.3; }
+  .body-m { font-family: "Inter"; font-weight: 400; font-size: 36px; line-height: 1.4; }
+  .mono { font-family: "Plex"; font-weight: 500; font-size: 30px; letter-spacing: 0.02em; }
+  .fine { font-family: "Inter"; font-weight: 400; font-size: 24px; line-height: 1.4; }
+
+  .white { color: #fff; } .navy { color: var(--navy); } .gd { color: var(--green-dark); }
+  .mint { color: var(--mint); } .muted { color: var(--muted); } .slate { color: #b9c2d3; }
+
+  /* Step rows (mirrors the site's gradient number circles) */
+  .step { display: flex; gap: 28px; align-items: flex-start; }
+  .num { flex: none; width: 76px; height: 76px; border-radius: 50%;
+         background: linear-gradient(135deg, var(--green-dark), var(--green) 55%, var(--teal));
+         color: #fff; font-family: "Plex"; font-weight: 500; font-size: 30px;
+         display: flex; align-items: center; justify-content: center; }
+  .step .t { font-family: "Manrope"; font-weight: 800; font-size: 52px; line-height: 1.08; letter-spacing: -0.02em; color: var(--navy); }
+  .step .m { margin-top: 12px; font-family: "Plex"; font-weight: 500; font-size: 28px; color: var(--green-dark); letter-spacing: 0.02em; }
+
+  /* Batch photo card */
+  .card { background: #fff; border: 2px solid var(--border); border-radius: 28px; padding: 26px; }
+  .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .card-top .mono { font-size: 24px; }
+  .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: var(--green); margin-right: 12px; vertical-align: middle; }
+  .viewport { position: relative; height: 440px; border-radius: 16px; background: var(--surface-soft); overflow: hidden; }
+  .bracket { position: absolute; width: 58px; height: 58px; border-color: var(--mint); border-style: solid; border-width: 0; }
+  .b-tl { left: 18px; top: 18px; border-left-width: 6px; border-top-width: 6px; border-top-left-radius: 10px; }
+  .b-tr { right: 18px; top: 18px; border-right-width: 6px; border-top-width: 6px; border-top-right-radius: 10px; }
+  .b-bl { left: 18px; bottom: 18px; border-left-width: 6px; border-bottom-width: 6px; border-bottom-left-radius: 10px; }
+  .b-br { right: 18px; bottom: 18px; border-right-width: 6px; border-bottom-width: 6px; border-bottom-right-radius: 10px; }
+  .grid { position: absolute; left: 70px; right: 70px; top: 62px; bottom: 62px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 26px; }
+  .unit { position: relative; background: #fff; border: 2px solid var(--border); border-radius: 12px; }
+  .unit .lbl { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 62px; background: #fff; border: 2px solid var(--border); border-radius: 6px; padding: 8px 10px; }
+  .bars { height: 30px; background: repeating-linear-gradient(90deg, var(--navy) 0 3px, transparent 3px 6px, var(--navy) 6px 7px, transparent 7px 11px, var(--navy) 11px 15px, transparent 15px 17px); }
+  .unit .tick { position: absolute; top: -18px; right: -18px; width: 48px; height: 48px; border-radius: 50%; background: var(--green); color: #fff; font-family: "Plex"; font-weight: 500; font-size: 22px; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.6); }
+
+  .rule { height: 8px; border-radius: 4px; background: var(--mint); transform-origin: left center; }
+
+  .plate { display: inline-block; background: var(--green-dark); color: #fff; border-radius: 18px; padding: 22px 40px; font-family: "Manrope"; font-weight: 800; font-size: 64px; letter-spacing: -0.02em; }
+  .logo { display: block; width: 400px; height: auto; }
+</style>
+</head>
+<body>
+
+<!-- ============ SCENE 1 · HOOK · 0.0–3.2 ============ -->
+<div class="scene bg-dark" data-in="0" data-out="3.2">
+  <div class="el eyebrow mint" style="top:300px" data-in="0.05" data-out="3.2">TikTok Shop · Shopify · Ireland</div>
+  <div class="el h-xl white" style="top:400px" data-in="0.15" data-out="3.2">Something’s wrong with your stock.</div>
+  <div class="el h-l mint" style="top:880px" data-in="1.25" data-out="3.2">Who finds out first?</div>
+  <div class="el body-l slate" style="top:1090px" data-in="1.9" data-out="3.2">You — or your customer?</div>
+</div>
+
+<!-- ============ SCENE 2 · PROCESS · 3.2–9.8 ============ -->
+<div class="scene bg-soft" data-in="3.2" data-out="9.8">
+  <div class="el eyebrow gd" style="top:230px" data-in="3.3" data-out="9.8">Dockentra · Limerick</div>
+
+  <div class="el step" style="top:310px" data-in="3.45" data-out="9.8">
+    <div class="num">01</div>
+    <div><div class="t">Your stock arrives.</div><div class="m">Receipt and count — same day</div></div>
+  </div>
+
+  <div class="el step" style="top:500px" data-in="4.6" data-out="9.8">
+    <div class="num">02</div>
+    <div><div class="t">A photo of every batch, on arrival.</div><div class="m">Photos — same day</div></div>
+  </div>
+
+  <div class="el card" id="photocard" style="top:730px" data-in="5.2" data-out="9.8">
+    <div class="card-top">
+      <span class="mono gd"><span class="dot"></span>BATCH PHOTO</span>
+      <span class="mono muted">ON ARRIVAL</span>
+    </div>
+    <div class="viewport">
+      <div class="grid">
+        <div class="unit"><div class="lbl"><div class="bars"></div></div><div class="tick" data-tick="5.9">1</div></div>
+        <div class="unit"><div class="lbl"><div class="bars"></div></div><div class="tick" data-tick="6.1">2</div></div>
+        <div class="unit"><div class="lbl"><div class="bars"></div></div><div class="tick" data-tick="6.3">3</div></div>
+        <div class="unit"><div class="lbl"><div class="bars"></div></div><div class="tick" data-tick="6.5">4</div></div>
+        <div class="unit"><div class="lbl"><div class="bars"></div></div><div class="tick" data-tick="6.7">5</div></div>
+        <div class="unit"><div class="lbl"><div class="bars"></div></div><div class="tick" data-tick="6.9">6</div></div>
+      </div>
+      <div class="bracket b-tl" data-snap="5.55"></div><div class="bracket b-tr" data-snap="5.55"></div>
+      <div class="bracket b-bl" data-snap="5.55"></div><div class="bracket b-br" data-snap="5.55"></div>
+    </div>
+  </div>
+
+  <div class="el step" style="top:1340px" data-in="7.5" data-out="9.8">
+    <div class="num">03</div>
+    <div><div class="t">What turned up, and what condition it’s in.</div><div class="m">Before anything goes on a shelf</div></div>
+  </div>
+</div>
+
+<!-- ============ SCENE 3 · MAIN MESSAGE · 9.8–14.2 ============ -->
+<div class="scene bg-dark" data-in="9.8" data-out="14.2">
+  <div class="el h-xl white" style="top:420px" data-in="10.0" data-out="14.2">You find out about a problem</div>
+  <div class="el h-xl mint" style="top:650px" data-in="10.7" data-out="14.2">before your customer does.</div>
+  <div class="el" style="top:890px;width:560px" data-in="11.3" data-out="14.2"><div class="rule" id="rule"></div></div>
+  <div class="el body-l slate" style="top:970px" data-in="12.0" data-out="14.2">So you’re not answering a complaint blind.</div>
+</div>
+
+<!-- ============ SCENE 4 · SECOND ARGUMENT · 14.2–24.0 ============ -->
+<div class="scene bg-white" data-in="14.2" data-out="24.0">
+  <div class="el eyebrow gd" style="top:230px" data-in="14.35" data-out="24.0">Selling on TikTok Shop in Ireland</div>
+  <div class="el h-l navy" style="top:310px" data-in="14.5" data-out="24.0">Who pays if a parcel goes missing?</div>
+  <div class="el h-xl gd" style="top:600px;width:920px;font-size:96px;white-space:nowrap" data-in="16.2" data-out="24.0">In Ireland, you do.</div>
+  <div class="el body-m muted" style="top:760px" data-in="17.6" data-out="24.0">Ship by Seller is the only shipping type available on TikTok Shop here — no platform fallback.</div>
+  <div class="el" style="top:980px;width:120px" data-in="19.4" data-out="24.0"><div class="rule" style="background:var(--green)"></div></div>
+  <div class="el h-m navy" style="top:1030px" data-in="19.6" data-out="24.0">We give you every piece of evidence the platform asks for when you dispute it.</div>
+  <div class="el fine muted" style="top:1420px" data-in="14.5" data-out="24.0">Dockentra is independent and not affiliated with or endorsed by TikTok.</div>
+</div>
+
+<!-- ============ SCENE 5 · CTA · 24.0–30.0 ============ -->
+<div class="scene bg-white" data-in="24.0" data-out="30.5">
+  <div class="el" style="top:250px;left:340px;width:400px" data-in="24.15" data-out="31">
+    <img class="logo" src="assets/dockentra-logo-transparent.png" alt="Dockentra">
+  </div>
+  <div class="el body-m muted" style="top:660px;text-align:center;left:60px;width:960px;font-size:34px" data-in="24.5" data-out="31">Local fulfilment for growing e-commerce businesses.</div>
+  <div class="el h-m navy" style="top:850px;text-align:center;left:90px;width:900px" data-in="25.1" data-out="31">See what leaves your warehouse before your customer does.</div>
+  <div class="el" style="top:1110px;text-align:center;left:90px;width:900px" data-in="25.8" data-out="31"><span class="plate">dockentra.ie</span></div>
+  <div class="el eyebrow muted" style="top:1320px;text-align:center;left:90px;width:900px;font-size:24px" data-in="26.3" data-out="31">Limerick, Ireland · Opening 2026</div>
+</div>
+
+<script>
+  const FADE_IN = 0.45, FADE_OUT = 0.3, RISE = 28;
+  const clamp = (x) => Math.max(0, Math.min(1, x));
+  const ease = (x) => 1 - Math.pow(1 - x, 3); // easeOutCubic
+
+  function window_(t, tin, tout) {
+    const a = ease(clamp((t - tin) / FADE_IN));
+    const b = 1 - clamp((t - (tout - FADE_OUT)) / FADE_OUT);
+    return { a, v: a * b };
+  }
+
+  window.render = function (t) {
+    // Each scene wipes up over the previous one (no cross-fade: blending
+    // navy into a light surface reads as a grey flash).
+    const WIPE = 0.35;
+    document.querySelectorAll(".scene").forEach((s, i) => {
+      const tin = +s.dataset.in, tout = +s.dataset.out;
+      const on = t >= tin && t < tout + WIPE;
+      const p = tin === 0 ? 1 : ease(clamp((t - tin) / WIPE));
+      s.style.opacity = on ? 1 : 0;
+      s.style.clipPath = `inset(${(1 - p) * 100}% 0 0 0)`;
+      s.style.zIndex = i + 1;
+    });
+    for (const e of document.querySelectorAll(".el")) {
+      const { a, v } = window_(t, +e.dataset.in, +e.dataset.out);
+      e.style.opacity = v;
+      e.style.transform = `translateY(${(1 - a) * RISE}px)`;
+    }
+    for (const b of document.querySelectorAll("[data-snap]")) {
+      const k = ease(clamp((t - +b.dataset.snap) / 0.35));
+      b.style.opacity = k;
+      b.style.transform = `scale(${1.25 - 0.25 * k})`;
+    }
+    for (const k of document.querySelectorAll("[data-tick]")) {
+      const p = ease(clamp((t - +k.dataset.tick) / 0.25));
+      k.style.opacity = p;
+      k.style.transform = `scale(${0.6 + 0.4 * p})`;
+    }
+    const rule = document.getElementById("rule");
+    rule.style.transform = `scaleX(${ease(clamp((t - 11.3) / 0.6))})`;
+  };
+
+  window.render(0);
+</script>
+</body>
+</html>
