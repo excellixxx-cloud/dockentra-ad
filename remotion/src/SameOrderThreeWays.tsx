@@ -43,7 +43,7 @@ export const SameOrderThreeWays: React.FC = () => {
         <IconStage />
         <Sequence {...seq("logo")} name="EndCard" layout="none"><EndCard /></Sequence>
         <Subtitles lightFrom={34.5} />
-        <Audio src={staticFile("music.wav")} />
+        <Audio src={staticFile("music-three-ways.wav")} />
       </AbsoluteFill>
     </TimeContext.Provider>
   );

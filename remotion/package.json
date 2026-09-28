@@ -7,10 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "studio": "remotion studio src/index.ts",
     "fonts": "node scripts/fetch-google-fonts.mjs",
-    "music": "python3 scripts/gen_music.py && ffmpeg -loglevel error -y -i public/music-raw.wav -af loudnorm=I=-17:TP=-1.5:LRA=11 -ar 48000 public/music.wav && rm public/music-raw.wav",
+    "music": "python3 scripts/gen_music.py creator && python3 scripts/gen_music.py three-ways",
     "render": "remotion render src/index.ts SameOrderThreeWays out/dockentra-same-order-three-ways-remotion.mp4 --audio-codec=aac --audio-bitrate=192k",
-    "check": "python3 scripts/checklist.py out/dockentra-same-order-three-ways-remotion.mp4",
-    "smoke": "remotion render src/index.ts HelloDockentra out/hello.mp4"
+    "check": "python3 scripts/checklist.py scripts/specs/three-ways.json out/dockentra-same-order-three-ways-remotion.mp4",
+    "smoke": "remotion render src/index.ts HelloDockentra out/hello.mp4",
+    "render:creator": "remotion render src/index.ts CreatorSamples out/dockentra-creator-samples-2909.mp4 --audio-codec=aac --audio-bitrate=192k",
+    "render:creator-frozen": "remotion render src/index.ts CreatorSamples out/diag-creator-frozen.mp4 --props={\\\"freezeCamera\\\":true} --muted",
+    "check:creator": "python3 scripts/checklist.py scripts/specs/creator-samples.json out/dockentra-creator-samples-2909.mp4 --frozen out/diag-creator-frozen.mp4"
   },
   "keywords": [],
   "author": "",

@@ -1,4 +1,4 @@
-import { Easing } from "remotion";
+import { Easing, interpolate } from "remotion";
 
 /** Dockentra Brand Book v2.0 — the only colours allowed in a frame. */
 export const C = {
@@ -28,9 +28,9 @@ export const EASE_LOGO = Easing.bezier(0.22, 1, 0.36, 1);
 
 export const clamp = (x: number, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 export const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
-/** 0→1 progress of [start, start+dur] at time t (seconds), eased. */
+/** 0→1 progress of [start, start+dur] at time t (seconds), eased — Remotion interpolate. */
 export const ramp = (t: number, start: number, dur: number, ease: (x: number) => number = EASE_APPEAR) =>
-  ease(clamp((t - start) / dur));
+  interpolate(t, [start, start + dur], [0, 1], { easing: ease, extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
 /** Words appear one by one — 60–90 ms apart (dockentra-motion skill). */
 export const WORD_STAGGER = 0.075;

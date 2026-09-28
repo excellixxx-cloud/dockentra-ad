@@ -1,7 +1,7 @@
 import { C, EASE_APPEAR, EASE_MOVE, FONT, ramp } from "../brand";
 import { useT } from "../time";
 
-export const SUBS: [number, number, string][] = [
+export const SUBS: Cue[] = [
   [0.2, 2.0, "Same order, three ways."],
   [2.0, 4.0, "Two of these are wrong for your category."],
   [4.2, 6.8, "Polybag. Cheapest, thinnest, fastest to pack."],
@@ -23,16 +23,20 @@ export const SUB_BOTTOM = 320;
 
 /** Karaoke subtitles: each cue slides in, its words light up in reading
  *  order, and the outgoing cue is pushed up rather than faded. Never mint. */
-export const Subtitles: React.FC<{ lightFrom: number }> = ({ lightFrom }) => {
+export type Cue = [number, number, string];
+
+export const Subtitles: React.FC<{ lightFrom?: number; cues?: Cue[]; end?: number }> = ({ lightFrom = 0, cues = SUBS, end = 36 }) => {
   const t = useT();
   const onLight = t >= lightFrom;
   const base = onLight ? C.ink : C.white;
   return (
     <div style={{ position: "absolute", left: 90, width: 900, bottom: SUB_BOTTOM, height: 0 }}>
-      {SUBS.map(([a, b, text]) => {
-        if (t < a - 0.01 || t > b + 0.22) return null;
-        const k = ramp(t, a, 0.28, EASE_APPEAR);
-        const o = b >= 36 ? 0 : ramp(t, b, 0.2, EASE_MOVE);
+      {cues.map(([a, b, text]) => {
+        if (t < a - 0.01 || t > b + 0.16) return null;
+        // incoming cue waits for the outgoing one to clear (0.14 s), so two
+        // cues never sit on top of each other
+        const k = ramp(t, a + 0.1, 0.26, EASE_APPEAR);
+        const o = b >= end ? 0 : ramp(t, b, 0.14, EASE_MOVE);
         const words = text.split(" ");
         const span = (b - a) * 0.8;
         return (

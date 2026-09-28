@@ -8,7 +8,8 @@ type WordsProps = {
   size: number;
   start: number;        // first word, seconds
   exit?: number;        // words leave upward from here
-  mint?: string[];      // the one key word per composition
+  accent?: string[];    // key word(s) set in the accent colour
+  accentColor?: string; // mint by default; Dock Green where mint is already used elsewhere
   mode?: "rise" | "scale";
   color?: string;
   left?: number;
@@ -18,7 +19,7 @@ type WordsProps = {
 /** Kinetic typography: each word rises out of its own mask (or scales
  *  down into place), 75 ms apart, on the appear ease; exits upward on the
  *  move ease with its own stagger — never a block fade. */
-export const Words: React.FC<WordsProps> = ({ lines, top, size, start, exit, mint = [], mode = "rise", color = C.white, left = 96, lineHeight = 1.06 }) => {
+export const Words: React.FC<WordsProps> = ({ lines, top, size, start, exit, accent = [], accentColor = C.mint, mode = "rise", color = C.white, left = 96, lineHeight = 1.06 }) => {
   const t = useT();
   let i = 0;
   const total = lines.join(" ").split(" ").length;
@@ -33,7 +34,7 @@ export const Words: React.FC<WordsProps> = ({ lines, top, size, start, exit, min
             const idx = i++;
             const k = ramp(t, start + idx * WORD_STAGGER, 0.5, EASE_APPEAR);
             const o = exit === undefined ? 0 : ramp(t, exit + (total - 1 - idx) * 0.03, 0.35, EASE_MOVE);
-            const isMint = mint.includes(word.replace(/[.,?’']/g, ""));
+            const isAccent = accent.includes(word.replace(/[.,?’']/g, ""));
             const inner: React.CSSProperties =
               mode === "rise"
                 ? { transform: `translateY(${(1 - k) * 112 - o * 112}%)` }
@@ -41,7 +42,7 @@ export const Words: React.FC<WordsProps> = ({ lines, top, size, start, exit, min
             return (
               <React.Fragment key={wi}>
                 <span style={{ display: "inline-block", overflow: "hidden", verticalAlign: "top", padding: "0 0.04em 0.14em", margin: "0 -0.04em -0.14em" }}>
-                  <span style={{ display: "inline-block", color: isMint ? C.mint : undefined, ...inner }}>{word}</span>
+                  <span style={{ display: "inline-block", color: isAccent ? accentColor : undefined, ...inner }}>{word}</span>
                 </span>
                 {wi < line.split(" ").length - 1 ? " " : null}
               </React.Fragment>

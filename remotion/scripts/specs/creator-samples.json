@@ -1,0 +1,12 @@
+{
+  "composition": "CreatorSamples",
+  "duration": 38,
+  "segments": [["hook", 0, 4], ["samples", 4, 14], ["morph", 14, 24], ["interrupt", 24, 30], ["cta + logo", 30, 38]],
+  "interrupt_window": [25.8, 26.4],
+  "no_cuts_outside_interrupt": true,
+  "logo": { "in": 36.5, "box": [336, 832, 744, 1152], "src": "src/creator/CreatorSamples.tsx", "must": ["LOGO_IN = 36.5", "(t - LOGO_IN) / 0.6"] },
+  "text_bands": { "type layer (y 150-620)": [150, 620], "subtitles (y 1440-1600)": [1440, 1600] },
+  "mint_only_in_y": [0, 64],
+  "parallax": { "src": "src/creator/CreatorSamples.tsx" },
+  "sources": ["src/creator"]
+}

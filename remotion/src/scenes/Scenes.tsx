@@ -8,7 +8,7 @@ import { useT } from "../time";
 export const Hook: React.FC = () => (
   <Drift from={0} to={4.2}>
     <Words lines={["Same order,", "three ways."]} top={230} size={124} start={0.15} exit={3.85} />
-    <Words lines={["Two of these", "are wrong for", "your category."]} top={540} size={76} start={0.95} exit={3.8} mint={["wrong"]} />
+    <Words lines={["Two of these", "are wrong for", "your category."]} top={540} size={76} start={0.95} exit={3.8} accent={["wrong"]} />
   </Drift>
 );
 
@@ -35,21 +35,21 @@ export const Mailer: React.FC = () => (
 export const Box: React.FC = () => (
   <Drift from={20.0} to={27.0} dy={-30}>
     <Chips items={["RIGID", "HEAVIEST", "MOST EXPENSIVE"]} top={380} start={20.3} exit={26.35} stagger={0.12} stamp />
-    <Words lines={["Protects a shape,", "not just a surface."]} top={488} size={64} start={23.3} exit={26.3} mint={["shape"]} />
+    <Words lines={["Protects a shape,", "not just a surface."]} top={488} size={64} start={23.3} exit={26.3} accent={["shape"]} />
   </Drift>
 );
 
 /** 0:27–0:33 — recap headline (icons, chips and verdicts are on the IconStage). */
 export const Recap: React.FC = () => (
   <Drift from={27.5} to={33.2}>
-    <Words lines={["Pick by category,", "not by habit."]} top={230} size={100} start={27.6} exit={32.85} mint={["category"]} />
+    <Words lines={["Pick by category,", "not by habit."]} top={230} size={100} start={27.6} exit={32.85} accent={["category"]} />
   </Drift>
 );
 
 /** 0:33–0:34.5 — the question, scaling in word by word. */
 export const Question: React.FC = () => (
   <Drift from={33.0} to={34.7} dy={-24}>
-    <Words lines={["Which one", "are you", "actually using?"]} top={520} size={128} start={33.05} mode="scale" mint={["actually"]} />
+    <Words lines={["Which one", "are you", "actually using?"]} top={520} size={128} start={33.05} mode="scale" accent={["actually"]} />
   </Drift>
 );
 

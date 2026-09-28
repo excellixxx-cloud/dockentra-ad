@@ -1,23 +1,24 @@
-"""Background track + sound accents for the Remotion "Same order, three ways" (36 s).
+"""Original background tracks + sound accents for the Remotion compositions.
 
-Original synthesis only (no samples): soft pad, plucked arpeggio and sub bass
-in D major at 96 BPM, plus quiet accents locked to the animation — icon drops,
-polybag presses, the mailer's spring and landing, the box's rigid lock, the
-recap verdicts and the logo. The track dips during the 0.5 s static pause.
+Pure synthesis, no samples or recordings: soft pad, plucked arpeggio and sub
+bass at 96 BPM, plus quiet accents locked to each composition's animation.
+Output is loudness-normalised to -17 LUFS (true peak -1.5 dBTP).
 
-    python3 scripts/gen_music.py   # -> public/music-raw.wav, then loudnorm -> public/music.wav
+    python3 scripts/gen_music.py creator       # -> public/music-creator.wav
+    python3 scripts/gen_music.py three-ways    # -> public/music-three-ways.wav
 """
+import subprocess
+import sys
+import tempfile
 import wave
 from pathlib import Path
 
+import imageio_ffmpeg
 import numpy as np
 
 SR = 48_000
-DUR = 36.0
 BPM = 96
 EIGHTH = 60 / BPM / 2
-N = int(SR * DUR)
-rng = np.random.default_rng(11)
 
 
 def hz(m):
@@ -30,145 +31,198 @@ GMAJ7 = [55, 59, 62, 66, 71]
 EM7 = [55, 59, 62, 64, 67]
 ASUS = [57, 62, 64, 69, 74]
 A = [57, 61, 64, 69, 73]
-CHORDS = [  # (start, end, notes, bass)
-    (0.0, 4.0, DMAJ9, 38), (4.0, 8.0, BM7, 35), (8.0, 12.0, GMAJ7, 31),
-    (12.0, 16.0, EM7, 28), (16.0, 20.0, ASUS, 33), (20.0, 24.0, GMAJ7, 31),
-    (24.0, 27.0, A, 33), (27.0, 30.0, BM7, 35), (30.0, 33.0, ASUS, 33),
-    (33.0, 36.0, DMAJ9, 38),
-]
 
 
-def env(n, a, r):
-    e = np.ones(n)
-    ai, ri = int(a * SR), int(r * SR)
-    e[:ai] = np.linspace(0, 1, ai) ** 2
-    e[n - ri:] *= np.linspace(1, 0, ri) ** 2
-    return e
+class Track:
+    def __init__(self, dur, seed):
+        self.dur = dur
+        self.n = int(SR * dur)
+        self.rng = np.random.default_rng(seed)
+        self.music = np.zeros((self.n, 2))
+        self.fx = np.zeros((self.n, 2))
+
+    # ---------------- sound sources ----------------
+    def env(self, n, a, r):
+        e = np.ones(n)
+        ai, ri = int(a * SR), int(r * SR)
+        e[:ai] = np.linspace(0, 1, ai) ** 2
+        e[n - ri:] *= np.linspace(1, 0, ri) ** 2
+        return e
+
+    def pad_voice(self, f, n, cents):
+        t = np.arange(n) / SR
+        f = f * 2 ** (cents / 1200)
+        s = np.sin(2 * np.pi * f * t) + .18 * np.sin(4 * np.pi * f * t) + .05 * np.sin(6 * np.pi * f * t)
+        return s * (.85 + .15 * np.sin(2 * np.pi * .13 * t + self.rng.uniform(0, 6.3)))
+
+    def blip(self, freq, dur=.18, decay=28, bend=0.0):
+        t = np.arange(int(dur * SR)) / SR
+        f = freq * (1 + bend * np.exp(-t * 30))
+        return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * decay) * np.minimum(1, t / .002)
+
+    def thump(self, freq=90, dur=.25, decay=18):
+        t = np.arange(int(dur * SR)) / SR
+        f = freq * (1 + 1.5 * np.exp(-t * 40))
+        return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * decay)
+
+    def click(self, dur=.03):
+        n = int(dur * SR)
+        t = np.arange(n) / SR
+        return np.diff(np.concatenate([[0], self.rng.standard_normal(n)])) * np.exp(-t * 180) * .5
+
+    def swish(self, dur=.35, bright=.25):
+        """Paper / air movement: low-passed noise with a rise-and-fall envelope."""
+        n = int(dur * SR)
+        noise = self.rng.standard_normal(n)
+        y, out = 0.0, np.empty(n)
+        for i in range(n):
+            y += bright * (noise[i] - y)
+            out[i] = y
+        t = np.linspace(0, 1, n)
+        return out * np.sin(np.pi * t) ** 2 * 2.2
+
+    # ---------------- arrangement ----------------
+    def chords(self, chords):
+        self._chords = chords
+        for start, end, notes, bass in chords:
+            s = int(start * SR)
+            e = min(self.n, int((end + 1.1) * SR))
+            n = e - s
+            ev = self.env(n, .9 if start else .5, 1.2)
+            for i, m in enumerate(notes):
+                pan = .5 + (i - 2) * .12
+                self.music[s:e, 0] += self.pad_voice(hz(m), n, -4) * ev * (1 - pan) * .05
+                self.music[s:e, 1] += self.pad_voice(hz(m), n, 4) * ev * pan * .05
+            tb = np.arange(n) / SR
+            self.music[s:e] += (np.sin(2 * np.pi * hz(bass) * tb) * self.env(n, .5, .6) * .085)[:, None]
+
+    def arpeggio(self, start, end):
+        pattern = [0, 2, 1, 3, 2, 4, 3, 1]
+        k, tn = 0, start
+        while tn < end:
+            notes = next(c[2] for c in self._chords if c[0] <= tn < c[1])
+            m = notes[pattern[k % 8]] + 12
+            s = int(tn * SR)
+            e = min(self.n, s + int(.8 * SR))
+            tt = np.arange(e - s) / SR
+            f = hz(m)
+            body = np.sin(2 * np.pi * f * tt) + .25 * np.sin(4 * np.pi * f * tt) * np.exp(-tt * 18)
+            lvl = min(1, (tn - start) / 1.5) * min(1, max(0, (end - tn) / 1.5)) * (.75 + .25 * (k % 2 == 0))
+            sig = body * np.exp(-tt * 7) * np.minimum(1, tt / .004) * .045 * lvl
+            pan = .35 if k % 2 == 0 else .65
+            self.music[s:e, 0] += sig * (1 - pan) * 2
+            self.music[s:e, 1] += sig * pan * 2
+            tn += EIGHTH
+            k += 1
+
+    def add(self, at, *parts, pan=.5, gain=1.0):
+        """Mix (signal, level) parts of any lengths in at `at` seconds."""
+        sig = np.zeros(max(len(p) for p, _ in parts))
+        for p, lvl in parts:
+            sig[:len(p)] += p * lvl
+        s = int(at * SR)
+        e = min(self.n, s + len(sig))
+        self.fx[s:e, 0] += sig[:e - s] * (1 - pan) * 2 * gain
+        self.fx[s:e, 1] += sig[:e - s] * pan * 2 * gain
+
+    def duck(self, a, b, depth, edge=.15):
+        tt = np.arange(self.n) / SR
+        d = 1 - depth * np.clip(np.minimum((tt - (a - edge)) / edge, (b + edge - tt) / edge), 0, 1)
+        self.music *= d[:, None]
+
+    def cut_duck(self, a, b, depth):
+        """Music sinks over [a, b] and returns instantly at b (a drop)."""
+        tt = np.arange(self.n) / SR
+        d = 1 - depth * np.clip((tt - a) / (b - a), 0, 1) * (tt < b)
+        self.music *= d[:, None]
+
+    def render(self, dst):
+        mix = self.music + self.fx
+        ir_len = int(2.0 * SR)
+        ti = np.arange(ir_len) / SR
+        ir = self.rng.standard_normal((ir_len, 2)) * np.exp(-ti * 3.4)[:, None]
+        ir /= np.sqrt((ir ** 2).sum(axis=0))
+        nfft = 1 << (self.n + ir_len - 1).bit_length()
+        wet = np.stack([np.fft.irfft(np.fft.rfft(mix[:, c], nfft) * np.fft.rfft(ir[:, c], nfft), nfft)[:self.n] for c in range(2)], axis=1)
+        out = mix * .78 + wet * .4
+        fi, fo = int(.3 * SR), int(1.2 * SR)
+        out[:fi] *= np.linspace(0, 1, fi)[:, None]
+        out[-fo:] *= (np.linspace(1, 0, fo) ** 1.5)[:, None]
+        out /= np.abs(out).max() / 10 ** (-3 / 20)
+        with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:
+            with wave.open(tmp.name, "wb") as w:
+                w.setnchannels(2)
+                w.setsampwidth(2)
+                w.setframerate(SR)
+                w.writeframes((out * 32767).astype("<i2").tobytes())
+            subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-loglevel", "error", "-y", "-i", tmp.name,
+                            "-af", "loudnorm=I=-17:TP=-1.5:LRA=11", "-ar", str(SR), str(dst)], check=True)
+        print(dst)
 
 
-def pad_voice(f, n, cents):
-    t = np.arange(n) / SR
-    f = f * 2 ** (cents / 1200)
-    s = np.sin(2 * np.pi * f * t) + .18 * np.sin(4 * np.pi * f * t) + .05 * np.sin(6 * np.pi * f * t)
-    return s * (.85 + .15 * np.sin(2 * np.pi * .13 * t + rng.uniform(0, 6.3)))
+def three_ways():
+    """"Same order, three ways" (36 s)."""
+    tr = Track(36.0, 11)
+    tr.chords([(0.0, 4.0, DMAJ9, 38), (4.0, 8.0, BM7, 35), (8.0, 12.0, GMAJ7, 31), (12.0, 16.0, EM7, 28),
+               (16.0, 20.0, ASUS, 33), (20.0, 24.0, GMAJ7, 31), (24.0, 27.0, A, 33), (27.0, 30.0, BM7, 35),
+               (30.0, 33.0, ASUS, 33), (33.0, 36.0, DMAJ9, 38)])
+    tr.arpeggio(4.0, 33.0)
+    for i, at in enumerate([2.15, 2.27, 2.39]):          # icons land at 2.70 / 2.82 / 2.94
+        tr.add(at + .55, (tr.thump(110 - i * 8, .2, 22), .5), (tr.blip(880 + i * 110, .12, 40), .25), pan=.3 + i * .2, gain=.9)
+    tr.add(4.0, (tr.blip(660, .25, 16), .35))
+    tr.add(12.0, (tr.blip(740, .5, 7, bend=.35), .3))     # springy
+    tr.add(20.0, (tr.click(), .9))                          # the hard cut
+    tr.add(20.24, (tr.thump(70, .3, 14), .8), (tr.click(), .5))
+    for at in (6.1, 9.4, 10.7):                             # polybag presses
+        tr.add(at + .1, (tr.thump(140, .22, 20), .35), gain=.9)
+    tr.add(18.25, (tr.thump(95, .3, 15), .6))
+    tr.add(18.47, (tr.thump(120, .15, 25), .2))
+    tr.add(21.45, (tr.click(.04), 1.2), (tr.blip(1320, .06, 90), .25))
+    for at, pan in ((29.9, .3), (31.9, .7)):
+        tr.add(at, (tr.blip(990, .1, 45), .25), pan=pan)
+    for at, pan in ((30.0, .3), (32.0, .7)):
+        tr.add(at, (tr.blip(330, .28, 14), .3), (tr.blip(311, .28, 14), .2), pan=pan)
+    tr.add(34.5, (tr.blip(hz(74), 1.2, 3.5), .22), (tr.blip(hz(81), 1.2, 3.0), .12))
+    tr.duck(27.0, 27.5, .55)
+    return tr
 
 
-music = np.zeros((N, 2))
-for start, end, notes, bass in CHORDS:
-    s = int(start * SR)
-    e = min(N, int((end + 1.1) * SR))
-    n = e - s
-    ev = env(n, .9 if start else .5, 1.2)
-    for i, m in enumerate(notes):
-        pan = .5 + (i - 2) * .12
-        music[s:e, 0] += pad_voice(hz(m), n, -4) * ev * (1 - pan) * .05
-        music[s:e, 1] += pad_voice(hz(m), n, 4) * ev * pan * .05
-    tb = np.arange(n) / SR
-    music[s:e] += (np.sin(2 * np.pi * hz(bass) * tb) * env(n, .5, .6) * .085)[:, None]
-
-# plucked arpeggio from 4.0 s, thinning out into the question
-pattern = [0, 2, 1, 3, 2, 4, 3, 1]
-k, tn = 0, 4.0
-while tn < 33.0:
-    notes = next(c[2] for c in CHORDS if c[0] <= tn < c[1])
-    m = notes[pattern[k % 8]] + 12
-    s = int(tn * SR)
-    e = min(N, s + int(.8 * SR))
-    tt = np.arange(e - s) / SR
-    f = hz(m)
-    body = np.sin(2 * np.pi * f * tt) + .25 * np.sin(4 * np.pi * f * tt) * np.exp(-tt * 18)
-    lvl = min(1, (tn - 4.0) / 1.5) * min(1, max(0, (33.0 - tn) / 1.5)) * (.75 + .25 * (k % 2 == 0))
-    sig = body * np.exp(-tt * 7) * np.minimum(1, tt / .004) * .045 * lvl
-    pan = .35 if k % 2 == 0 else .65
-    music[s:e, 0] += sig * (1 - pan) * 2
-    music[s:e, 1] += sig * pan * 2
-    tn += EIGHTH
-    k += 1
-
-# ---------------- accents ----------------
-fx = np.zeros((N, 2))
+def creator():
+    """"Creator samples" (38 s). Accent times mirror src/creator/timeline.ts."""
+    tr = Track(38.0, 29)
+    tr.chords([(0.0, 4.0, GMAJ7, 31), (4.0, 8.0, DMAJ9, 38), (8.0, 11.0, BM7, 35), (11.0, 14.0, ASUS, 33),
+               (14.0, 18.0, GMAJ7, 31), (18.0, 22.0, EM7, 28), (22.0, 24.0, ASUS, 33), (24.0, 26.0, A, 33),
+               (26.0, 30.0, BM7, 35), (30.0, 33.0, GMAJ7, 31), (33.0, 36.0, ASUS, 33), (36.0, 38.0, DMAJ9, 38)])
+    tr.arpeggio(4.0, 36.0)
+    tr.add(0.3, (tr.swish(.6, .12), .25))                                      # divider draws
+    for i in range(7):                                                          # orders land
+        tr.add(0.8 + i * 0.36 + .55, (tr.thump(125 - i * 4, .18, 22), .42), (tr.click(.02), .12), pan=.3 + i * .02)
+    for i in range(5):                                                          # sample mailers land
+        tr.add(4.4 + i * 0.55 + .65, (tr.swish(.2, .3), .3), (tr.thump(160, .14, 26), .2), pan=.65 + i * .03)
+    tr.add(14.2, (tr.swish(.7, .15), .3))                                       # hero lifts
+    tr.add(15.4, (tr.swish(.9, .35), .35), pan=.3)                              # invoice out
+    tr.add(16.9, (tr.blip(1250, .12, 40), .18))                                 # price struck
+    tr.add(17.25, (tr.swish(.8, .35), .3), pan=.7)                              # label peels
+    tr.add(18.4, (tr.blip(520, .9, 4, bend=-.25), .2))                          # morph
+    tr.add(20.35, (tr.blip(1480, .07, 70), .2), (tr.click(.02), .3))            # tag hooks on
+    tr.add(20.9, (tr.click(.04), .9), (tr.blip(1700, .05, 90), .15))            # viewfinder
+    tr.add(22.6, (tr.swish(.8, .2), .3), pan=.65)                               # to the pile
+    tr.add(24.5, (tr.blip(hz(79), .25, 14), .3))                                # request arrives
+    tr.add(24.62, (tr.blip(hz(86), .3, 12), .25))
+    for j in range(6):
+        tr.add(24.6 + j * .07 + .55, (tr.blip(1100 + j * 60, .05, 80), .12), pan=.6)
+    tr.cut_duck(25.1, 26.0, .75)                                                # tension …
+    tr.add(26.0, (tr.thump(58, .5, 8), 1.0), (tr.click(.05), 1.0), (tr.blip(220, .35, 9), .3))  # … the jerk
+    tr.add(30.0, (tr.swish(1.2, .2), .35))                                      # stack deals out
+    for r in range(5):
+        tr.add(31.6 + r * 10 * .035, (tr.blip(1500 + r * 90, .05, 90), .12))   # rows processed
+    tr.add(35.8, (tr.swish(.8, .18), .3))                                       # converge
+    tr.add(36.5, (tr.blip(hz(74), 1.2, 3.5), .22), (tr.blip(hz(81), 1.2, 3.0), .12))  # logo
+    return tr
 
 
-def add(at, *parts, pan=.5, gain=1.0):
-    """Mix one or more (signal, level) parts, of any lengths, in at `at` seconds."""
-    sig = np.zeros(max(len(p) for p, _ in parts))
-    for p, lvl in parts:
-        sig[:len(p)] += p * lvl
-    s = int(at * SR)
-    e = min(N, s + len(sig))
-    fx[s:e, 0] += sig[:e - s] * (1 - pan) * 2 * gain
-    fx[s:e, 1] += sig[:e - s] * pan * 2 * gain
+TRACKS = {"three-ways": three_ways, "creator": creator}
 
-
-def blip(freq, dur=.18, decay=28, bend=0.0):
-    t = np.arange(int(dur * SR)) / SR
-    f = freq * (1 + bend * np.exp(-t * 30))
-    ph = 2 * np.pi * np.cumsum(f) / SR
-    return np.sin(ph) * np.exp(-t * decay) * np.minimum(1, t / .002)
-
-
-def thump(freq=90, dur=.25, decay=18):
-    t = np.arange(int(dur * SR)) / SR
-    f = freq * (1 + 1.5 * np.exp(-t * 40))
-    return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * decay)
-
-
-def click(dur=.03):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    noise = rng.standard_normal(n)
-    return np.diff(np.concatenate([[0], noise])) * np.exp(-t * 180) * .5
-
-
-# icons drop into the row (0:02)
-for i, at in enumerate([2.15, 2.27, 2.39]):   # lands at 2.70 / 2.82 / 2.94
-    add(at + .55, (thump(110 - i * 8, .2, 22), .5), (blip(880 + i * 110, .12, 40), .25), pan=.3 + i * .2, gain=.9)
-# focus changes
-add(4.0, (blip(660, .25, 16), .35))
-add(12.0, (blip(740, .5, 7, bend=.35), .3))            # springy
-add(20.0, (click(), .9))                                   # the hard cut
-add(20.24, (thump(70, .3, 14), .8), (click(), .5))       # box slams down       # firm
-# polybag presses: soft, muted
-for at in (6.1, 9.4, 10.7):
-    add(at + .1, (thump(140, .22, 20), .35), gain=.9)
-# mailer landing + little bounce
-add(18.25, (thump(95, .3, 15), .6))
-add(18.47, (thump(120, .15, 25), .2))
-# box locks: rigid click
-add(21.45, (click(.04), 1.2), (blip(1320, .06, 90), .25))
-# recap: chips arrive, verdicts
-for at, pan in ((29.9, .3), (31.9, .7)):
-    add(at, (blip(990, .1, 45), .25), pan=pan)
-for at, pan in ((30.0, .3), (32.0, .7)):
-    add(at, (blip(330, .28, 14), .3), (blip(311, .28, 14), .2), pan=pan)
-# logo fill: soft two-note chime
-add(34.5, (blip(hz(74), 1.2, 3.5), .22), (blip(hz(81), 1.2, 3.0), .12))
-
-mix = music.copy()
-# duck the music during the static pause (27.0–27.5), smooth edges
-tt = np.arange(N) / SR
-duck = 1 - .55 * np.clip(np.minimum((tt - 26.85) / .15, (27.65 - tt) / .15), 0, 1)
-mix *= duck[:, None]
-mix += fx
-
-# reverb
-ir_len = int(2.0 * SR)
-ti = np.arange(ir_len) / SR
-ir = rng.standard_normal((ir_len, 2)) * np.exp(-ti * 3.4)[:, None]
-ir /= np.sqrt((ir ** 2).sum(axis=0))
-nfft = 1 << (N + ir_len - 1).bit_length()
-wet = np.stack([np.fft.irfft(np.fft.rfft(mix[:, c], nfft) * np.fft.rfft(ir[:, c], nfft), nfft)[:N] for c in range(2)], axis=1)
-out = mix * .78 + wet * .4
-
-fi, fo = int(.3 * SR), int(1.2 * SR)
-out[:fi] *= np.linspace(0, 1, fi)[:, None]
-out[-fo:] *= (np.linspace(1, 0, fo) ** 1.5)[:, None]
-out /= np.abs(out).max() / 10 ** (-3 / 20)
-
-dst = Path(__file__).resolve().parent.parent / "public" / "music-raw.wav"
-with wave.open(str(dst), "wb") as w:
-    w.setnchannels(2)
-    w.setsampwidth(2)
-    w.setframerate(SR)
-    w.writeframes((out * 32767).astype("<i2").tobytes())
-print(dst)
+if __name__ == "__main__":
+    name = sys.argv[1] if len(sys.argv) > 1 else "creator"
+    TRACKS[name]().render(Path(__file__).resolve().parent.parent / "public" / f"music-{name}.wav")
