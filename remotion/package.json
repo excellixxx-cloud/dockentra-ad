@@ -1,0 +1,36 @@
+{
+  "name": "dockentra-motion",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "studio": "remotion studio src/index.ts",
+    "fonts": "node scripts/fetch-google-fonts.mjs",
+    "music": "python3 scripts/gen_music.py && ffmpeg -loglevel error -y -i public/music-raw.wav -af loudnorm=I=-17:TP=-1.5:LRA=11 -ar 48000 public/music.wav && rm public/music-raw.wav",
+    "render": "remotion render src/index.ts SameOrderThreeWays out/dockentra-same-order-three-ways-remotion.mp4 --audio-codec=aac --audio-bitrate=192k",
+    "check": "python3 scripts/checklist.py out/dockentra-same-order-three-ways-remotion.mp4",
+    "smoke": "remotion render src/index.ts HelloDockentra out/hello.mp4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "private": "true",
+  "type": "module",
+  "dependencies": {
+    "@remotion/cli": "^4.0.529",
+    "@remotion/lottie": "^4.0.529",
+    "@remotion/renderer": "^4.0.529",
+    "gsap": "^3.15.0",
+    "lottie-react": "^3.1.2",
+    "lottie-web": "^5.13.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.529"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
