@@ -10,33 +10,29 @@ export const RECV = { x0: 9, x1: 25, y0: 17, y1: 26, top: 9.5 };
 export const PACK = { x0: 33, x1: 51, y0: 20, y1: 28, top: 9.5 };
 export const CAGE = { x0: 44, y0: 3, w: 8, d: 7, h: 15 };
 export const JARS: [number, number][] = [18, 20, 22, 24].flatMap((x) => [19.5, 21.7, 23.9].map((y) => [x, y] as [number, number]));
-export const DAMAGED = 7; // index into JARS → (22, 21.7)
+export const DAMAGED = [7, 2]; // indices into JARS
 export const CELLS = ["A1", "A2", "A3", "A4", "A5", "A6"];
 
+export type P3 = { x: number; y: number; z: number };
 export type RoomState = {
-  carton: number;               // 0 = not there, 1 = on the receiving table, open
-  jarsOnTable: number;          // how many product jars are laid out (0..12)
-  damagedMark: boolean;
-  flash: number;                // 0..1 camera flash above the table
-  jarsOnShelf: number;          // jars stored in cell A2 (0..12)
-  highlightCells: boolean;
-  pickedFromShelf: boolean;     // one jar lifted out of A2
-  mailer: "none" | "table" | "scale" | "cage";
-  taped: boolean;
-  label: "none" | "printing" | "applied";
+  carton: null | { z: number; flaps: number; collapse: number };   // z above the table top; flaps 0 closed → 1 open
+  jars: P3[];                                                    // every product jar in world space
+  mailer: null | (P3 & { taped: number; label: number; inCage: boolean });
+  printer: number;              // label coming out of the printer, 0..1
   cageOut: number;              // 0 at its spot, 1 in the doorway
-  hand: null | "carton" | "shelf" | "packing" | "cage";
+  hand: null | (P3 & { rot: number });
+  highlightCells: boolean;
 };
 
 const wall = (pts: V3[], fill: string) => <polygon points={poly(pts)} fill={fill} {...LINE} />;
 
 /* ---------- small fixtures ---------- */
-const Mailer: React.FC<{ x: number; y: number; z: number; w?: number; d?: number; label?: boolean; taped?: boolean }> = ({ x, y, z, w = 5, d = 3.6, label, taped }) => (
+const Mailer: React.FC<{ x: number; y: number; z: number; w?: number; d?: number; label?: number; taped?: number }> = ({ x, y, z, w = 5, d = 3.6, label = 0, taped = 0 }) => (
   <g>
     <Box x={x} y={y} z={z} w={w} d={d} h={0.7} color={C.white} />
     <polygon points={poly([[x + 0.4, y + 0.4, z + 0.7], [x + w / 2, y + d / 2, z + 0.7], [x + 0.4, y + d - 0.4, z + 0.7]])} fill="none" {...LINE} />
-    {taped && <polygon points={poly([[x + w * 0.45, y, z + 0.72], [x + w * 0.55, y, z + 0.72], [x + w * 0.55, y + d, z + 0.72], [x + w * 0.45, y + d, z + 0.72]])} fill={C.green} {...LINE} />}
-    {label && (
+    {taped > 0.01 && <polygon points={poly([[x + w * 0.45, y, z + 0.72], [x + w * 0.55, y, z + 0.72], [x + w * 0.55, y + d * taped, z + 0.72], [x + w * 0.45, y + d * taped, z + 0.72]])} fill={C.green} {...LINE} />}
+    {label > 0.99 && (
       <g>
         <polygon points={poly([[x + w * 0.62, y + 0.5, z + 0.72], [x + w - 0.4, y + 0.5, z + 0.72], [x + w - 0.4, y + d - 0.5, z + 0.72], [x + w * 0.62, y + d - 0.5, z + 0.72]])} fill={C.white} {...LINE} />
         {[0, 1, 2, 3].map((k) => (
@@ -47,20 +43,23 @@ const Mailer: React.FC<{ x: number; y: number; z: number; w?: number; d?: number
   </g>
 );
 
-const Carton: React.FC<{ x: number; y: number; z: number }> = ({ x, y, z }) => {
-  const w = 6, d = 5, h = 5, f = 2.2;
+const Carton: React.FC<{ x: number; y: number; z: number; flaps: number; collapse: number }> = ({ x, y, z, flaps, collapse }) => {
+  const w = 6, d = 5, h = 5 * (1 - 0.9 * collapse), f = 2.2 * flaps * (1 - collapse);
   const g = C.green;
+  const up = f * 0.8, out = f * 0.6;
   return (
     <g>
-      {/* back flaps (open, leaning out) */}
-      <polygon points={poly([[x, y, z + h], [x + w, y, z + h], [x + w, y - f * 0.6, z + h + f * 0.8], [x, y - f * 0.6, z + h + f * 0.8]])} fill={mix(g, C.ink, 0.25)} {...LINE} />
-      <polygon points={poly([[x, y, z + h], [x, y + d, z + h], [x - f * 0.6, y + d, z + h + f * 0.8], [x - f * 0.6, y, z + h + f * 0.8]])} fill={mix(g, C.ink, 0.15)} {...LINE} />
-      <Box x={x} y={y} z={z} w={w} d={d} h={h} color={g} top={mix(g, C.ink, 0.45)} />
-      {/* front flaps */}
-      <polygon points={poly([[x, y + d, z + h], [x + w, y + d, z + h], [x + w, y + d + f * 0.6, z + h + f * 0.8], [x, y + d + f * 0.6, z + h + f * 0.8]])} fill={g} {...LINE} />
-      <polygon points={poly([[x + w, y, z + h], [x + w, y + d, z + h], [x + w + f * 0.6, y + d, z + h + f * 0.8], [x + w + f * 0.6, y, z + h + f * 0.8]])} fill={mix(g, C.ink, 0.08)} {...LINE} />
-      <FaceText x={x + w / 2} y={y + d} z={z + h * 0.62} size={11} color={C.white}>FROM</FaceText>
-      <FaceText x={x + w / 2} y={y + d} z={z + h * 0.36} size={11} color={C.white}>BRAND</FaceText>
+      <polygon points={poly([[x, y, z + h], [x + w, y, z + h], [x + w, y - out, z + h + up], [x, y - out, z + h + up]])} fill={mix(g, C.ink, 0.25)} {...LINE} />
+      <polygon points={poly([[x, y, z + h], [x, y + d, z + h], [x - out, y + d, z + h + up], [x - out, y, z + h + up]])} fill={mix(g, C.ink, 0.15)} {...LINE} />
+      <Box x={x} y={y} z={z} w={w} d={d} h={h} color={g} top={flaps > 0.05 ? mix(g, C.ink, 0.45) : g} />
+      <polygon points={poly([[x, y + d, z + h], [x + w, y + d, z + h], [x + w, y + d + out, z + h + up], [x, y + d + out, z + h + up]])} fill={g} {...LINE} />
+      <polygon points={poly([[x + w, y, z + h], [x + w, y + d, z + h], [x + w + out, y + d, z + h + up], [x + w + out, y, z + h + up]])} fill={mix(g, C.ink, 0.08)} {...LINE} />
+      {collapse < 0.3 && (
+        <>
+          <FaceText x={x + w / 2} y={y + d} z={z + h * 0.62} size={11} color={C.white}>FROM</FaceText>
+          <FaceText x={x + w / 2} y={y + d} z={z + h * 0.36} size={11} color={C.white}>BRAND</FaceText>
+        </>
+      )}
     </g>
   );
 };
@@ -71,6 +70,7 @@ const Jar: React.FC<{ x: number; y: number; z: number }> = ({ x, y, z }) => <Cyl
 export const Room: React.FC<{ s: RoomState }> = ({ s }) => {
   const { W, D, H } = ROOM;
   const cy = CAGE.y0 - (CAGE.y0 - 0.2) * s.cageOut; // cage rolls toward the door
+  const m = s.mailer;
   return (
     <g>
       {/* floor with a painted walkway */}
@@ -95,15 +95,14 @@ export const Room: React.FC<{ s: RoomState }> = ({ s }) => {
       <Cage y0={cy} s={s} />
 
       {/* receiving table: light grey top, mint edge along the front */}
-      <Table t={RECV} edge={C.mint} />
+      <Table t={RECV} edge={C.green} />
       {/* overhead copy-stand camera that photographs every delivery */}
       <Box x={RECV.x0 + 0.3} y={RECV.y1 - 1.1} z={RECV.top} w={0.6} d={0.6} h={11.5} color={C.ink} line={false} />
       <Box x={RECV.x0 + 0.3} y={RECV.y1 - 1.1} z={RECV.top + 11} w={8} d={0.5} h={0.5} color={C.ink} line={false} />
       <Box x={RECV.x0 + 7.8} y={RECV.y0 + 5} z={RECV.top + 11} w={0.5} d={RECV.y1 - RECV.y0 - 5.6} h={0.5} color={C.ink} line={false} />
       <Box x={RECV.x0 + 6.6} y={RECV.y0 + 3.6} z={RECV.top + 9.4} w={3} d={2.6} h={1.8} color={C.white} />
       <ellipse cx={iso(RECV.x0 + 8.1, RECV.y0 + 4.9, RECV.top + 9.4).X} cy={iso(RECV.x0 + 8.1, RECV.y0 + 4.9, RECV.top + 9.4).Y + 3} rx={9} ry={5} fill={C.ink} />
-      {s.carton > 0 && <Carton x={RECV.x0 + 1.2} y={RECV.y0 + 1.5} z={RECV.top} />}
-      {JARS.slice(0, s.jarsOnTable).map(([x, y], i) => <Jar key={i} x={x} y={y} z={RECV.top} />)}
+      {s.carton && <Carton x={RECV.x0 + 1.2} y={RECV.y0 + 1.5} z={RECV.top + s.carton.z} flaps={s.carton.flaps} collapse={s.carton.collapse} />}
 
       {/* packing table: tape, scale, label printer, a stack of mailers */}
       <Table t={PACK} />
@@ -119,25 +118,25 @@ export const Room: React.FC<{ s: RoomState }> = ({ s }) => {
       {/* label printer */}
       <Box x={PACK.x1 - 5} y={PACK.y0 + 1} z={PACK.top} w={4} d={4} h={3.2} color={C.white} />
       <polyline points={poly([[PACK.x1 - 1, PACK.y0 + 1.6, PACK.top + 2.2], [PACK.x1 - 1, PACK.y0 + 4.4, PACK.top + 2.2]])} stroke={C.ink} strokeWidth={3} fill="none" vectorEffect="non-scaling-stroke" />
-      {s.label === "printing" && (
+      {s.printer > 0.01 && (
         <g>
-          <polygon points={poly([[PACK.x1 - 1, PACK.y0 + 1.8, PACK.top + 2.2], [PACK.x1 + 1.6, PACK.y0 + 1.8, PACK.top + 1.4], [PACK.x1 + 1.6, PACK.y0 + 4.2, PACK.top + 1.4], [PACK.x1 - 1, PACK.y0 + 4.2, PACK.top + 2.2]])} fill={C.white} {...LINE} />
-          {[0, 1, 2].map((k) => <polyline key={k} points={poly([[PACK.x1 + 0.2 + k * 0.4, PACK.y0 + 2.3, PACK.top + 1.8], [PACK.x1 + 0.2 + k * 0.4, PACK.y0 + 3.7, PACK.top + 1.8]])} stroke={C.ink} strokeWidth={1.5} fill="none" vectorEffect="non-scaling-stroke" />)}
+          <polygon points={poly([[PACK.x1 - 1, PACK.y0 + 1.8, PACK.top + 2.2], [PACK.x1 - 1 + 2.6 * s.printer, PACK.y0 + 1.8, PACK.top + 2.2 - 0.8 * s.printer], [PACK.x1 - 1 + 2.6 * s.printer, PACK.y0 + 4.2, PACK.top + 2.2 - 0.8 * s.printer], [PACK.x1 - 1, PACK.y0 + 4.2, PACK.top + 2.2]])} fill={C.white} {...LINE} />
+          {s.printer > 0.9 && [0, 1, 2].map((k) => <polyline key={k} points={poly([[PACK.x1 + 0.2 + k * 0.4, PACK.y0 + 2.3, PACK.top + 1.8], [PACK.x1 + 0.2 + k * 0.4, PACK.y0 + 3.7, PACK.top + 1.8]])} stroke={C.ink} strokeWidth={1.5} fill="none" vectorEffect="non-scaling-stroke" />)}
         </g>
       )}
-      {s.mailer === "scale" && <Mailer x={PACK.x0 + 7.2} y={PACK.y0 + 1.7} z={PACK.top + 0.9} taped={s.taped} label={s.label === "applied"} />}
-      {s.mailer === "table" && <Mailer x={PACK.x0 + 6.5} y={PACK.y1 - 4.5} z={PACK.top} taped={s.taped} />}
+
 
       {/* a pallet of boxes in the front corner */}
       <Box x={1.5} y={30} z={0} w={8} d={8} h={1.2} color={C.white} />
       {[[1.8, 30.3], [5.7, 30.3], [1.8, 34.2], [5.7, 34.2]].map(([x, y], i) => <Box key={i} x={x} y={y} z={1.2} w={3.8} d={3.8} h={3.6} color={C.green} />)}
       {[[1.8, 30.3], [5.7, 30.3], [1.8, 34.2]].map(([x, y], i) => <Box key={i} x={x} y={y} z={4.8} w={3.8} d={3.8} h={3.6} color={C.green} />)}
 
-      {/* hands */}
-      {s.hand === "carton" && <Glove {...pt(RECV.x0 + 1.2, RECV.y0 + 4.6, RECV.top + 4.6)} rot={80} scale={1.15} />}
-      {s.hand === "shelf" && <Glove {...pt(8.5, SHELF.y1 + 1.2, SHELF.levels[1] + 3.2)} rot={-20} scale={1.1} />}
-      {s.hand === "packing" && <Glove {...pt(PACK.x0 + 11.2, PACK.y0 + 2.2, PACK.top + 2.6)} rot={190} scale={1} />}
-      {s.hand === "cage" && <Glove {...pt(CAGE.x0 + 4, cy + CAGE.d + 1, CAGE.h + 2.5)} rot={175} scale={1.1} />}
+      {/* product jars, wherever they are (table, air, shelf) */}
+      {s.jars.map((j, i) => <Jar key={i} x={j.x} y={j.y} z={j.z} />)}
+      {/* the order's mailer, while it is not inside the cage */}
+      {m && !m.inCage && <Mailer x={m.x} y={m.y} z={m.z} taped={m.taped} label={m.label} />}
+      {/* the hand */}
+      {s.hand && <Glove {...pt(s.hand.x, s.hand.y, s.hand.z)} rot={s.hand.rot} scale={1.1} />}
     </g>
   );
 };
@@ -181,11 +180,6 @@ const Shelving: React.FC<{ s: RoomState }> = ({ s }) => {
           );
         }),
       )}
-      {JARS.slice(0, s.jarsOnShelf).map(([x, y], i) => {
-        if (s.pickedFromShelf && i === s.jarsOnShelf - 1) return null;
-        const col = i % 6, row = Math.floor(i / 6);
-        return <Jar key={i} x={x0 + 1.2 + col * 1.8} y={y0 + 1.8 + row * 2.2} z={levels[1] + 0.5} />;
-      })}
       {/* front uprights and beams, with a cell label on every beam */}
       {[0, 1, 2].map((b) => <Box key={b} x={x0 + b * bay - 0.3} y={y1 - 0.6} z={0} w={0.6} d={0.6} h={top + 0.5} color={G} />)}
       {levels.map((z, li) =>
@@ -225,10 +219,10 @@ const Cage: React.FC<{ y0: number; s: RoomState }> = ({ y0, s }) => {
       {/* parcels already inside */}
       <Box x={x0 + 0.6} y={y0 + 0.6} z={z0} w={3.4} d={3} h={3} color={C.green} />
       <Box x={x0 + 4.2} y={y0 + 0.8} z={z0} w={3} d={2.8} h={2.4} color={C.green} />
-      <Mailer x={x0 + 0.8} y={y0 + 3.6} z={z0} w={4.6} d={3} label />
-      <Mailer x={x0 + 1.2} y={y0 + 3.4} z={z0 + 0.7} w={4.6} d={3} label />
-      <Mailer x={x0 + 3.4} y={y0 + 3.8} z={z0 + 2.4} w={4} d={2.8} label />
-      {s.mailer === "cage" && <Mailer x={x0 + 1.8} y={y0 + 1.2} z={z0 + 3.4} w={4.6} d={3.2} label taped />}
+      <Mailer x={x0 + 0.8} y={y0 + 3.6} z={z0} w={4.6} d={3} label={1} />
+      <Mailer x={x0 + 1.2} y={y0 + 3.4} z={z0 + 0.7} w={4.6} d={3} label={1} />
+      <Mailer x={x0 + 3.4} y={y0 + 3.8} z={z0 + 2.4} w={4} d={2.8} label={1} />
+      {s.mailer?.inCage && <Mailer x={x0 + 1.8} y={y0 + 1.2} z={z0 + 3.4} label={1} taped={1} />}
       {/* frame + mesh on the two faces toward the viewer */}
       {mesh([x0, y0 + d, z0], [x0 + w, y0 + d, z0], 7, "x")}
       {mesh([x0 + w, y0, z0], [x0 + w, y0 + d, z0], 6, "y")}

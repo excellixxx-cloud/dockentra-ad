@@ -1,0 +1,17 @@
+{
+  "composition": "WarehouseTour",
+  "duration": 28,
+  "segments": [["1 wide", 0, 4], ["2 receiving", 4, 9], ["3 message", 9, 13], ["4 storage", 13, 17], ["5 pick+pack", 17, 21.6], ["6 dispatch", 21.6, 24.8], ["7 price+logo", 24.8, 28]],
+  "interrupt_window": [7.4, 7.6],
+  "no_cuts_outside_interrupt": true,
+  "logo": { "in": 26.5, "box": [416, 356, 664, 552], "must": { "src/warehouse/timeline.ts": ["logo: 26.5"], "src/warehouse/WarehouseTour.tsx": ["(t - LOGO_IN) / 0.6", "export const LOGO_IN = T.logo"] } },
+  "text_bands": { "headline (y 140-480)": [140, 480], "subtitles (y 1580-1680)": [1580, 1680] },
+  "no_mint_bands": [[140, 480], [1580, 1680]],
+  "sources": ["src/warehouse"],
+  "script": "src/warehouse/script.json",
+  "subtitle_src": "src/warehouse/WarehouseTour.tsx",
+  "max_big_words": 8,
+  "max_headline_words": 8,
+  "min_headline_s": 2.5,
+  "review_frames": [2, 7, 15, 20]
+}

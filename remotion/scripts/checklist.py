@@ -195,7 +195,7 @@ if "no_mint_bands" in spec:
     for ya, yb in spec["no_mint_bands"]:
         worst_band = max(worst_band, is_mint[~logo_frames, ya // 8:yb // 8, :].sum(axis=(1, 2)).max())
     ok_mint &= worst_band <= 3
-    mint_line = f"mint pixels inside text bands {spec['no_mint_bands']}: max {worst_band} per frame (mint is reserved for the creators)"
+    mint_line = f"mint pixels inside text bands {spec['no_mint_bands']}: max {worst_band} per frame (mint stays out of the text)"
 report("5. Colours, fonts and logo per Brand Book",
        not stray and off_hue < 12 and fams == BRAND_FONTS and logo_timing and logo_shown and ok_mint,
        f"colours in source: {sorted(hexes)}" + (f" — STRAY {sorted(stray)}" if stray else " (all five brand colours only)"),
@@ -217,7 +217,7 @@ for name, (ya, yb) in spec["text_bands"].items():
 report("Prohibited: text motionless for more than 2 s", ok, *lines)
 
 # ---- Subtitles ----
-sub_src = (ROOT / "src/components/Subtitles.tsx").read_text()
+sub_src = (ROOT / spec.get("subtitle_src", "src/components/Subtitles.tsx")).read_text()
 bottom = int(re.search(r"SUB_BOTTOM = (\d+)", sub_src).group(1))
 ys = slice(1440 // 8, 1600 // 8)
 sub_mint = ((hue[:, ys] > 145) & (hue[:, ys] < 172) & (sat[:, ys] > 0.4) & (mx[:, ys] > 0.6)).sum(axis=(1, 2)).max()
@@ -254,15 +254,16 @@ if "script" in spec:
     spans = []
     for h in sc["headlines"]:
         txt = " ".join(h["lines"])
-        n = len(words(txt))
+        n = len(txt.split())            # a word is what the viewer reads as one: "€2.60", "dockentra.ie"
         end = h["exit"] if h["exit"] is not None else spec["duration"]
-        readable = end - (h["start"] + (n - 1) * STAGGER + RISE)
-        good = readable >= need(n)
+        readable = end - (h["start"] + (n - 1) * h.get("stagger", STAGGER) + h.get("rise", RISE))
+        want = max(need(n), spec.get("min_headline_s", 0))
+        good = readable >= want and n <= spec.get("max_headline_words", 99)
         ok &= good
-        spans.append((h["start"], end + (n - 1) * 0.03 + 0.35, n, txt))
-        lines.append(f"{'ok ' if good else 'BAD'} headline {h['id']:6s} {n} words, fully readable {readable:4.1f} s (needs {need(n):.1f})")
+        spans.append((h["start"], end + (n - 1) * 0.03 + h.get("out", 0.35), n, txt))
+        lines.append(f"{'ok ' if good else 'BAD'} headline {h['id']:6s} {n} words, fully readable {readable:4.1f} s (needs {want:.1f})")
     for a_, b_, txt in sc["subtitles"]:
-        n = len(words(txt))
+        n = len(txt.split())
         readable = b_ - (a_ + 0.36)
         good = readable >= need(n)
         ok &= good
@@ -273,8 +274,9 @@ if "script" in spec:
         on = sum(nw for a_, b_, nw, _ in spans if a_ <= tt < b_)
         if on > peak:
             peak, peak_at = on, tt
-    ok &= peak <= 7
-    lines.append(f"{'ok ' if peak <= 7 else 'BAD'} max big-type words on screen at once: {peak} (at {peak_at:.2f} s; limit 7)")
+    limit = spec.get("max_big_words", 7)
+    ok &= peak <= limit
+    lines.append(f"{'ok ' if peak <= limit else 'BAD'} max big-type words on screen at once: {peak} (at {peak_at:.2f} s; limit {limit})")
     dup_worst = 0.0
     for a_, b_, txt in sc["subtitles"]:
         sw = set(words(txt))
@@ -284,7 +286,7 @@ if "script" in spec:
                 dup_worst = max(dup_worst, len(sw & hw) / len(sw | hw))
     ok &= dup_worst < 0.5
     lines.append(f"{'ok ' if dup_worst < 0.5 else 'BAD'} subtitle vs headline on screen at the same time: max word overlap {dup_worst:.0%} (limit 50 %)")
-    report("7. All on-screen text is readable in the time it stays, no duplicates, <= 7 big words", ok, *lines)
+    report(f"7. All on-screen text is readable in the time it stays, no duplicates, <= {spec.get('max_big_words', 7)} big words", ok, *lines)
 
 print(f"\n{sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

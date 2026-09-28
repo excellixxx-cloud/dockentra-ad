@@ -214,7 +214,46 @@ def creator():
     return tr
 
 
-TRACKS = {"three-ways": three_ways, "creator": creator}
+def warehouse():
+    """"Warehouse tour" (28 s). Accent times mirror src/warehouse/timeline.ts (T)."""
+    tr = Track(28.0, 41)
+    tr.chords([(0.0, 4.0, DMAJ9, 38), (4.0, 9.0, GMAJ7, 31), (9.0, 13.0, BM7, 35), (13.0, 17.0, GMAJ7, 31),
+               (17.0, 21.6, EM7, 28), (21.6, 24.8, ASUS, 33), (24.8, 28.0, DMAJ9, 38)])
+    tr.arpeggio(3.9, 26.5)
+    tr.add(3.9, (tr.swish(1.0, .12), .25))                                   # dolly in to receiving
+    tr.add(5.2, (tr.thump(110, .25, 16), .55), (tr.click(.03), .2))          # carton set down
+    tr.add(5.4, (tr.swish(.5, .3), .3))                                      # flaps open
+    for i in range(12):                                                     # jars laid out in rows
+        tr.add(5.9 + i * 0.1 + .45, (tr.blip(1200 + (i % 4) * 90, .05, 90), .09), pan=.3 + (i % 4) * .12)
+    tr.cut_duck(7.2, 7.45, .6)
+    tr.add(7.45, (tr.click(.05), 1.0), (tr.blip(2600, .06, 80), .25), (tr.swish(.25, .5), .4))  # camera shutter + flash
+    tr.add(7.6, (tr.swish(.45, .25), .25), pan=.7)                           # batch photo slides in
+    tr.add(9.6, (tr.blip(hz(79), .25, 14), .28), pan=.6)                     # "sent to you"
+    tr.add(9.72, (tr.blip(hz(86), .3, 12), .22), pan=.6)
+    tr.add(12.9, (tr.swish(1.1, .12), .25))                                  # to the shelving
+    tr.add(13.0, (tr.thump(150, .2, 20), .3))                                # carton folded away
+    for i in range(12):                                                     # jars onto the shelf
+        tr.add(13.3 + i * 0.09 + .75, (tr.blip(900 + (i % 6) * 60, .05, 90), .08), pan=.35)
+    tr.add(15.1, (tr.blip(hz(81), .3, 12), .2))                              # A2 · 120 units
+    tr.add(17.1, (tr.blip(hz(79), .25, 14), .28), pan=.4)                    # new order
+    tr.add(17.22, (tr.blip(hz(86), .3, 12), .22), pan=.4)
+    tr.add(17.9, (tr.click(.02), .4))                                        # jar picked
+    tr.add(18.2, (tr.swish(1.0, .12), .25))                                  # to packing
+    tr.add(19.4, (tr.thump(170, .15, 26), .3))                               # into the mailer
+    tr.add(19.5, (tr.swish(.4, .6), .45))                                    # tape
+    tr.add(20.4, (tr.blip(1800, .08, 60), .18))                              # scale beep
+    for k in range(10):                                                     # label printer
+        tr.add(20.5 + k * 0.05, (tr.click(.012), .25), pan=.7)
+    tr.add(21.35, (tr.click(.02), .35))                                      # label on
+    tr.add(21.6, (tr.swish(.9, .12), .25))                                   # to the cage
+    tr.add(22.6, (tr.thump(95, .25, 16), .5))                                # into the cage
+    tr.add(23.2, (tr.swish(1.2, .06), .45))                                  # cage rolls
+    tr.add(24.7, (tr.swish(.9, .15), .25))                                   # pull back to the whole room
+    tr.add(26.5, (tr.blip(hz(74), 1.2, 3.5), .22), (tr.blip(hz(81), 1.2, 3.0), .12))  # logo
+    return tr
+
+
+TRACKS = {"three-ways": three_ways, "creator": creator, "warehouse": warehouse}
 
 if __name__ == "__main__":
     name = sys.argv[1] if len(sys.argv) > 1 else "creator"

@@ -14,12 +14,15 @@ type WordsProps = {
   color?: string;
   left?: number;
   lineHeight?: number;
+  stagger?: number;     // seconds between words (60–90 ms)
+  rise?: number;        // duration of one word's entrance
+  out?: number;         // duration of one word's exit
 };
 
 /** Kinetic typography: each word rises out of its own mask (or scales
  *  down into place), 75 ms apart, on the appear ease; exits upward on the
  *  move ease with its own stagger — never a block fade. */
-export const Words: React.FC<WordsProps> = ({ lines, top, size, start, exit, accent = [], accentColor = C.mint, mode = "rise", color = C.white, left = 96, lineHeight = 1.06 }) => {
+export const Words: React.FC<WordsProps> = ({ lines, top, size, start, exit, accent = [], accentColor = C.mint, mode = "rise", color = C.white, left = 96, lineHeight = 1.06, stagger = WORD_STAGGER, rise = 0.5, out = 0.35 }) => {
   const t = useT();
   let i = 0;
   const total = lines.join(" ").split(" ").length;
@@ -32,8 +35,8 @@ export const Words: React.FC<WordsProps> = ({ lines, top, size, start, exit, acc
         >
           {line.split(" ").map((word, wi) => {
             const idx = i++;
-            const k = ramp(t, start + idx * WORD_STAGGER, 0.5, EASE_APPEAR);
-            const o = exit === undefined ? 0 : ramp(t, exit + (total - 1 - idx) * 0.03, 0.35, EASE_MOVE);
+            const k = ramp(t, start + idx * stagger, rise, EASE_APPEAR);
+            const o = exit === undefined ? 0 : ramp(t, exit + (total - 1 - idx) * 0.03, out, EASE_MOVE);
             const isAccent = accent.includes(word.replace(/[.,?’']/g, ""));
             const inner: React.CSSProperties =
               mode === "rise"

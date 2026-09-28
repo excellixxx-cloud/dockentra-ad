@@ -1,0 +1,130 @@
+{
+  "_note": "All on-screen text for WarehouseTour. Read by WarehouseTour.tsx and scripts/checklist.py. Headlines: one phrase, <= 8 words, top third, held >= 2.5 s once fully in. Subtitles carry the voice only where it does not repeat the headline.",
+  "headlines": [
+    {
+      "id": "s1",
+      "lines": [
+        "Your orders.",
+        "Packed in Limerick."
+      ],
+      "start": 0.1,
+      "exit": 3.75,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "s2",
+      "lines": [
+        "Every delivery",
+        "photographed on arrival."
+      ],
+      "start": 4.2,
+      "exit": 8.8,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "s3",
+      "lines": [
+        "You know before",
+        "your customer does."
+      ],
+      "start": 9.2,
+      "exit": 12.8,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "s4",
+      "lines": [
+        "Stored and counted."
+      ],
+      "start": 13.3,
+      "exit": 16.8,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "s5",
+      "lines": [
+        "Picked, packed, labelled."
+      ],
+      "start": 17.2,
+      "exit": 21.3,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "s6",
+      "lines": [
+        "Out to your customer."
+      ],
+      "start": 21.55,
+      "exit": 24.55,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "s7",
+      "lines": [
+        "From €2.60 per order",
+        "dockentra.ie"
+      ],
+      "start": 24.9,
+      "exit": null,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    }
+  ],
+  "subtitles": [
+    [
+      0.3,
+      3.9,
+      "This is Dockentra, a fulfilment warehouse in Limerick"
+    ],
+    [
+      4.3,
+      8.8,
+      "for TikTok Shop and Shopify brands."
+    ],
+    [
+      13.4,
+      21.3,
+      "We store it, pick it, pack it and ship it."
+    ]
+  ],
+  "voiceover": [
+    [
+      0.3,
+      4.3,
+      "This is Dockentra, a fulfilment warehouse in Limerick"
+    ],
+    [
+      4.3,
+      9.0,
+      "for TikTok Shop and Shopify brands. Every delivery is photographed when it arrives,"
+    ],
+    [
+      9.0,
+      12.8,
+      "so you know about a problem before your customer does."
+    ],
+    [
+      13.4,
+      24.6,
+      "We store it, pick it, pack it and ship it."
+    ],
+    [
+      24.9,
+      28.0,
+      "From two euro sixty per order. dockentra.ie."
+    ]
+  ]
+}
