@@ -188,35 +188,28 @@ def three_ways():
 
 
 def creator():
-    """"Creator samples" (38 s). Accent times mirror src/creator/timeline.ts."""
+    """"Creator samples" (38 s). Accent times mirror src/creator/timeline.ts (T, SENT_AT, WAVE_AT)."""
     tr = Track(38.0, 29)
-    tr.chords([(0.0, 4.0, GMAJ7, 31), (4.0, 8.0, DMAJ9, 38), (8.0, 11.0, BM7, 35), (11.0, 14.0, ASUS, 33),
-               (14.0, 18.0, GMAJ7, 31), (18.0, 22.0, EM7, 28), (22.0, 24.0, ASUS, 33), (24.0, 26.0, A, 33),
-               (26.0, 30.0, BM7, 35), (30.0, 33.0, GMAJ7, 31), (33.0, 36.0, ASUS, 33), (36.0, 38.0, DMAJ9, 38)])
+    tr.chords([(0.0, 4.0, GMAJ7, 31), (4.0, 10.0, DMAJ9, 38), (10.0, 17.0, BM7, 35),
+               (17.0, 24.0, EM7, 28), (24.0, 30.0, BM7, 35), (30.0, 34.0, ASUS, 33), (34.0, 38.0, DMAJ9, 38)])
     tr.arpeggio(4.0, 36.0)
-    tr.add(0.3, (tr.swish(.6, .12), .25))                                      # divider draws
-    for i in range(7):                                                          # orders land
-        tr.add(0.8 + i * 0.36 + .55, (tr.thump(125 - i * 4, .18, 22), .42), (tr.click(.02), .12), pan=.3 + i * .02)
-    for i in range(5):                                                          # sample mailers land
-        tr.add(4.4 + i * 0.55 + .65, (tr.swish(.2, .3), .3), (tr.thump(160, .14, 26), .2), pan=.65 + i * .03)
-    tr.add(14.2, (tr.swish(.7, .15), .3))                                       # hero lifts
-    tr.add(15.4, (tr.swish(.9, .35), .35), pan=.3)                              # invoice out
-    tr.add(16.9, (tr.blip(1250, .12, 40), .18))                                 # price struck
-    tr.add(17.25, (tr.swish(.8, .35), .3), pan=.7)                              # label peels
-    tr.add(18.4, (tr.blip(520, .9, 4, bend=-.25), .2))                          # morph
-    tr.add(20.35, (tr.blip(1480, .07, 70), .2), (tr.click(.02), .3))            # tag hooks on
-    tr.add(20.9, (tr.click(.04), .9), (tr.blip(1700, .05, 90), .15))            # viewfinder
-    tr.add(22.6, (tr.swish(.8, .2), .3), pan=.65)                               # to the pile
-    tr.add(24.5, (tr.blip(hz(79), .25, 14), .3))                                # request arrives
-    tr.add(24.62, (tr.blip(hz(86), .3, 12), .25))
-    for j in range(6):
-        tr.add(24.6 + j * .07 + .55, (tr.blip(1100 + j * 60, .05, 80), .12), pan=.6)
-    tr.cut_duck(25.1, 26.0, .75)                                                # tension …
-    tr.add(26.0, (tr.thump(58, .5, 8), 1.0), (tr.click(.05), 1.0), (tr.blip(220, .35, 9), .3))  # … the jerk
-    tr.add(30.0, (tr.swish(1.2, .2), .35))                                      # stack deals out
-    for r in range(5):
-        tr.add(31.6 + r * 10 * .035, (tr.blip(1500 + r * 90, .05, 90), .12))   # rows processed
-    tr.add(35.8, (tr.swish(.8, .18), .3))                                       # converge
+    for d in range(8):                                                     # grid rises in a diagonal wave
+        tr.add(0.6 + d * 0.09 + 0.45, (tr.blip(900 + d * 70, .08, 60), .14), pan=.3 + d * .06)
+    for d in range(8):                                                     # Monday: outlines light up
+        tr.add(4.6 + d * 0.07, (tr.blip(hz(81) * (1 + d * .02), .5, 8), .06), pan=.3 + d * .06)
+    tr.add(10.3, (tr.swish(1.0, .15), .3))                                  # calendar glides to Wed
+    for k in range(4):                                                     # one box at a time …
+        at = 11.5 + k * 1.2
+        tr.add(at, (tr.thump(140, .16, 24), .35), (tr.click(.02), .15), pan=.35)
+        tr.add(at + 0.6, (tr.blip(hz(86), .35, 10), .22), pan=.6)          # … one creator lights up
+    tr.cut_duck(16.2, 17.0, .8)                                             # tension …
+    tr.add(17.0, (tr.thump(55, .5, 8), 1.0), (tr.click(.05), 1.0),          # … Friday: 14 go grey at once
+           (tr.blip(233, .45, 7), .25), (tr.blip(247, .45, 7), .22))
+    tr.add(24.4, (tr.swish(1.1, .12), .35))                                 # grey creators slide into a pile
+    tr.add(30.2, (tr.swish(.8, .2), .3))                                    # they come back
+    for col in range(5):                                                   # all light up, left → right
+        tr.add(31.0 + col * 0.28, (tr.blip(hz(74 + [0, 2, 4, 7, 9][col]), .45, 9), .24), pan=.2 + col * .15)
+    tr.add(34.75, (tr.swish(.7, .18), .3))                                  # end card opens
     tr.add(36.5, (tr.blip(hz(74), 1.2, 3.5), .22), (tr.blip(hz(81), 1.2, 3.0), .12))  # logo
     return tr
 

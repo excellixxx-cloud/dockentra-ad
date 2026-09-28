@@ -1,9 +1,70 @@
 {
   "composition": "SameOrderThreeWays",
   "duration": 36,
-  "segments": [["hook", 0, 4], ["polybag", 4, 12], ["mailer", 12, 20], ["box", 20, 27], ["recap", 27, 33], ["question+logo", 33, 36]],
-  "interrupt_window": [19.9, 20.4],
-  "logo": { "in": 34.5, "box": [336, 560, 744, 976], "src": "src/scenes/Scenes.tsx", "must": ["LOGO_IN = 34.5", "(t - LOGO_IN) / 0.6"] },
-  "text_bands": { "title/text band (y 150-720)": [150, 720], "subtitles (y 1440-1600)": [1440, 1600] },
-  "sources": ["src/scenes", "src/components", "src/SameOrderThreeWays.tsx"]
+  "segments": [
+    [
+      "hook",
+      0,
+      4
+    ],
+    [
+      "polybag",
+      4,
+      12
+    ],
+    [
+      "mailer",
+      12,
+      20
+    ],
+    [
+      "box",
+      20,
+      27
+    ],
+    [
+      "recap",
+      27,
+      33
+    ],
+    [
+      "question+logo",
+      33,
+      36
+    ]
+  ],
+  "interrupt_window": [
+    19.9,
+    20.4
+  ],
+  "logo": {
+    "in": 34.5,
+    "box": [
+      336,
+      560,
+      744,
+      976
+    ],
+    "must": {
+      "src/scenes/Scenes.tsx": [
+        "LOGO_IN = 34.5",
+        "(t - LOGO_IN) / 0.6"
+      ]
+    }
+  },
+  "text_bands": {
+    "title/text band (y 150-720)": [
+      150,
+      720
+    ],
+    "subtitles (y 1440-1600)": [
+      1440,
+      1600
+    ]
+  },
+  "sources": [
+    "src/scenes",
+    "src/components",
+    "src/SameOrderThreeWays.tsx"
+  ]
 }

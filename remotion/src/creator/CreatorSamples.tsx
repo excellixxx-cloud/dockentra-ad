@@ -1,366 +1,268 @@
 import { useMemo } from "react";
-import { AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, Img, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { C, EASE_APPEAR, EASE_LOGO, EASE_MOVE, FONT, clamp, lerp, ramp } from "../brand";
-import { Words } from "../components/Kinetic";
+import { Drift, Words } from "../components/Kinetic";
 import { Cue, Subtitles } from "../components/Subtitles";
 import { loadBrandFonts } from "../fonts";
 import { TimeContext, useT } from "../time";
-import { CameraIcon, ClockIcon, Mailer, Parcel, PARCEL_H, PARCEL_W, PriceIcon, ReceiptIcon, Tag, Tile, Viewfinder } from "./Objects";
-import {
-  buildTimeline, GRID, HERO_FOCUS, JERK, LOGO_POINT, ORDER_DROP, RIGHT, SAMPLE_DROP, STACK, TAG_FLY, TILE_DONE, TILE_FLY,
-} from "./timeline";
+import script from "./script.json";
+import { buildTimeline, CIRCLE, COLS, FRI_LIT, home, LIT_AT, MISSED, N, SENT_AT, T, WAVE_AT, WED_LIT } from "./timeline";
 
 loadBrandFonts();
 
 export const DURATION_S = 38;
-export const LOGO_IN = 36.5;
+export const LOGO_IN = T.logo;
 
-/* ---------------------------------------------------------------- camera */
-// Slow overhead drift (sums of sines — no linear motion), a push-in on the
-// hero parcel, and a punch + shake on the pattern interrupt.
-const SHAKE = [0, 20, -15, 11, -7, 4, -2, 1];
+/* ------------------------------------------------------------------ camera */
+const SHAKE = [0, 22, -16, 12, -7, 4, -2, 1];
 function camera(t: number, fps: number) {
-  const x = 26 * Math.sin(0.31 * t + 0.3) + 10 * Math.sin(0.77 * t + 1.7);
-  const y = 22 * Math.sin(0.23 * t + 2.1) + 8 * Math.sin(0.61 * t);
-  const push = ramp(t, 14.2, 0.8, EASE_MOVE) * (1 - ramp(t, 22.6, 0.8, EASE_MOVE));
-  const punch = t >= JERK ? 0.06 * Math.exp(-(t - JERK) * 5) : 0;
-  const f = Math.round((t - JERK) * fps);
+  const x = 16 * Math.sin(0.31 * t + 0.3) + 7 * Math.sin(0.77 * t + 1.7);
+  const y = 14 * Math.sin(0.23 * t + 2.1) + 6 * Math.sin(0.61 * t);
+  const f = Math.round((t - T.jerk) * fps);
   const shake = f >= 0 && f < SHAKE.length ? SHAKE[f] : 0;
-  return { x: x + shake, y: y - shake * 0.6, zoom: 1 + 0.08 * push + punch };
+  const punch = t >= T.jerk ? 0.05 * Math.exp(-(t - T.jerk) * 5) : 0;
+  return { x: x + shake, y: y - shake * 0.6, zoom: 1 + punch };
 }
-/** Parallax: the desk moves at 85 % of the objects, the type layer at 108 %. */
+/** Parallax: background at 85 % of the grid's motion, headlines at 108 %. */
 const BG_FACTOR = 0.85;
 const TYPE_FACTOR = 1.08;
-const ORIGIN = "540px 1000px";
+const ORIGIN = "540px 900px";
+type Cam = ReturnType<typeof camera>;
 
-/* ---------------------------------------------------------------- script */
-const CUES: Cue[] = [
-  [0.2, 2.5, "Creator samples are a second fulfilment stream."],
-  [2.5, 4.1, "Nobody plans it."],
-  [4.3, 6.3, "Everyone plans the regular orders."],
-  [6.3, 8.1, "Nobody plans the creator samples."],
-  [8.1, 11.1, "Different packaging: no receipt, no price, and it has to look good on an unboxing camera."],
-  [11.1, 14.1, "Different deadline: the creator needs it fast, while the trend is alive."],
-  [14.3, 16.6, "Same parcel, different job."],
-  [16.6, 19.4, "The invoice comes out. The price comes off."],
-  [19.4, 22.4, "It gets packed to look good on camera, and tagged as a creator sample."],
-  [22.4, 24.1, "Then it joins the sample stream."],
-  [24.3, 26.0, "Then an agency sends one request:"],
-  [26.0, 30.0, "fifty creator samples."],
-  [30.2, 33.3, "50 creators. 50 micro-orders. Overnight."],
-  [33.4, 38.0, "If you run an agency pushing creator samples, DM me."],
-];
-
-/* ------------------------------------------------------------------ desk */
-const Desk: React.FC<{ cam: ReturnType<typeof camera> }> = ({ cam }) => {
-  const z = 1 + (cam.zoom - 1) * BG_FACTOR;
-  const marks = [[150, 260], [930, 420], [110, 1480], [980, 1650], [520, 1760], [700, 150]];
+/* ---------------------------------------------------------------- backdrop */
+const Backdrop: React.FC<{ cam: Cam }> = ({ cam }) => {
+  const t = useT();
+  const dx = 18 * Math.sin(t * 0.21), dy = 24 * Math.sin(t * 0.17 + 1);
   return (
-    <AbsoluteFill style={{ background: C.grey, overflow: "hidden" }}>
-      <AbsoluteFill style={{ transform: `translate(${cam.x * BG_FACTOR}px, ${cam.y * BG_FACTOR}px) scale(${z})`, transformOrigin: ORIGIN }}>
-        <AbsoluteFill style={{ inset: -140, backgroundImage: `radial-gradient(circle, ${C.green} 2px, transparent 2.5px)`, backgroundSize: "44px 44px", opacity: 0.16 }} />
-        {marks.map(([x, y], i) => (
-          <svg key={i} width={40} height={40} style={{ position: "absolute", left: x - 20, top: y - 20, opacity: 0.18 }}>
-            <path d="M20 4V36M4 20H36" stroke={C.ink} strokeWidth={2} strokeLinecap="round" />
-          </svg>
-        ))}
-        {/* Overhead desk: mint line along the top edge — the one mint accent. */}
-        <div style={{ position: "absolute", left: -140, right: -140, top: -100, height: 136, background: C.mint }} />
-      </AbsoluteFill>
+    <AbsoluteFill style={{ background: C.ink, overflow: "hidden" }}>
+      <AbsoluteFill style={{ inset: -160, backgroundImage: `radial-gradient(circle, ${C.green} 3px, transparent 3.6px)`, backgroundSize: "112px 112px", opacity: 0.35, transform: `translate(${cam.x * 0.6 + dx * 0.5}px, ${cam.y * 0.6 + dy * 0.5}px)` }} />
+      <AbsoluteFill style={{ inset: -160, backgroundImage: `radial-gradient(circle, ${C.green} 2px, transparent 2.6px)`, backgroundSize: "56px 56px", opacity: 0.55, transform: `translate(${cam.x * BG_FACTOR + dx}px, ${cam.y * BG_FACTOR + dy}px) scale(${1 + (cam.zoom - 1) * BG_FACTOR})`, transformOrigin: ORIGIN }} />
     </AbsoluteFill>
   );
 };
 
-/* ------------------------------------------------------------ small bits */
-const Counter: React.FC<{ value: number; changedAt: number; x: number; y: number }> = ({ value, changedAt, x, y }) => {
+/* ---------------------------------------------------------------- calendar */
+const DAYS = ["MON", "TUE", "WED", "THU", "FRI"];
+const CAL = { y: 485, w: 156, h: 70, gap: 14 };
+const CAL_X0 = (1080 - (5 * CAL.w + 4 * CAL.gap)) / 2;
+
+function dayIndex(t: number) {
+  if (t >= T.plan) return lerp(4, 0, ramp(t, T.plan, 0.8, EASE_MOVE));
+  if (t >= T.jerk) return 4;                                   // the jump: no easing, one frame
+  return lerp(0, 2, ramp(t, T.toWed, 1.0, EASE_MOVE));         // glides through Tue to Wed
+}
+
+const Calendar: React.FC = () => {
   const t = useT();
-  const k = ramp(t, changedAt, 0.3);
-  const fmt = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+  const d = dayIndex(t);
+  const flash = t >= T.jerk && t < T.plan ? 1 + 0.18 * (1 - ramp(t, T.jerk, 0.3)) : 1;
   return (
-    <div style={{ position: "absolute", left: x, top: y, height: 34, overflow: "hidden", fontFamily: FONT.mono, fontWeight: 500, fontSize: 28, color: C.ink }}>
-      <div style={{ transform: `translateY(${(1 - k) * 100}%)` }}>×{fmt(value)}</div>
-    </div>
-  );
-};
-
-const MonoRow: React.FC<{ top: number; left?: number; start: number; exit: number; icon: React.ReactNode; text: string }> = ({ top, left = 96, start, exit, icon, text }) => {
-  const t = useT();
-  const k = ramp(t, start, 0.5);
-  const o = ramp(t, exit, 0.35, EASE_MOVE);
-  if (k <= 0) return null;
-  return (
-    <div style={{ position: "absolute", left, top, display: "flex", alignItems: "center", gap: 16, fontFamily: FONT.mono, fontWeight: 500, fontSize: 30, letterSpacing: "0.05em", textTransform: "uppercase", color: C.ink, whiteSpace: "nowrap", transform: `translateY(${(1 - k) * 40 - o * 60}px)`, clipPath: `inset(0 ${(1 - k) * 100}% 0 ${o * 100}%)` }}>
-      {icon}
-      {text}
-    </div>
-  );
-};
-
-const Check: React.FC<{ k: number }> = ({ k }) => (
-  <svg width={40} height={40} viewBox="0 0 24 24" style={{ flex: "none" }}>
-    <circle cx={12} cy={12} r={10} fill="none" stroke={C.ink} strokeWidth={2} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - k} />
-    <path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke={C.ink} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - clamp(k * 2 - 1)} />
-  </svg>
-);
-
-/* ------------------------------------------------------------ the world */
-const World: React.FC<{ tl: ReturnType<typeof buildTimeline>; cam: ReturnType<typeof camera> }> = ({ tl, cam }) => {
-  const t = useT();
-  const { orders, samples, pile, inv, peel, heroTag, tags, tiles } = tl;
-  const hero = orders[6];
-
-  // divider between the two fields: draws, retracts for the close-up, redraws, leaves for the finale
-  const div = ramp(t, 0.3, 0.7) * (1 - ramp(t, 14.2, 0.45, EASE_MOVE)) + ramp(t, 23.0, 0.5) * (1 - ramp(t, 30.0, 0.45, EASE_MOVE));
-  const labels = ramp(t, 0.5, 0.5) * (1 - ramp(t, 14.2, 0.35, EASE_MOVE)) + ramp(t, 23.0, 0.45) * (1 - ramp(t, 30.0, 0.35, EASE_MOVE));
-  const empty = ramp(t, 0.6, 0.5) * (1 - ramp(t, 4.5, 0.6, EASE_MOVE));
-
-  const ordersLanded = orders.filter((_, i) => t >= ORDER_DROP(i) + 0.55).length;
-  const lastOrder = ORDER_DROP(Math.max(0, ordersLanded - 1)) + 0.55;
-  const samplesLanded = samples.filter((_, i) => t >= SAMPLE_DROP(i) + 0.65).length + (t >= 23.2 ? 1 : 0);
-  const stackN = t >= JERK ? 50 : samplesLanded;
-  const rightChanged = t >= JERK ? JERK : t >= 23.2 ? 23.2 : SAMPLE_DROP(Math.max(0, samplesLanded - 1)) + 0.65;
-
-  // Swing of a hanging tag after it lands: damped, plus a small idle sway.
-  const swing = (land: number, ph: number) => {
-    const d = t - land;
-    const damped = d > 0 ? 16 * Math.exp(-2.4 * d) * Math.sin(9 * d) : 0;
-    return 8 + damped + 3 * Math.sin(t * 1.3 + ph);
-  };
-
-  const tagPivot = (i: number) => {
-    if (i < 5) {
-      const m = samples[i];
-      return { x: m.x + pile.right - 78 * m.s, y: m.y - 52 * m.s };
-    }
-    return { x: hero.x + pile.right - (PARCEL_W / 2 - 22) * hero.s, y: hero.y - (PARCEL_H / 2 - 16) * hero.s };
-  };
-  const stackSlot = (j: number) => ({ x: STACK.x, y: STACK.y - j * STACK.step });
-
-  // The jerk: tags 6..49 appear in ~2 frames, then the stack wobbles to rest.
-  const jerkK = t >= JERK ? clamp((t - JERK) / 0.07) : 0;
-  const wobble = t >= JERK ? 6 * Math.exp(-1.4 * (t - JERK)) * Math.sin(12 * (t - JERK)) : 0;
-  const topSwing = t >= JERK ? 12 * Math.exp(-1.2 * (t - JERK)) * Math.sin(7 * (t - JERK)) : 0;
-  // next to fifty samples the order pile backs off and looks small
-  const dwarf = ramp(t, 26.3, 2.9, EASE_MOVE);
-
-  const heroMorph = ramp(t, 18.4, 1.0, EASE_MOVE);
-  const strike = ramp(t, 16.9, 0.3, EASE_MOVE);
-
-  return (
-    <AbsoluteFill style={{ transform: `translate(${cam.x}px, ${cam.y}px) scale(${cam.zoom})`, transformOrigin: ORIGIN }}>
-      {/* divider */}
-      <svg width={4} height={800} style={{ position: "absolute", left: 538, top: 630, overflow: "visible" }}>
-        <path d="M2 0V780" stroke={C.ink} strokeWidth={2} strokeLinecap="round" strokeDasharray="10 12" pathLength={780} style={{ strokeDashoffset: 0 }} transform={`scale(1 ${div})`} />
-      </svg>
-      {/* field labels + counters */}
-      <div style={{ opacity: labels, transform: `translateY(${(1 - labels) * -30}px)` }}>
-        <div style={{ position: "absolute", left: 96, top: 650, fontFamily: FONT.mono, fontWeight: 500, fontSize: 26, letterSpacing: "0.14em", color: C.ink }}>ORDERS</div>
-        <Counter value={ordersLanded} changedAt={lastOrder} x={96} y={690} />
-        <div style={{ position: "absolute", left: 600, top: 650, fontFamily: FONT.mono, fontWeight: 500, fontSize: 26, letterSpacing: "0.14em", color: C.ink }}>CREATOR SAMPLES</div>
-        <Counter value={stackN} changedAt={rightChanged} x={600} y={690} />
-      </div>
-      {/* the empty right field breathes until the first sample lands */}
-      <svg width={400} height={480} style={{ position: "absolute", left: 610, top: 820, opacity: empty, overflow: "visible" }}>
-        <rect x={2} y={2} width={396} height={476} rx={24} fill="none" stroke={C.ink} strokeOpacity={0.35} strokeWidth={2} strokeDasharray="14 14" strokeDashoffset={14 * Math.sin(t * 1.6)} transform={`translate(200 240) scale(${1 + 0.015 * Math.sin(t * 2.2)}) translate(-200 -240)`} />
-      </svg>
-
-      {/* regular orders (hero drawn last) */}
-      {orders.slice(0, 6).map((o, i) => (
-        <div key={i} style={{ position: "absolute", left: o.x + pile.left - 60 * dwarf - PARCEL_W / 2, top: o.y - PARCEL_H / 2 + 30 * dwarf, width: PARCEL_W, height: PARCEL_H, transform: `rotate(${o.r}deg) scale(${o.s * (1 - 0.14 * dwarf)})`, opacity: 1 }}>
-          <Parcel uid={`o${i}`} />
-        </div>
-      ))}
-
-      {/* creator-sample mailers and their tags */}
-      {samples.map((m, i) => (
-        <div key={i} style={{ position: "absolute", left: m.x + pile.right - 100, top: m.y - 72, width: 200, height: 143, transform: `rotate(${m.r}deg) scale(${m.s})` }}>
-          <Mailer />
-        </div>
-      ))}
-      {samples.map((m, i) => {
-        if (t < SAMPLE_DROP(i) + 0.4 || t >= TAG_FLY(i)) return null;
-        const pv = tagPivot(i);
+    <>
+      {DAYS.map((day, k) => {
+        const a = ramp(t, 3.95 + k * 0.07, 0.45);
+        const on = Math.abs(d - k) < 0.5;
         return (
-          <div key={i} style={{ position: "absolute", left: pv.x, top: pv.y }}>
-            <Tag swing={swing(SAMPLE_DROP(i) + 0.65, i)} scale={0.8} />
+          <div key={day} style={{ position: "absolute", left: CAL_X0 + k * (CAL.w + CAL.gap), top: CAL.y, width: CAL.w, height: CAL.h, borderRadius: 14, border: `2px solid rgba(255,255,255,0.3)`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT.mono, fontWeight: 500, fontSize: 28, letterSpacing: "0.12em", color: on ? C.ink : C.white, opacity: a, transform: `translateY(${(1 - a) * 30}px)`, zIndex: on ? 2 : 0 }}>
+            {day}
           </div>
         );
       })}
-
-      {/* hero parcel: carton → camera-ready sample */}
-      <div style={{ position: "absolute", left: hero.x + (t >= 22.6 ? pile.right : pile.left) - PARCEL_W / 2, top: hero.y - PARCEL_H / 2, width: PARCEL_W, height: PARCEL_H, transform: `rotate(${hero.r}deg) scale(${hero.s})`, opacity: 1 }}>
-        <Parcel uid="hero" morph={heroMorph} invoice={{ dx: inv.dx, dy: inv.dy, r: inv.r, o: t < 16.5 ? 1 : 0 }} strike={strike} peel={{ dx: peel.dx, dy: peel.dy, r: peel.r, o: t < 18.2 ? 1 : 0 }} />
-        {t >= 19.8 && t < TAG_FLY(5) && (
-          <div style={{ position: "absolute", left: 22 + heroTag.x, top: 16 + heroTag.y }}>
-            <Tag swing={swing(20.4, 5)} scale={0.8 / 0.85} />
-          </div>
-        )}
-      </div>
-
-      {/* viewfinder around the camera-ready parcel */}
-      {t >= 20.9 && t < 22.7 && (
-        <div style={{ position: "absolute", left: HERO_FOCUS.x, top: HERO_FOCUS.y }}>
-          <Viewfinder k={ramp(t, 20.9, 0.3) * (1 - ramp(t, 22.35, 0.3, EASE_MOVE))} w={PARCEL_W * HERO_FOCUS.s + 90} h={PARCEL_H * HERO_FOCUS.s + 90} dot={0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 5))} />
-        </div>
+      {t >= 3.95 && (
+        <div style={{ position: "absolute", left: CAL_X0 + d * (CAL.w + CAL.gap), top: CAL.y, width: CAL.w, height: CAL.h, borderRadius: 14, background: C.white, opacity: ramp(t, 4.3, 0.3), transform: `scale(${flash})` }} />
       )}
-
-      {/* tag stack: 6 tags fly in along arcs, then the jerk to 50 */}
-      {t >= TAG_FLY(0) &&
-        Array.from({ length: t >= JERK ? 50 : 6 }, (_, j) => {
-          if (j < 6 && t < TAG_FLY(j)) return null;
-          if (t >= TILE_FLY(j)) return null;
-          let x: number, y: number, s = 0.8;
-          if (j < 6) {
-            const g = tags[j];
-            const a = tagPivot(j), b = stackSlot(j);
-            const cx = (a.x + b.x) / 2, cy = Math.min(a.y, b.y) - 220;
-            const u = g.k;
-            x = (1 - u) ** 2 * a.x + 2 * (1 - u) * u * cx + u * u * b.x;
-            y = (1 - u) ** 2 * a.y + 2 * (1 - u) * u * cy + u * u * b.y;
-            s = 0.8 * g.s;
-          } else {
-            const b = stackSlot(j);
-            x = b.x;
-            y = lerp(stackSlot(5).y, b.y, jerkK);
-          }
-          const top = j === (t >= JERK ? 49 : 5);
-          const lean = wobble * (j / 49);
-          return (
-            <div key={j} style={{ position: "absolute", left: x + lean * 6, top: y }}>
-              <Tag swing={j < 6 && tags[j].k < 1 ? 8 + 20 * (1 - tags[j].k) : -2 + lean + (top ? topSwing : 0)} scale={s} label={top} />
-            </div>
-          );
-        })}
-
-      {/* 50 micro-orders */}
-      {t >= TILE_FLY(0) &&
-        tiles.map((g, i) => {
-          if (g.k <= 0) return null;
-          const a = stackSlot(i);
-          const col = i % GRID.cols, row = Math.floor(i / GRID.cols);
-          const b = { x: GRID.x0 + col * GRID.dx, y: GRID.y0 + row * GRID.dy };
-          const cx = (a.x + b.x) / 2, cy = Math.min(a.y, b.y) - 260;
-          const u = g.k;
-          let x = (1 - u) ** 2 * (a.x + 40) + 2 * (1 - u) * u * cx + u * u * b.x;
-          let y = (1 - u) ** 2 * (a.y + 30) + 2 * (1 - u) * u * cy + u * u * b.y;
-          x = lerp(x, LOGO_POINT.x, g.out);
-          y = lerp(y, LOGO_POINT.y, g.out);
-          const s = g.s * (1 - g.out);
-          if (s <= 0.001) return null;
-          return (
-            <div key={i} style={{ position: "absolute", left: x - 36, top: y - 26, width: 72, height: 52, transform: `scale(${s}) rotate(${(1 - u) * 14 + g.out * 90}deg)`, opacity: Math.min(1, u * 3) }}>
-              <Tile done={ramp(t, TILE_DONE(i), 0.25)} />
-            </div>
-          );
-        })}
-    </AbsoluteFill>
-  );
-};
-
-/* -------------------------------------------------------- the type layer */
-const TypeLayer: React.FC<{ tl: ReturnType<typeof buildTimeline>; cam: ReturnType<typeof camera> }> = ({ tl, cam }) => {
-  const t = useT();
-  const ink = { color: C.ink, accentColor: C.green, size: 88 };
-  const { card } = tl;
-  const clockTicks = (t - 11.6) * 2;
-  const clockAngle = t < 11.6 ? 0 : 60 * (Math.floor(clockTicks) + EASE_APPEAR(clamp((clockTicks % 1) / 0.35)));
-  return (
-    <AbsoluteFill style={{ transform: `translate(${cam.x * TYPE_FACTOR}px, ${cam.y * TYPE_FACTOR}px)` }}>
-      <Sequence from={0} durationInFrames={Math.round(4.4 * 30)} layout="none">
-        <Words {...ink} lines={["Creator samples", "are a second", "fulfilment stream."]} top={170} start={0.15} exit={3.85} />
-        <Words {...ink} lines={["Nobody plans it."]} top={470} start={2.4} exit={3.95} accent={["Nobody"]} />
-      </Sequence>
-      <Sequence from={Math.round(4.2 * 30)} durationInFrames={Math.round(4.0 * 30)} layout="none">
-        <Words {...ink} size={84} lines={["Everyone plans", "the orders."]} top={170} start={4.3} exit={7.8} />
-        <Words {...ink} size={84} lines={["Nobody plans", "the samples."]} top={370} start={6.3} exit={7.85} accent={["Nobody"]} />
-      </Sequence>
-      <Sequence from={Math.round(8.0 * 30)} durationInFrames={Math.round(6.3 * 30)} layout="none">
-        <Words {...ink} size={72} lines={["Different packaging."]} top={180} start={8.1} exit={13.85} accent={["packaging"]} />
-        <MonoRow top={286} start={8.6} exit={13.8} icon={<ReceiptIcon cross={ramp(t, 8.9, 0.35, EASE_MOVE)} />} text="No receipt" />
-        <MonoRow left={500} top={286} start={9.2} exit={13.82} icon={<PriceIcon cross={ramp(t, 9.5, 0.35, EASE_MOVE)} />} text="No price" />
-        <MonoRow top={350} start={9.8} exit={13.8} icon={<CameraIcon />} text="Camera-ready" />
-        <Words {...ink} size={72} lines={["Different deadline."]} top={430} start={11.1} exit={13.9} />
-        <MonoRow top={530} start={11.6} exit={13.85} icon={<ClockIcon angle={clockAngle} />} text="Fast — while the trend is alive" />
-      </Sequence>
-      <Sequence from={Math.round(14.2 * 30)} durationInFrames={Math.round(8.8 * 30)} layout="none">
-        <Words {...ink} lines={["Same parcel.", "Different job."]} top={170} start={14.3} exit={22.45} accent={["Different"]} />
-        {[
-          ["Invoice — out", 15.5],
-          ["Price — off", 16.95],
-          ["Packed for the camera", 18.5],
-          ["Tagged: creator sample", 19.9],
-        ].map(([label, at], i) => (
-          <MonoRow key={i} top={390 + i * 56} start={at as number} exit={22.35 + i * 0.04} icon={<Check k={ramp(t, (at as number) + 0.15, 0.45)} />} text={label as string} />
-        ))}
-      </Sequence>
-      {/* agency request card */}
-      {t >= 24.2 && t < 30.2 && (
-        <div style={{ position: "absolute", left: card.x - 390, top: card.y - 120, width: 780, height: 240, background: C.white, border: `2px solid ${C.ink}`, borderRadius: 24, transform: `rotate(${card.r}deg) scale(${card.s})`, padding: "30px 36px", boxSizing: "border-box" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", fontFamily: FONT.mono, fontWeight: 500, fontSize: 24, letterSpacing: "0.12em", color: C.ink }}>
-            <span>NEW REQUEST · AGENCY</span>
-            <span style={{ opacity: 0.5 + 0.5 * Math.sin(t * 6) ** 2 }}>●</span>
-          </div>
-          <div style={{ marginTop: 26, fontFamily: FONT.display, fontWeight: 800, fontSize: 76, letterSpacing: "-0.03em", color: C.ink, lineHeight: 1 }}>
-            {t < JERK ? "Creator samples" : <><span style={{ color: C.green, position: "relative" }}>50<span style={{ position: "absolute", left: 0, right: 0, bottom: -10, height: 6, borderRadius: 3, background: C.green, transform: `scaleX(${ramp(t, 26.3, 0.6)})`, transformOrigin: "left" }} /></span> creator samples</>}
-          </div>
-        </div>
-      )}
-      <Sequence from={Math.round(30.2 * 30)} durationInFrames={Math.round(3.4 * 30)} layout="none">
-        <Words {...ink} size={92} lines={["50 creators."]} top={170} start={30.3} exit={33.15} />
-        <Words {...ink} size={92} lines={["50 micro-orders."]} top={275} start={31.0} exit={33.2} />
-        <Words {...ink} size={92} lines={["Overnight."]} top={380} start={31.8} exit={33.25} accent={["Overnight"]} />
-      </Sequence>
-      <Sequence from={Math.round(33.3 * 30)} durationInFrames={Math.round(3.4 * 30)} layout="none">
-        <Words {...ink} size={76} lines={["If you run an agency", "pushing creator", "samples, DM me."]} top={180} start={33.4} exit={36.2} accent={["DM", "me"]} />
-      </Sequence>
-    </AbsoluteFill>
-  );
-};
-
-/* ---------------------------------------------------------------- logo */
-const HANDLE = "@dockentra.ie";   // the TikTok account from dockentra.ie — where the DM goes
-
-const Logo: React.FC = () => {
-  const t = useT();
-  const typed = Math.floor(clamp((t - 37.05) * 22, 0, HANDLE.length));
-  const rule = ramp(t, 37.55, 0.4);
-  const fill = t < LOGO_IN ? 0 : EASE_LOGO(clamp((t - LOGO_IN) / 0.6));
-  const edge = -20 + fill * 140;
-  const mask = `linear-gradient(45deg, #000 ${edge}%, transparent ${edge + 1}%)`;
-  return (
-    <>
-    <div style={{ position: "absolute", left: LOGO_POINT.x - 200, top: LOGO_POINT.y - 156, width: 400, WebkitMaskImage: mask, maskImage: mask, opacity: t >= LOGO_IN ? 1 : 0 }}>
-      <Img src={staticFile("brand/dockentra-logo.png")} style={{ width: "100%", display: "block" }} />
-    </div>
-    <div style={{ position: "absolute", left: 0, width: 1080, top: LOGO_POINT.y + 190, textAlign: "center", fontFamily: FONT.mono, fontWeight: 500, fontSize: 34, letterSpacing: "0.04em", color: C.ink }}>
-      <span style={{ position: "relative", display: "inline-block" }}>
-        {HANDLE.slice(0, typed)}
-        <span style={{ visibility: "hidden" }}>{HANDLE.slice(typed)}</span>
-        <span style={{ position: "absolute", left: 0, right: 0, bottom: -8, height: 3, background: C.ink, transform: `scaleX(${rule})`, transformOrigin: "left" }} />
-      </span>
-    </div>
     </>
   );
 };
 
-/* ---------------------------------------------------------- composition */
+/* ---------------------------------------------------------------- creators */
+function stateOf(i: number, t: number) {
+  const col = i % COLS, row = Math.floor(i / COLS);
+  const wait = ramp(t, T.confirm + (col + row) * 0.07, 0.4);
+  const reset = ramp(t, T.plan, 0.35, EASE_MOVE);
+  let lit = 0;
+  if (i in LIT_AT && t >= LIT_AT[i]) lit = FRI_LIT.includes(i) ? 1 : ramp(t, LIT_AT[i], 0.35);
+  lit = Math.max(lit * (1 - reset), ramp(t, WAVE_AT(i), 0.35));
+  const grey = MISSED.includes(i) && t >= T.jerk ? 1 - ramp(t, T.plan, 0.5, EASE_MOVE) : 0;
+  return { wait, lit, grey };
+}
+
+const Creator: React.FC<{ i: number; p: { x: number; y: number; s: number; r: number; o: number } }> = ({ i, p }) => {
+  const t = useT();
+  const { wait, lit, grey } = stateOf(i, t);
+  // in the pile the grey creators keep jostling and slowly settle
+  const piled = MISSED.includes(i) ? ramp(t, T.heap + 0.8, 0.4) * (1 - ramp(t, T.plan, 0.2, EASE_MOVE)) : 0;
+  const settle = ramp(t, T.heap + 1.0, 4.4, EASE_MOVE);
+  const jx = piled * 5 * Math.sin(t * 2.3 + i * 1.7), jy = piled * (4 * Math.sin(t * 1.9 + i) + 16 * settle), js = 1 - piled * 0.06 * settle;
+  // a posted video keeps a slow pulse
+  const breathe = lit > 0.99 && t < T.wipe ? 1 + 0.04 * Math.sin(t * 3.1 + i * 0.9) : 1;
+  // after Friday the grey creators slowly sag, and their crosses draw in one by one
+  const k = MISSED.indexOf(i);
+  const sag = grey * (1 - piled) * 10 * ramp(t, T.jerk + 0.3, 5, EASE_MOVE);
+  const cross = k >= 0 ? ramp(t, T.jerk + 0.15 + k * 0.09, 0.35) : 0;
+  const R = CIRCLE / 2;
+  const ringA = lerp(0.35, 1, wait) * (1 - grey * 0.75);
+  const waiting = wait > 0.5 && lit < 0.5 && grey < 0.5 && t < T.wipe;
+  const ping = waiting ? ((t * 0.7 + i * 0.137) % 1) : 0;
+  const pop = lit > 0 ? lit * (1 + 0.05 * Math.sin(Math.PI * lit)) : 0;
+  // labels hide while the grey creators are piled up (they would pile into a smear)
+  const inHeap = MISSED.includes(i) ? ramp(t, T.heap, 0.4, EASE_MOVE) * (1 - ramp(t, T.plan + 0.3, 0.4)) : 0;
+  const labelA = lerp(0.55, 1, wait) * (1 - grey * 0.6) * clamp((p.s - 0.5) / 0.4) * (1 - inHeap);
+  return (
+    <div style={{ position: "absolute", left: p.x + jx, top: p.y + jy + sag, opacity: p.o, transform: `rotate(${p.r}deg) scale(${p.s * js * breathe})` }}>
+      <svg width={CIRCLE + 60} height={CIRCLE + 60} viewBox={`${-R - 30} ${-R - 30} ${CIRCLE + 60} ${CIRCLE + 60}`} style={{ position: "absolute", left: -R - 30, top: -R - 30, overflow: "visible" }}>
+        {waiting && <circle r={R + 4 + ping * 26} fill="none" stroke={C.white} strokeWidth={2} opacity={0.45 * (1 - ping)} />}
+        <circle r={R} fill={`rgba(255,255,255,${0.14 * grey})`} stroke={lit > 0.5 ? C.mint : C.white} strokeOpacity={lit > 0.5 ? 1 : ringA} strokeWidth={2.5} />
+        <circle r={R * pop} fill={C.mint} />
+        {lit > 0.5 && <path d="M-11 -15 L16 0 L-11 15 Z" fill={C.ink} stroke={C.ink} strokeWidth={2} strokeLinejoin="round" opacity={clamp((lit - 0.5) * 2)}  />}
+        {grey > 0.5 && (
+          <>
+            <path d="M-14 -14L14 14" stroke={C.white} strokeOpacity={0.4 * grey} strokeWidth={2.5} strokeLinecap="round" pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - clamp(cross * 2)} />
+            <path d="M14 -14L-14 14" stroke={C.white} strokeOpacity={0.4 * grey} strokeWidth={2.5} strokeLinecap="round" pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - clamp(cross * 2 - 1)} />
+          </>
+        )}
+      </svg>
+      <div style={{ position: "absolute", left: -90, width: 180, top: R + 12, textAlign: "center", fontFamily: FONT.mono, fontWeight: 500, fontSize: 20, color: C.white, opacity: labelA }}>
+        @creator_{String(i + 1).padStart(2, "0")}
+      </div>
+    </div>
+  );
+};
+
+/* --------------------------------------------- the (labelled) sample pile */
+const STACK = { x: 300, y: 1372, w: 58, h: 19, pitch: 21 };
+const Pile: React.FC = () => {
+  const t = useT();
+  const sent = t >= T.jerk ? 6 : WED_LIT.filter((_, k) => t >= SENT_AT(k)).length;
+  const inK = ramp(t, 10.8, 0.5) * (1 - ramp(t, T.heap - 0.2, 0.45, EASE_MOVE));
+  const planSent = Array.from({ length: N }, (_, i) => i).filter((i) => t >= WAVE_AT(i) + 0.2).length;
+  const planK = ramp(t, T.plan + 0.3, 0.45) * (1 - ramp(t, T.wipe - 0.1, 0.3, EASE_MOVE));
+  const counter = (n: number, k: number, x: number) => (
+    <div style={{ position: "absolute", left: x, top: 1296, opacity: k, transform: `translateY(${(1 - k) * 40}px)`, color: C.white, fontFamily: FONT.mono, fontWeight: 500 }}>
+      <div style={{ fontSize: 24, letterSpacing: "0.14em", opacity: 0.75 }}>SAMPLES SENT</div>
+      <div style={{ fontSize: 46, marginTop: 4 }}>{String(n).padStart(2, "0")} / 20</div>
+    </div>
+  );
+  return (
+    <>
+      {inK > 0 && (
+        <>
+          {Array.from({ length: sent }, (_, k) => {
+            const a = k < 4 ? ramp(t, SENT_AT(k), 0.35) : 1;
+            return (
+              <div key={k} style={{ position: "absolute", left: STACK.x - STACK.w / 2, top: STACK.y - (k + 1) * STACK.pitch - (1 - a) * 50, width: STACK.w, height: STACK.h, border: `2px solid ${C.white}`, borderRadius: 4, opacity: inK * Math.min(1, a * 2), transform: `scale(${1 + 0.05 * Math.sin(Math.PI * a)})` }}>
+                <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 2, background: C.white, transform: "translateX(-1px)" }} />
+              </div>
+            );
+          })}
+          {counter(sent, inK, 380)}
+        </>
+      )}
+      {planK > 0 && counter(planSent, planK, 380)}
+    </>
+  );
+};
+
+/** Dashed arc from the pile to the creator it reached (Wed shipments). */
+const Trails: React.FC = () => {
+  const t = useT();
+  return (
+    <svg width={1080} height={1920} style={{ position: "absolute", left: 0, top: 0, overflow: "visible" }}>
+      {WED_LIT.map((id, k) => {
+        const a = ramp(t, SENT_AT(k) + 0.05, 0.5, EASE_MOVE);
+        const o = 1 - ramp(t, SENT_AT(k) + 0.9, 0.4, EASE_MOVE);
+        if (a <= 0 || o <= 0) return null;
+        const from = { x: STACK.x, y: STACK.y - (k + 1) * STACK.pitch };
+        const to = home(id);
+        const cx = (from.x + to.x) / 2 - 120, cy = Math.min(from.y, to.y) - 60;
+        return <path key={id} d={`M${from.x} ${from.y} Q${cx} ${cy} ${to.x} ${to.y + CIRCLE / 2}`} fill="none" stroke={C.white} strokeWidth={2} strokeLinecap="round" strokeDasharray="1 1" pathLength={1} strokeDashoffset={1 - a} opacity={0.8 * o} />;
+      })}
+    </svg>
+  );
+};
+
+/* ------------------------------------------------------------- the pile label */
+const HeapLabel: React.FC = () => {
+  const t = useT();
+  const k = ramp(t, T.heap + 0.9, 0.45) * (1 - ramp(t, T.plan, 0.35, EASE_MOVE));
+  if (k <= 0) return null;
+  return (
+    <div style={{ position: "absolute", left: 0, width: 1080, top: 1290, textAlign: "center", fontFamily: FONT.mono, fontWeight: 500, fontSize: 32, letterSpacing: "0.12em", color: C.white, clipPath: `inset(0 ${(1 - k) * 50}% 0 ${(1 - k) * 50}%)` }}>
+      14 VIDEOS NEVER POSTED
+    </div>
+  );
+};
+
+/* ---------------------------------------------------------------- headlines */
+type Headline = { id: string; lines: string[]; start: number; exit: number | null; top?: number; size?: number; accent?: string[] };
+const Headlines: React.FC<{ cam: Cam }> = ({ cam }) => {
+  const t = useT();
+  return (
+    <AbsoluteFill style={{ transform: `translate(${cam.x * TYPE_FACTOR}px, ${cam.y * TYPE_FACTOR}px)` }}>
+      {(script.headlines as Headline[]).map((h) => {
+        const end = h.exit ?? DURATION_S;
+        if (t < h.start - 0.05 || t > end + 0.5) return null;
+        const onLight = h.id === "cta";
+        return (
+          <Drift key={h.id} from={h.start} to={end} dy={-26}>
+            <Words lines={h.lines} top={h.top ?? 160} size={h.size ?? 84} start={h.start} exit={h.exit ?? undefined} color={onLight ? C.ink : C.white} accent={h.accent ?? []} accentColor={C.green} />
+          </Drift>
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
+
+/* ------------------------------------------------------------------- finale */
+const EndPanel: React.FC = () => {
+  const t = useT();
+  const r = ramp(t, T.wipe, 0.7, EASE_MOVE) * 2300;
+  if (r <= 0) return null;
+  return <div style={{ position: "absolute", inset: -240, background: C.grey, clipPath: `circle(${r}px at 780px 1150px)` }} />;
+};
+
+const Logo: React.FC = () => {
+  const t = useT();
+  const fill = t < LOGO_IN ? 0 : EASE_LOGO(clamp((t - LOGO_IN) / 0.6));
+  const edge = -20 + fill * 140;
+  const mask = `linear-gradient(45deg, #000 ${edge}%, transparent ${edge + 1}%)`;
+  return (
+    <div style={{ position: "absolute", left: 340, top: 744, width: 400, WebkitMaskImage: mask, maskImage: mask, opacity: t >= LOGO_IN ? 1 : 0 }}>
+      <Img src={staticFile("brand/dockentra-logo.png")} style={{ width: "100%", display: "block" }} />
+    </div>
+  );
+};
+
+/* ------------------------------------------------------------- composition */
 /** freezeCamera: diagnostic render with the camera locked, used by the
  *  acceptance check to prove the objects move on their own. */
 export const CreatorSamples: React.FC<{ freezeCamera?: boolean }> = ({ freezeCamera = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
-  const tl = useMemo(buildTimeline, []);
-  tl.tl.seek(t, false);
+  const { tl, c } = useMemo(buildTimeline, []);
+  tl.seek(t, false);
   const cam = freezeCamera ? { x: 0, y: 0, zoom: 1 } : camera(t, fps);
+  // After the end card opens, the row of dots keeps a slow mint wave going.
+  const dotPulse = (i: number) => (t >= T.wipe + 0.6 ? 1 + 0.35 * Math.max(0, Math.sin(t * 5.2 - i * 0.42)) : 1);
   return (
     <TimeContext.Provider value={t}>
       <AbsoluteFill>
-        <Desk cam={cam} />
-        <World tl={tl} cam={cam} />
-        <TypeLayer tl={tl} cam={cam} />
-        <Sequence from={Math.round(36.3 * fps)} layout="none" name="Logo"><Logo /></Sequence>
-        <Subtitles cues={CUES} lightFrom={0} end={DURATION_S} />
+        <Backdrop cam={cam} />
+        <AbsoluteFill style={{ transform: `translate(${cam.x}px, ${cam.y}px) scale(${cam.zoom})`, transformOrigin: ORIGIN }}>
+          <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+            <Calendar />
+          </div>
+          <Pile />
+          <Trails />
+          <HeapLabel />
+          <EndPanel />
+          {c.map((p, i) => (
+            <Creator key={i} i={i} p={{ ...p, s: p.s * dotPulse(i) }} />
+          ))}
+        </AbsoluteFill>
+        <Headlines cam={cam} />
+        <Logo />
+        <Subtitles cues={script.subtitles as Cue[]} lightFrom={99} end={DURATION_S} />
         <Audio src={staticFile("music-creator.wav")} />
       </AbsoluteFill>
     </TimeContext.Provider>

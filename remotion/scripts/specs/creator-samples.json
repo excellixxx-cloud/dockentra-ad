@@ -1,12 +1,14 @@
 {
   "composition": "CreatorSamples",
   "duration": 38,
-  "segments": [["hook", 0, 4], ["samples", 4, 14], ["morph", 14, 24], ["interrupt", 24, 30], ["cta + logo", 30, 38]],
-  "interrupt_window": [25.8, 26.4],
+  "segments": [["hook", 0, 4], ["monday", 4, 10], ["problem", 10, 17], ["friday", 17, 24], ["blame", 24, 30], ["plan", 30, 35], ["cta + logo", 35, 38]],
+  "interrupt_window": [16.9, 17.3],
   "no_cuts_outside_interrupt": true,
-  "logo": { "in": 36.5, "box": [336, 832, 744, 1152], "src": "src/creator/CreatorSamples.tsx", "must": ["LOGO_IN = 36.5", "(t - LOGO_IN) / 0.6"] },
-  "text_bands": { "type layer (y 150-620)": [150, 620], "subtitles (y 1440-1600)": [1440, 1600] },
-  "mint_only_in_y": [0, 64],
+  "logo": { "in": 36.5, "box": [336, 740, 744, 1060], "must": { "src/creator/timeline.ts": ["logo: 36.5"], "src/creator/CreatorSamples.tsx": ["(t - LOGO_IN) / 0.6", "export const LOGO_IN = T.logo"] } },
+  "text_bands": { "headlines (y 150-470)": [150, 470], "subtitles (y 1440-1600)": [1440, 1600] },
+  "no_mint_bands": [[140, 470]],
   "parallax": { "src": "src/creator/CreatorSamples.tsx" },
-  "sources": ["src/creator"]
+  "sources": ["src/creator"],
+  "script": "src/creator/script.json",
+  "review_frames": [8, 20, 33]
 }

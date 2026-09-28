@@ -1,0 +1,129 @@
+{
+  "_note": "Single source of truth for all on-screen text. Read by CreatorSamples.tsx and by scripts/checklist.py (word limits, reading time, headline/subtitle duplication).",
+  "headlines": [
+    {
+      "id": "hook1",
+      "lines": [
+        "Your creators",
+        "are ready."
+      ],
+      "start": 0.05,
+      "exit": 3.85
+    },
+    {
+      "id": "hook2",
+      "lines": [
+        "The samples aren't."
+      ],
+      "top": 350,
+      "start": 1.45,
+      "exit": 3.9
+    },
+    {
+      "id": "mon",
+      "lines": [
+        "Monday:",
+        "20 creators",
+        "confirmed."
+      ],
+      "start": 4.35,
+      "exit": 9.8
+    },
+    {
+      "id": "wed",
+      "lines": [
+        "The brand packs",
+        "samples after",
+        "customer orders."
+      ],
+      "start": 10.35,
+      "exit": 16.55
+    },
+    {
+      "id": "fri",
+      "lines": [
+        "Friday:",
+        "the trend is gone."
+      ],
+      "start": 17.15,
+      "exit": 23.8
+    },
+    {
+      "id": "blame",
+      "lines": [
+        "The brand blames",
+        "the agency."
+      ],
+      "start": 24.3,
+      "exit": 29.85
+    },
+    {
+      "id": "plan",
+      "lines": [
+        "Samples need their",
+        "own dispatch plan."
+      ],
+      "start": 30.35,
+      "exit": 34.65
+    },
+    {
+      "id": "cta",
+      "lines": [
+        "Agencies:",
+        "DM me."
+      ],
+      "start": 35.25,
+      "exit": null,
+      "size": 120,
+      "top": 400,
+      "accent": [
+        "DM",
+        "me"
+      ]
+    }
+  ],
+  "subtitles": [
+    [
+      13.6,
+      16.97,
+      "So by Wednesday, four have gone out."
+    ]
+  ],
+  "voiceover": [
+    [
+      0.2,
+      3.9,
+      "Your creators are ready. The samples aren't."
+    ],
+    [
+      4.3,
+      9.8,
+      "Monday, twenty creators confirm."
+    ],
+    [
+      10.3,
+      16.8,
+      "But the brand packs samples after customer orders, so by Wednesday four have gone out."
+    ],
+    [
+      17.0,
+      23.8,
+      "By Friday the trend is over,"
+    ],
+    [
+      24.2,
+      29.8,
+      "and the brand blames the agency."
+    ],
+    [
+      30.2,
+      34.7,
+      "Creator samples need their own dispatch plan."
+    ],
+    [
+      35.2,
+      38.0,
+      "If you run an agency, DM me."
+    ]
+  ]
+}

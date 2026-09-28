@@ -124,10 +124,17 @@ report("2. Pause at 5 random timecodes — >= 4/5 mid-animation", sum(hits) >= 4
 full = np.abs(np.diff(gray, axis=0)).mean(axis=(1, 2))
 local = np.array([np.median(full[max(0, i - 15):i + 15]) for i in range(len(full))])
 spike = full / (local + 0.5)
+prev = np.r_[0, full[:-1]]
+ahead = np.array([full[i:i + 10].max() for i in range(len(full))])
+# A hard cut changes the most on its very first frame (sharp onset, then decay);
+# a wipe or morph ramps up and peaks later, so its onset frame is not its peak.
+single = (full > 2.5 * prev) & (full >= 0.8 * ahead)
 cuts = []
 for i in np.argsort(-spike):
     if spike[i] <= 6 or len(cuts) == 6:
         break
+    if not single[i]:
+        continue
     if all(abs(i - c) > FPS // 2 for c in cuts):
         cuts.append(int(i))
 cuts.sort()
@@ -136,7 +143,7 @@ inside = [c for c in cuts if wa <= (c + 1) / FPS <= wb]
 outside = [c for c in cuts if not wa <= (c + 1) / FPS <= wb]
 ok = bool(inside) and (not spec.get("no_cuts_outside_interrupt") or not outside)
 report("3. Pattern interrupt present" + (" — and the only hard cut" if spec.get("no_cuts_outside_interrupt") else ""), ok,
-       "abrupt changes: " + (", ".join(f"{(c + 1) / FPS:.2f} s (x{spike[c]:.0f} vs local)" for c in cuts) or "none"),
+       "hard cuts (sharp onset): " + (", ".join(f"{(c + 1) / FPS:.2f} s (x{spike[c]:.0f} vs local)" for c in cuts) or "none"),
        f"expected inside {wa}–{wb} s: {'yes' if inside else 'NO'}" + (f"; outside it: {'none' if not outside else 'FOUND'}" if spec.get("no_cuts_outside_interrupt") else ""))
 
 # ---- 4. Easing profiles (and no linear) ----
@@ -170,8 +177,8 @@ for p in sources + [ROOT / "src/components/Subtitles.tsx", ROOT / "src/component
 stray = hexes - PALETTE
 fams = {f["family"] for f in json.loads((ROOT / "public/fonts/manifest.json").read_text())}
 font_uses = set(re.findall(r"fontFamily[=:]\s*\{?FONT\.(\w+)", code))
-logo_src = (ROOT / logo["src"]).read_text()
-logo_timing = all(s in logo_src for s in logo["must"]) and "Easing.bezier(0.22, 1, 0.36, 1)" in (ROOT / "src/brand.ts").read_text()
+logo_timing = all(m in (ROOT / f).read_text() for f, ms in logo["must"].items() for m in ms) \
+    and "Easing.bezier(0.22, 1, 0.36, 1)" in (ROOT / "src/brand.ts").read_text()
 tail = gray[int((logo["in"] + 0.6) * FPS):, y0 * 2:y1 * 2, x0 * 2:x1 * 2]
 logo_shown = (tail < 120).mean(axis=(1, 2)).min() > 0.02 and (spec["duration"] - logo["in"]) >= 1.5
 mint_line = ""
@@ -182,6 +189,13 @@ if "mint_only_in_y" in spec:
     stray_mint = is_mint[~logo_frames, my:, :].sum(axis=(1, 2)).max()
     ok_mint = stray_mint <= 3
     mint_line = f"mint pixels outside the desk's top edge (before the logo): max {stray_mint} per frame"
+if "no_mint_bands" in spec:
+    is_mint = (hue > 145) & (hue < 172) & (sat > 0.4) & (mx > 0.6)
+    worst_band = 0
+    for ya, yb in spec["no_mint_bands"]:
+        worst_band = max(worst_band, is_mint[~logo_frames, ya // 8:yb // 8, :].sum(axis=(1, 2)).max())
+    ok_mint &= worst_band <= 3
+    mint_line = f"mint pixels inside text bands {spec['no_mint_bands']}: max {worst_band} per frame (mint is reserved for the creators)"
 report("5. Colours, fonts and logo per Brand Book",
        not stray and off_hue < 12 and fams == BRAND_FONTS and logo_timing and logo_shown and ok_mint,
        f"colours in source: {sorted(hexes)}" + (f" — STRAY {sorted(stray)}" if stray else " (all five brand colours only)"),
@@ -218,6 +232,59 @@ if "parallax" in spec:
     ty = float(re.search(r"TYPE_FACTOR = ([\d.]+)", src).group(1))
     report("Parallax: background and foreground move at different speeds (>= 5 %)", abs(1 - bg) >= 0.05 and abs(ty - 1) >= 0.05,
            f"desk {bg:.0%} of object speed, type layer {ty:.0%}; applied to the camera in every scene")
+
+# ---- 6. Frames for the silent-viewer review (judged by a person, not by this script) ----
+if "review_frames" in spec:
+    out_paths = []
+    for ts in spec["review_frames"]:
+        dst = Path(args.video).with_name(f"review-{int(ts):02d}s.png")
+        subprocess.run([FF, "-v", "error", "-y", "-ss", str(ts), "-i", args.video, "-frames:v", "1", str(dst)], check=True)
+        out_paths.append(str(dst.relative_to(ROOT)) if dst.is_relative_to(ROOT) else str(dst))
+    print("[ -- ] 6. Silent-viewer review — frames extracted for a human verdict:")
+    for pth in out_paths:
+        print(f"       {pth}")
+
+# ---- 7. On-screen text: word limit, reading time, no headline/subtitle duplicates ----
+if "script" in spec:
+    sc = json.loads((ROOT / spec["script"]).read_text())
+    STAGGER, RISE, EXIT = 0.075, 0.5, 0.45
+    words = lambda txt: re.findall(r"[A-Za-z0-9']+", txt.lower())
+    need = lambda n: 0.8 + 0.3 * n
+    lines, ok = [], True
+    spans = []
+    for h in sc["headlines"]:
+        txt = " ".join(h["lines"])
+        n = len(words(txt))
+        end = h["exit"] if h["exit"] is not None else spec["duration"]
+        readable = end - (h["start"] + (n - 1) * STAGGER + RISE)
+        good = readable >= need(n)
+        ok &= good
+        spans.append((h["start"], end + (n - 1) * 0.03 + 0.35, n, txt))
+        lines.append(f"{'ok ' if good else 'BAD'} headline {h['id']:6s} {n} words, fully readable {readable:4.1f} s (needs {need(n):.1f})")
+    for a_, b_, txt in sc["subtitles"]:
+        n = len(words(txt))
+        readable = b_ - (a_ + 0.36)
+        good = readable >= need(n)
+        ok &= good
+        lines.append(f"{'ok ' if good else 'BAD'} subtitle {n} words, readable {readable:4.1f} s (needs {need(n):.1f})")
+    # the largest number of big-type words on screen at any moment
+    peak, peak_at = 0, 0.0
+    for tt in np.arange(0, spec["duration"], 1 / FPS):
+        on = sum(nw for a_, b_, nw, _ in spans if a_ <= tt < b_)
+        if on > peak:
+            peak, peak_at = on, tt
+    ok &= peak <= 7
+    lines.append(f"{'ok ' if peak <= 7 else 'BAD'} max big-type words on screen at once: {peak} (at {peak_at:.2f} s; limit 7)")
+    dup_worst = 0.0
+    for a_, b_, txt in sc["subtitles"]:
+        sw = set(words(txt))
+        for ha, hb, _, htxt in spans:
+            if ha < b_ and a_ < hb:
+                hw = set(words(htxt))
+                dup_worst = max(dup_worst, len(sw & hw) / len(sw | hw))
+    ok &= dup_worst < 0.5
+    lines.append(f"{'ok ' if dup_worst < 0.5 else 'BAD'} subtitle vs headline on screen at the same time: max word overlap {dup_worst:.0%} (limit 50 %)")
+    report("7. All on-screen text is readable in the time it stays, no duplicates, <= 7 big words", ok, *lines)
 
 print(f"\n{sum(results)}/{len(results)} checks passed")
 sys.exit(0 if all(results) else 1)
