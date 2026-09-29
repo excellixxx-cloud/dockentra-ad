@@ -17,12 +17,13 @@ type WordsProps = {
   stagger?: number;     // seconds between words (60–90 ms)
   rise?: number;        // duration of one word's entrance
   out?: number;         // duration of one word's exit
+  center?: boolean;     // centre every line across the 1080 frame
 };
 
 /** Kinetic typography: each word rises out of its own mask (or scales
  *  down into place), 75 ms apart, on the appear ease; exits upward on the
  *  move ease with its own stagger — never a block fade. */
-export const Words: React.FC<WordsProps> = ({ lines, top, size, start, exit, accent = [], accentColor = C.mint, mode = "rise", color = C.white, left = 96, lineHeight = 1.06, stagger = WORD_STAGGER, rise = 0.5, out = 0.35 }) => {
+export const Words: React.FC<WordsProps> = ({ lines, top, size, start, exit, accent = [], accentColor = C.mint, mode = "rise", color = C.white, left = 96, lineHeight = 1.06, stagger = WORD_STAGGER, rise = 0.5, out = 0.35, center = false }) => {
   const t = useT();
   let i = 0;
   const total = lines.join(" ").split(" ").length;
@@ -31,7 +32,7 @@ export const Words: React.FC<WordsProps> = ({ lines, top, size, start, exit, acc
       {lines.map((line, li) => (
         <div
           key={li}
-          style={{ position: "absolute", left, top: top + li * size * lineHeight, whiteSpace: "nowrap", fontFamily: FONT.display, fontWeight: 800, fontSize: size, letterSpacing: "-0.035em", lineHeight: 1, color }}
+          style={{ position: "absolute", left: center ? 0 : left, width: center ? 1080 : undefined, textAlign: center ? "center" : undefined, top: top + li * size * lineHeight, whiteSpace: "nowrap", fontFamily: FONT.display, fontWeight: 800, fontSize: size, letterSpacing: "-0.035em", lineHeight: 1, color }}
         >
           {line.split(" ").map((word, wi) => {
             const idx = i++;

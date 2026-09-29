@@ -1,6 +1,6 @@
 import React from "react";
 import { C, FONT } from "../brand";
-import { Box, Cyl, FaceText, Glove, iso, LINE, mix, poly, V3 } from "./iso";
+import { Box, Cyl, FaceText, iso, LINE, mix, poly, V3 } from "./iso";
 
 /** One small warehouse, world units (1 ≈ 10 cm). */
 export const ROOM = { W: 60, D: 40, H: 26 };
@@ -12,6 +12,28 @@ export const CAGE = { x0: 44, y0: 3, w: 8, d: 7, h: 15 };
 export const JARS: [number, number][] = [18, 20, 22, 24].flatMap((x) => [19.5, 21.7, 23.9].map((y) => [x, y] as [number, number]));
 export const DAMAGED = [7, 2]; // indices into JARS
 export const CELLS = ["A1", "A2", "A3", "A4", "A5", "A6"];
+/** Copy stand: pole at the table's back-right corner, arm over the product rows, lens down. */
+export const STAND = { pole: { x: 24.2, y: 17.2 }, head: { x: 22.3, y: 21.3 }, armZ: 18.6, lensZ: 16 };
+
+/** Damaged units go here, away from sellable stock. */
+export const BIN = { w: 3.2, d: 3.0, h: 2.6 };
+const HoldBin: React.FC<{ p: P3 & { hooked: boolean } }> = ({ p }) => (
+  <g>
+    {p.hooked && <Box x={RECV.x1 - 0.2} y={p.y + 1.1} z={p.z + BIN.h - 0.5} w={0.6} d={0.8} h={0.6} color={C.ink} line={false} />}
+    <Box x={p.x} y={p.y} z={p.z} w={BIN.w} d={BIN.d} h={BIN.h} color={C.white} top={mix(C.grey, C.ink, 0.35)} />
+    <polygon points={poly([[p.x + 0.35, p.y + 0.35, p.z + BIN.h], [p.x + BIN.w - 0.35, p.y + 0.35, p.z + BIN.h], [p.x + BIN.w - 0.35, p.y + BIN.d - 0.35, p.z + BIN.h], [p.x + 0.35, p.y + BIN.d - 0.35, p.z + BIN.h]])} fill={mix(C.grey, C.ink, 0.55)} {...LINE} />
+  </g>
+);
+
+/** Flat shipping label with a barcode, lying on a horizontal surface. */
+export const ShipLabel: React.FC<{ x: number; y: number; z: number; w: number; d: number }> = ({ x, y, z, w, d }) => (
+  <g>
+    <polygon points={poly([[x, y, z], [x + w, y, z], [x + w, y + d, z], [x, y + d, z]])} fill={C.white} {...LINE} />
+    {[0.18, 0.34, 0.46, 0.62, 0.78].map((k, i) => (
+      <polyline key={i} points={poly([[x + w * k, y + d * 0.2, z + 0.01], [x + w * k, y + d * 0.8, z + 0.01]])} fill="none" stroke={C.ink} strokeWidth={i % 2 ? 2 : 3} vectorEffect="non-scaling-stroke" />
+    ))}
+  </g>
+);
 
 export type P3 = { x: number; y: number; z: number };
 export type RoomState = {
@@ -20,7 +42,9 @@ export type RoomState = {
   mailer: null | (P3 & { taped: number; label: number; inCage: boolean });
   printer: number;              // label coming out of the printer, 0..1
   cageOut: number;              // 0 at its spot, 1 in the doorway
-  hand: null | (P3 & { rot: number });
+  recvFade: number;             // receiving table + copy stand: 1 shown, 0 dissolved (storage shot)
+  flyLabel: null | P3;          // the shipping label on its way from the printer to the mailer
+  holdBin: P3 & { hooked: boolean };  // tote for damaged units: hooked on the receiving table, later on the bottom shelf
   highlightCells: boolean;
 };
 
@@ -34,10 +58,7 @@ const Mailer: React.FC<{ x: number; y: number; z: number; w?: number; d?: number
     {taped > 0.01 && <polygon points={poly([[x + w * 0.45, y, z + 0.72], [x + w * 0.55, y, z + 0.72], [x + w * 0.55, y + d * taped, z + 0.72], [x + w * 0.45, y + d * taped, z + 0.72]])} fill={C.green} {...LINE} />}
     {label > 0.99 && (
       <g>
-        <polygon points={poly([[x + w * 0.62, y + 0.5, z + 0.72], [x + w - 0.4, y + 0.5, z + 0.72], [x + w - 0.4, y + d - 0.5, z + 0.72], [x + w * 0.62, y + d - 0.5, z + 0.72]])} fill={C.white} {...LINE} />
-        {[0, 1, 2, 3].map((k) => (
-          <polyline key={k} points={poly([[x + w * 0.66 + k * 0.35, y + 0.9, z + 0.73], [x + w * 0.66 + k * 0.35, y + d - 0.9, z + 0.73]])} fill="none" stroke={C.ink} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-        ))}
+        <ShipLabel x={x + w * 0.56} y={y + 0.4} z={z + 0.72} w={w * 0.44 - 0.3} d={d - 0.8} />
       </g>
     )}
   </g>
@@ -95,14 +116,14 @@ export const Room: React.FC<{ s: RoomState }> = ({ s }) => {
       <Cage y0={cy} s={s} />
 
       {/* receiving table: light grey top, mint edge along the front */}
-      <Table t={RECV} edge={C.green} />
-      {/* overhead copy-stand camera that photographs every delivery */}
-      <Box x={RECV.x0 + 0.3} y={RECV.y1 - 1.1} z={RECV.top} w={0.6} d={0.6} h={11.5} color={C.ink} line={false} />
-      <Box x={RECV.x0 + 0.3} y={RECV.y1 - 1.1} z={RECV.top + 11} w={8} d={0.5} h={0.5} color={C.ink} line={false} />
-      <Box x={RECV.x0 + 7.8} y={RECV.y0 + 5} z={RECV.top + 11} w={0.5} d={RECV.y1 - RECV.y0 - 5.6} h={0.5} color={C.ink} line={false} />
-      <Box x={RECV.x0 + 6.6} y={RECV.y0 + 3.6} z={RECV.top + 9.4} w={3} d={2.6} h={1.8} color={C.white} />
-      <ellipse cx={iso(RECV.x0 + 8.1, RECV.y0 + 4.9, RECV.top + 9.4).X} cy={iso(RECV.x0 + 8.1, RECV.y0 + 4.9, RECV.top + 9.4).Y + 3} rx={9} ry={5} fill={C.ink} />
-      {s.carton && <Carton x={RECV.x0 + 1.2} y={RECV.y0 + 1.5} z={RECV.top + s.carton.z} flaps={s.carton.flaps} collapse={s.carton.collapse} />}
+      {s.recvFade > 0.001 && (
+        <g opacity={s.recvFade} transform={`translate(0 ${(1 - s.recvFade) * 30})`}>
+          <Table t={RECV} edge={C.green} />
+          {/* copy-stand pole at the back-right corner, behind the products */}
+          <Box x={STAND.pole.x} y={STAND.pole.y} z={RECV.top} w={0.6} d={0.6} h={STAND.armZ - RECV.top + 0.5} color={C.ink} line={false} />
+          {s.carton && <Carton x={RECV.x0 + 1.2} y={RECV.y0 + 1.5} z={RECV.top + s.carton.z} flaps={s.carton.flaps} collapse={s.carton.collapse} />}
+        </g>
+      )}
 
       {/* packing table: tape, scale, label printer, a stack of mailers */}
       <Table t={PACK} />
@@ -131,17 +152,27 @@ export const Room: React.FC<{ s: RoomState }> = ({ s }) => {
       {[[1.8, 30.3], [5.7, 30.3], [1.8, 34.2], [5.7, 34.2]].map(([x, y], i) => <Box key={i} x={x} y={y} z={1.2} w={3.8} d={3.8} h={3.6} color={C.green} />)}
       {[[1.8, 30.3], [5.7, 30.3], [1.8, 34.2]].map(([x, y], i) => <Box key={i} x={x} y={y} z={4.8} w={3.8} d={3.8} h={3.6} color={C.green} />)}
 
+      {/* the hold tote for damaged units */}
+      <HoldBin p={s.holdBin} />
       {/* product jars, wherever they are (table, air, shelf) */}
       {s.jars.map((j, i) => <Jar key={i} x={j.x} y={j.y} z={j.z} />)}
+      {/* copy-stand arm and camera, lens pointing straight down at the rows of products */}
+      {s.recvFade > 0.001 && (
+        <g opacity={s.recvFade} transform={`translate(0 ${(1 - s.recvFade) * 30})`}>
+          <Box x={STAND.pole.x} y={STAND.pole.y} z={STAND.armZ} w={0.6} d={STAND.head.y - STAND.pole.y + 0.3} h={0.5} color={C.ink} line={false} />
+          <Box x={STAND.head.x + 0.8} y={STAND.head.y} z={STAND.armZ} w={STAND.pole.x - STAND.head.x - 0.2} d={0.6} h={0.5} color={C.ink} line={false} />
+          <Cyl x={STAND.head.x} y={STAND.head.y} z={STAND.lensZ} r={0.75} h={0.9} color={C.ink} />
+          <Box x={STAND.head.x - 1.3} y={STAND.head.y - 1.3} z={STAND.lensZ + 0.9} w={2.6} d={2.6} h={1.5} color={C.white} />
+        </g>
+      )}
       {/* the order's mailer, while it is not inside the cage */}
       {m && !m.inCage && <Mailer x={m.x} y={m.y} z={m.z} taped={m.taped} label={m.label} />}
-      {/* the hand */}
-      {s.hand && <Glove {...pt(s.hand.x, s.hand.y, s.hand.z)} rot={s.hand.rot} scale={1.1} />}
+      {/* the shipping label flying from the printer onto the mailer */}
+      {s.flyLabel && <ShipLabel x={s.flyLabel.x} y={s.flyLabel.y} z={s.flyLabel.z} w={1.9} d={2.8} />}
     </g>
   );
 };
 
-const pt = (x: number, y: number, z: number) => { const p = iso(x, y, z); return { x: p.X, y: p.Y }; };
 
 const Table: React.FC<{ t: { x0: number; x1: number; y0: number; y1: number; top: number }; edge?: string }> = ({ t, edge }) => {
   const legs: [number, number][] = [[t.x0 + 0.4, t.y0 + 0.4], [t.x1 - 1.2, t.y0 + 0.4], [t.x0 + 0.4, t.y1 - 1.2], [t.x1 - 1.2, t.y1 - 1.2]];
@@ -168,14 +199,14 @@ const Shelving: React.FC<{ s: RoomState }> = ({ s }) => {
           ))}
         </g>
       ))}
-      {/* stock on the shelves (green boxes) and the product jars in A2 */}
+      {/* stock on the shelves (green boxes); the left slot of A4 is kept for the hold tote */}
       {levels.map((z, li) =>
         [0, 1].map((b) => {
           const cell = CELLS[b * 3 + li];
           const n = stock[cell] ?? 0;
           return (
             <g key={`${li}-${b}`}>
-              {Array.from({ length: n }, (_, k) => <Box key={k} x={x0 + b * bay + 0.6 + k * 3.8} y={y0 + 0.8} z={z + 0.5} w={3.4} d={4.6} h={4.6} color={G} />)}
+              {Array.from({ length: n }, (_, k) => <Box key={k} x={x0 + b * bay + 0.6 + (k + (cell === "A4" ? 1 : 0)) * 3.8} y={y0 + 0.8} z={z + 0.5} w={3.4} d={4.6} h={4.6} color={G} />)}
             </g>
           );
         }),

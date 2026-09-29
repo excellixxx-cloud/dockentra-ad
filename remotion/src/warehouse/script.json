@@ -96,8 +96,18 @@
     ],
     [
       13.4,
+      16.8,
+      "We store it and count it."
+    ],
+    [
+      17.2,
       21.3,
-      "We store it, pick it, pack it and ship it."
+      "We pick it, pack it and label it."
+    ],
+    [
+      21.6,
+      24.65,
+      "Then it ships to your customer."
     ]
   ],
   "voiceover": [
@@ -118,8 +128,18 @@
     ],
     [
       13.4,
-      24.6,
-      "We store it, pick it, pack it and ship it."
+      16.8,
+      "We store it and count it."
+    ],
+    [
+      17.2,
+      21.3,
+      "We pick it, pack it and label it."
+    ],
+    [
+      21.6,
+      24.5,
+      "Then it ships to your customer."
     ],
     [
       24.9,
