@@ -462,3 +462,118 @@ export const StockBox: React.FC<{ p: P; cell: string; heat: number }> = ({ p, ce
     </g>
   );
 };
+
+/* ------------------------------------------------------------------ pieces that act on their own (no hands) */
+
+/** Soft contact shadow on the table; shrinks and fades as the object rises. */
+export const LiftShadow: React.FC<{ x: number; y: number; r: number; lift: number; seed?: number }> = ({ x, y, r, lift, seed = 2 }) => (
+  <path d={smooth(blob(x + 0.4 + lift * 0.15, y + 0.5 + lift * 0.15, 0.015, r * (1 + lift * 0.06), seed, 0.06))} fill={C.ink} opacity={0.12 / (1 + lift * 0.35)} />
+);
+
+type BagBox = { x0: number; y0: number; x1: number; y1: number; z0: number; zTop: number };
+/** Zip bag, back half (under the contents): a clear sheet lying on the table. */
+export const ZipBagBack: React.FC<{ b: BagBox; op?: number }> = ({ b, op = 1 }) => (
+  <g opacity={op}>
+    <polygon points={poly([[b.x0, b.y0, b.z0], [b.x1, b.y0, b.z0], [b.x1, b.y1, b.z0], [b.x0, b.y1, b.z0]])} fill={C.white} fillOpacity={0.45} {...LINE} strokeOpacity={0.45} />
+  </g>
+);
+/** Zip bag, front half: the top sheet lifts to open the mouth, then the zip runs left → right. */
+export const ZipBagFront: React.FC<{ b: BagBox; open: number; zip: number; op?: number }> = ({ b, open, zip, op = 1 }) => {
+  const zt = b.zTop + open * 2.6;
+  const zipAt = b.x0 + 0.6 + (b.x1 - b.x0 - 1.2) * zip;
+  return (
+    <g opacity={op}>
+      {/* sides of the pouch */}
+      <polygon points={poly([[b.x0, b.y1, b.z0], [b.x1, b.y1, b.z0], [b.x1, b.y1, zt], [b.x0, b.y1, zt]])} fill={C.white} fillOpacity={0.22} {...LINE} strokeOpacity={0.35} />
+      <polygon points={poly([[b.x1, b.y0, b.z0], [b.x1, b.y1, b.z0], [b.x1, b.y1, zt], [b.x1, b.y0, zt]])} fill={C.white} fillOpacity={0.18} {...LINE} strokeOpacity={0.35} />
+      {/* top sheet with a glint */}
+      <polygon points={poly([[b.x0, b.y0, zt], [b.x1, b.y0, zt], [b.x1, b.y1, zt], [b.x0, b.y1, zt]])} fill={C.white} fillOpacity={0.3} {...LINE} strokeOpacity={0.5} />
+      <polyline points={poly([[b.x0 + 1.5, b.y0 + 1, zt + 0.02], [b.x0 + (b.x1 - b.x0) * 0.45, b.y0 + 1, zt + 0.02]])} stroke={C.white} strokeWidth={4} strokeOpacity={0.9} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      {/* zip track: dashed while open, solid behind the slider */}
+      <polyline points={poly([[b.x0 + 0.6, b.y0 + 0.5, zt + 0.03], [b.x1 - 0.6, b.y0 + 0.5, zt + 0.03]])} stroke={C.ink} strokeOpacity={0.35} strokeWidth={1.5} strokeDasharray="3 3" fill="none" vectorEffect="non-scaling-stroke" />
+      {zip > 0 && <polyline points={poly([[b.x0 + 0.6, b.y0 + 0.5, zt + 0.04], [zipAt, b.y0 + 0.5, zt + 0.04]])} stroke={C.ink} strokeWidth={2.5} fill="none" vectorEffect="non-scaling-stroke" />}
+      {zip > 0 && zip < 1 && <polygon points={poly([[zipAt - 0.4, b.y0 + 0.1, zt + 0.05], [zipAt + 0.5, b.y0 + 0.1, zt + 0.05], [zipAt + 0.5, b.y0 + 1.1, zt + 0.05], [zipAt - 0.4, b.y0 + 1.1, zt + 0.05]])} fill={PROP.silverDark} {...LINE} />}
+    </g>
+  );
+};
+
+/** Bubble wrap winding round the jar: coverage climbs as it turns, then a tape band. */
+export const BubbleWrapJar: React.FC<{ p: P; wrap: number; taped?: number }> = ({ p, wrap, taped = 0 }) => {
+  if (wrap <= 0.01) return null;
+  const [x, y, z] = p;
+  const r = 2.95, h = 4.6 * wrap;
+  const dots: React.ReactElement[] = [];
+  const rows = Math.max(1, Math.floor(h / 0.8));
+  for (let row = 0; row < rows; row++) {
+    for (let k = 0; k < 7; k++) {
+      const a = ((-30 + k * 25 + (row % 2) * 12) * Math.PI) / 180;
+      const [bx, by] = sp([x + Math.cos(a) * r, y + Math.sin(a) * r, z + 0.45 + row * 0.8]);
+      dots.push(<g key={`${row}-${k}`}><ellipse cx={bx} cy={by} rx={4.2} ry={3.4} fill={C.white} fillOpacity={0.6} stroke={C.ink} strokeOpacity={0.3} strokeWidth={0.8} /><circle cx={bx - 1.3} cy={by - 1.1} r={1} fill={C.white} /></g>);
+    }
+  }
+  return (
+    <g>
+      <Cylinder c0={[x, y, z]} c1={[x, y, z + h]} axis="z" r={r} fill={C.white} end={mix(C.white, PROP.silver, 0.15)} opacity={0.5} gloss={0.9} />
+      {dots}
+      {taped > 0.01 && <Cylinder c0={[x, y, z + 1.6]} c1={[x, y, z + 2.6]} axis="z" r={r + 0.05} fill={PROP.tapeTint} end={mix(PROP.tapeTint, C.white, 0.3)} opacity={0.8 * taped} gloss={0.5} />}
+    </g>
+  );
+};
+
+/** A loose sheet of bubble wrap in flight (flat, bubbles showing). */
+export const BubbleSheet: React.FC<{ c: P; s: number }> = ({ c, s }) => {
+  const [x, y, z] = c, w = 3.2 * s, d = 2.4 * s;
+  return (
+    <g>
+      <polygon points={poly([[x - w, y - d, z], [x + w, y - d, z], [x + w, y + d, z], [x - w, y + d, z]])} fill={C.white} fillOpacity={0.6} {...LINE} strokeOpacity={0.5} />
+      {Array.from({ length: 12 }, (_, i) => {
+        const [bx, by] = sp([x - w * 0.7 + (i % 4) * w * 0.46, y - d * 0.55 + Math.floor(i / 4) * d * 0.55, z + 0.02]);
+        return <ellipse key={i} cx={bx} cy={by} rx={4} ry={3} fill={C.white} fillOpacity={0.7} stroke={C.ink} strokeOpacity={0.3} strokeWidth={0.8} />;
+      })}
+    </g>
+  );
+};
+
+/** Crumpled kraft ball (filler). `squash` flattens it on impact. */
+export const PaperBall: React.FC<{ c: P; r?: number; seed: number; squash?: number }> = ({ c, r = 1.4, seed, squash = 0 }) => {
+  const [x, y, z] = c;
+  const rz = r * (1 - 0.3 * squash);
+  return (
+    <g>
+      <path d={smooth(blob(x, y, z + rz, r * (1 + 0.15 * squash), seed, 0.5, 11))} fill={mix(PROP.kraft, C.white, 0.25)} {...LINE} />
+      <path d={`M${sp([x - r * 0.4, y, z + rz])} L${sp([x + r * 0.1, y - r * 0.3, z + rz])} L${sp([x + r * 0.4, y + r * 0.2, z + rz])}`} fill="none" stroke={PROP.kraftDark} strokeWidth={1.2} vectorEffect="non-scaling-stroke" />
+    </g>
+  );
+};
+
+/** Printed shipping label lying flat (barcode + address lines). `press` lowers and flattens it. */
+export const ShippingLabel: React.FC<{ c: P; tilt?: number; sheen?: number }> = ({ c, tilt = 0, sheen = 0 }) => {
+  const [x, y, z] = c, w = 2.6, d = 1.9;
+  const zf = (dx: number) => z + tilt * (dx + w) * 0.35;           // front edge dips while it lands
+  const q = (dx: number, dy: number, dz = 0): [number, number, number] => [x + dx, y + dy, zf(dx) + dz];
+  return (
+    <g>
+      <polygon points={poly([q(-w, -d), q(w, -d), q(w, d), q(-w, d)])} fill={C.white} {...LINE} />
+      {[-1.9, -1.5, -1.3, -0.9, -0.6, -0.2, 0.1, 0.5].map((bx, i) => (
+        <polyline key={i} points={poly([q(bx, -d + 0.35, 0.01), q(bx, -0.2, 0.01)])} stroke={C.ink} strokeWidth={i % 3 ? 1.6 : 2.6} fill="none" vectorEffect="non-scaling-stroke" />
+      ))}
+      {[0.35, 0.85, 1.35].map((ly, i) => (
+        <polyline key={i} points={poly([q(-2, ly, 0.01), q(i === 2 ? 0.2 : 1.6, ly, 0.01)])} stroke={C.ink} strokeOpacity={0.55} strokeWidth={1.4} fill="none" vectorEffect="non-scaling-stroke" />
+      ))}
+      {sheen > 0 && sheen < 1 && <polyline points={poly([q(-w + 2 * w * sheen, -d, 0.02), q(-w + 2 * w * sheen - 0.6, d, 0.02)])} stroke={C.white} strokeWidth={5} strokeOpacity={0.9} fill="none" vectorEffect="non-scaling-stroke" />}
+    </g>
+  );
+};
+
+/** Packing tape pulled off the dispenser: a brown clear ribbon from the blade to its tip. */
+export const TapeRibbon: React.FC<{ from: P; to: P; sag?: number; op?: number }> = ({ from, to, sag = 1.2, op = 1 }) => {
+  const mid: P = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2, Math.max(from[2], to[2]) + sag];
+  const d = `M${sp(from)} Q${sp(mid)} ${sp(to)}`;
+  return (
+    <g opacity={op}>
+      <path d={d} fill="none" stroke={C.ink} strokeWidth={13} strokeLinecap="round" strokeOpacity={0.8} />
+      <path d={d} fill="none" stroke={PROP.tapeTint} strokeWidth={10} strokeLinecap="round" />
+      <path d={d} fill="none" stroke={C.white} strokeWidth={2.5} strokeOpacity={0.6} strokeLinecap="round" />
+    </g>
+  );
+};

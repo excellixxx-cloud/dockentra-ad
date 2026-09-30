@@ -5,15 +5,16 @@ import { Drift, Words } from "../components/Kinetic";
 import { loadBrandFonts } from "../fonts";
 import { TimeContext, useT } from "../time";
 import { iso } from "../warehouse/iso";
-import { Hand, P, PROP } from "./geo";
+import { P, PROP, sp } from "./geo";
 import {
-  BalmJar, BubbleRoll, ClearLid, CreamJar, FillerBox, KraftMailer, LabelPrinter, Lipstick, LotionBottle,
-  MailerStack, MaskingTape, Scale, StockBox, TapeDispenser, WallsAndTable,
+  BalmJar, BubbleRoll, BubbleSheet, BubbleWrapJar, ClearLid, CreamJar, FillerBox, KraftMailer, LabelPrinter, LiftShadow,
+  Lipstick, LotionBottle, MailerStack, MaskingTape, PaperBall, Scale, ShippingLabel, StockBox, TapeDispenser, TapeRibbon,
+  WallsAndTable, ZipBagBack, ZipBagFront,
 } from "./Props";
 import script from "./script.json";
 import {
-  boxAt, bottleAt, breathe, buildCamera, DURATION_S, flashAt, handsAt, jarAt, lipBalmAt, mailer1At, mailer2At,
-  mailer3At, mailerVisible, printerAt, scaleAt, shakeAt, T,
+  ballsAt, bottleAt, boxesAt, breathe, buildCamera, DURATION_S, flashAt, jarAt, labelAt, lipBalmAt, mailer1At,
+  mailer2At, mailer3At, mailerVisible, printerAt, scaleAt, shakeAt, T,
 } from "./timeline";
 import { Cam } from "./Keyframes";
 
@@ -24,17 +25,6 @@ const toScreen = (cam: Cam, p: P) => {
   const a = iso(p[0], p[1], p[2]), o = iso(cam.x, cam.y, cam.z);
   return { x: cam.ax + cam.zoom * (a.X - o.X), y: cam.ay + cam.zoom * (a.Y - o.Y) };
 };
-const drawHand = (cam: Cam, p: P, o: { rot: number; curl?: number; mirror?: boolean; thumbOut?: number; k?: number; op?: number }, key: React.Key) => {
-  const s = toScreen(cam, p);
-  const sc = 0.72 * cam.zoom * (o.k ?? 1);
-  const a = (o.rot * Math.PI) / 180, reach = 50 * (1 - 0.4 * (o.curl ?? 0.4));
-  return (
-    <g key={key} opacity={o.op ?? 1}>
-      <Hand x={s.x - reach * sc * Math.cos(a)} y={s.y - reach * sc * Math.sin(a)} rot={o.rot} scale={sc} curl={o.curl ?? 0.4} mirror={o.mirror} thumbOut={o.thumbOut} />
-    </g>
-  );
-};
-
 const SUB_BOTTOM = 250;
 const LOGO_IN = T.logo;
 
@@ -51,23 +41,16 @@ export const Cosmetics: React.FC = () => {
   const m1 = mailer1At(t), m2 = mailer2At(t), m3 = mailer3At(t);
   const bottle = bottleAt(t);
   const jar = jarAt(t);
+  const balls = ballsAt(t);
   const lipBalm = lipBalmAt(t);
-  const box = boxAt(t);
+  const boxes = boxesAt(t);
   const sc = scaleAt(t);
   const pr = printerAt(t);
-  const hands = handsAt(t);
+  const label = labelAt(t, m1);
 
   const apex = toScreen(cam, [0, 0, 0]);
   const band = clamp((620 - apex.y) / 260);
   const dim = ramp(t, T.dim, 0.6, EASE_MOVE);
-
-  // the printer's label, torn off and carried to the mailer on the scale
-  const labelFrom: P = [26, 4.5, 6.6], labelTo: P = [31, 13.3, 2.8];
-  const labelP: P | null = pr.flying ? [
-    labelFrom[0] + (labelTo[0] - labelFrom[0]) * pr.k,
-    labelFrom[1] + (labelTo[1] - labelFrom[1]) * pr.k,
-    labelFrom[2] + (labelTo[2] - labelFrom[2]) * pr.k + Math.sin(Math.PI * pr.k) * 2,
-  ] : null;
 
   const tf = (() => {
     const o = iso(cam.x, cam.y, cam.z);
@@ -91,58 +74,78 @@ export const Cosmetics: React.FC = () => {
               {[m1, m2, m3].map((m, i) => ({ m, i })).sort((a, b) => a.m.x + a.m.y - (b.m.x + b.m.y)).map(({ m, i }) => (
                 <g key={i} opacity={mailerVisible(i as 0 | 1 | 2, t)}><KraftMailer m={m} /></g>
               ))}
-              {bottle && (
-                <g opacity={bottle.opacity}>
-                  <LotionBottle p={bottle.p} capGap={bottle.capGap} drop={bottle.drop} taped={bottle.taped} />
-                  {bottle.bagged > 0.01 && (
-                    <polygon
-                      points={`${toScreen(cam, [bottle.p[0] - 1, bottle.p[1] - 2.5, 1.7]).x},${toScreen(cam, [bottle.p[0] - 1, bottle.p[1] - 2.5, 1.7]).y} ${toScreen(cam, [bottle.p[0] + 15, bottle.p[1] - 2.5, 1.7]).x},${toScreen(cam, [bottle.p[0] + 15, bottle.p[1] - 2.5, 1.7]).y} ${toScreen(cam, [bottle.p[0] + 15, bottle.p[1] + 4, 1.7]).x},${toScreen(cam, [bottle.p[0] + 15, bottle.p[1] + 4, 1.7]).y} ${toScreen(cam, [bottle.p[0] - 1, bottle.p[1] + 4, 1.7]).x},${toScreen(cam, [bottle.p[0] - 1, bottle.p[1] + 4, 1.7]).y}`}
-                      fill={C.white} fillOpacity={0.3 * bottle.bagged} stroke={C.ink} strokeOpacity={0.4 * bottle.bagged} strokeWidth={1.5} strokeDasharray="4 3"
-                    />
-                  )}
-                </g>
-              )}
-              {jar && (
-                <g opacity={jar.opacity}>
-                  <CreamJar p={jar.p} crack={jar.crack} />
-                  {jar.wrap > 0.01 && (
-                    <ellipse
-                      cx={toScreen(cam, [jar.p[0], jar.p[1], jar.p[2] + 2.2]).x} cy={toScreen(cam, [jar.p[0], jar.p[1], jar.p[2] + 2.2]).y}
-                      rx={34 * cam.zoom} ry={30 * cam.zoom} fill="none" stroke={C.white} strokeOpacity={0.6 * jar.wrap} strokeWidth={6} strokeDasharray="3 4"
-                    />
-                  )}
-                </g>
-              )}
-              {lipBalm && (
-                <g opacity={lipBalm.opacity}>
-                  <Lipstick p={lipBalm.lip} melted={lipBalm.melted} />
-                  <BalmJar p={lipBalm.balm} crater={lipBalm.crater} />
-                  {lipBalm.balm && <ClearLid p={[lipBalm.balm[0] + 4, lipBalm.balm[1] + 2, 0]} />}
-                </g>
-              )}
-              {box && (
-                <g opacity={box.opacity}>
-                  <StockBox p={box.p} cell={box.cell} heat={box.heat} />
-                </g>
-              )}
-              {box && box.heat > 0.05 && (() => {
-                const s0 = toScreen(cam, [box.p[0] + 4, box.p[1] + 4, 9.5]);
+              {bottle && (() => {
+                const bb = bottle.bag;
+                const box = bb ? { x0: bb.at[0] - 1.5, y0: bb.at[1] - 2.6, x1: bb.at[0] + 16.5, y1: bb.at[1] + 2.6, z0: bb.at[2] + 0.02, zTop: bb.at[2] + 3.5 } : null;
+                const base = sp(bottle.p);
                 return (
-                  <g opacity={box.heat}>
-                    {[-1, 0, 1].map((i) => {
-                      const x0 = s0.x + i * 30 * cam.zoom, y0 = s0.y;
-                      const d = `M${x0} ${y0} c${-9 * cam.zoom} ${-13 * cam.zoom} ${9 * cam.zoom} ${-24 * cam.zoom} 0 ${-37 * cam.zoom} s${9 * cam.zoom} ${-24 * cam.zoom} 0 ${-37 * cam.zoom}`;
-                      return <path key={i} d={d} fill="none" stroke={PROP.red} strokeWidth={4} strokeLinecap="round" opacity={0.7 - Math.abs(i) * 0.2} />;
-                    })}
+                  <g opacity={bottle.opacity}>
+                    {box && <ZipBagBack b={box} op={bb!.op} />}
+                    <LiftShadow x={bottle.p[0] + 7} y={bottle.p[1]} r={6.5} lift={bottle.p[2]} />
+                    <g transform={`rotate(${bottle.rot} ${base[0]} ${base[1]})`}>
+                      <LotionBottle p={bottle.p} capGap={bottle.capGap} drop={bottle.drop} taped={bottle.taped} />
+                    </g>
+                    {bottle.tape && <TapeRibbon from={bottle.tape.from} to={bottle.tape.to} op={bottle.tape.op} />}
+                    {box && <ZipBagFront b={box} open={bb!.open} zip={bb!.zip} op={bb!.op} />}
                   </g>
                 );
               })()}
+              {jar && (
+                <g opacity={jar.opacity}>
+                  <LiftShadow x={jar.p[0]} y={jar.p[1]} r={3} lift={jar.p[2]} seed={5} />
+                  <CreamJar p={jar.p} crack={jar.crack} />
+                  <BubbleWrapJar p={jar.p} wrap={jar.wrap} taped={jar.taped} />
+                </g>
+              )}
+              {jar?.sheet && (
+                <g>
+                  <LiftShadow x={jar.sheet.c[0]} y={jar.sheet.c[1]} r={3 * jar.sheet.s} lift={jar.sheet.c[2]} seed={9} />
+                  <BubbleSheet c={jar.sheet.c} s={jar.sheet.s} />
+                </g>
+              )}
+              {balls.map((b, i) => (
+                <g key={i} opacity={b.op}>
+                  <LiftShadow x={b.c[0]} y={b.c[1]} r={1.3} lift={Math.max(0, b.c[2] - 1.1)} seed={b.seed} />
+                  <PaperBall c={b.c} seed={b.seed} squash={b.squash} />
+                </g>
+              ))}
+              {lipBalm && (() => {
+                const bg = lipBalm.bag;
+                const box = bg ? { x0: bg.b.x0, y0: bg.b.y0, x1: bg.b.x0 + 15, y1: bg.b.y0 + 6.5, z0: bg.b.z0, zTop: bg.b.z0 + 2.4 } : null;
+                return (
+                  <g opacity={lipBalm.opacity}>
+                    {box && <ZipBagBack b={box} op={bg!.op} />}
+                    <Lipstick p={lipBalm.lip} melted={lipBalm.melted} />
+                    <BalmJar p={lipBalm.balm} crater={lipBalm.crater} />
+                    {!bg && <ClearLid p={[lipBalm.balm[0] + 4, lipBalm.balm[1] + 2, 0]} />}
+                    {box && <ZipBagFront b={box} open={bg!.open} zip={bg!.zip} op={bg!.op} />}
+                  </g>
+                );
+              })()}
+              {boxes.map((bx) => (
+                <g key={bx.cell} opacity={bx.opacity}>
+                  <StockBox p={bx.p} cell={bx.cell} heat={bx.heat} />
+                  {bx.cell === "A6" && bx.heat > 0.05 && (() => {
+                    const s0 = sp([bx.p[0] + 4, bx.p[1] + 4, 9.5]);
+                    return (
+                      <g opacity={bx.heat}>
+                        {[-1, 0, 1].map((i) => {
+                          const x0 = s0[0] + i * 30, y0 = s0[1] - 6 * Math.sin(t * 5 + i);
+                          const d = `M${x0} ${y0} c-9 -13 9 -24 0 -37 s9 -24 0 -37`;
+                          return <path key={i} d={d} fill="none" stroke={PROP.red} strokeWidth={4} strokeLinecap="round" opacity={0.7 - Math.abs(i) * 0.2} vectorEffect="non-scaling-stroke" />;
+                        })}
+                      </g>
+                    );
+                  })()}
+                </g>
+              ))}
+              {label && (
+                <g>
+                  {label.flying && <LiftShadow x={label.c[0]} y={label.c[1]} r={2.4} lift={label.c[2] - 3} seed={11} />}
+                  <ShippingLabel c={label.c} tilt={label.tilt} sheen={label.sheen} />
+                </g>
+              )}
             </g>
-            {labelP && (() => {
-              const s = toScreen(cam, labelP);
-              return <rect x={s.x - 16 * cam.zoom} y={s.y - 10 * cam.zoom} width={32 * cam.zoom} height={20 * cam.zoom} fill={C.white} stroke={C.ink} strokeWidth={1.5} transform={`rotate(${pr.k * 30} ${s.x} ${s.y})`} />;
-            })()}
-            {hands.map((h, i) => drawHand(cam, h.p, h, i))}
           </svg>
         </AbsoluteFill>
 
