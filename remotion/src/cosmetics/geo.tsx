@@ -25,7 +25,7 @@ export const PROP = {
   beigeDark: "#CDB089",
   red: "#D9483B",
   tapeTint: "#D8B98C",
-  skin: "#DCDFE1",       // hands: light-grey fill, line style
+  skin: "#EEF1F2",       // hands: light-grey fill, line style
   sleeve: "#55595E",
 };
 
@@ -136,47 +136,49 @@ export const Hand: React.FC<{ x: number; y: number; rot?: number; scale?: number
   const st = { stroke: C.ink, strokeWidth: 2, strokeLinejoin: "round" as const, strokeLinecap: "round" as const, vectorEffect: "non-scaling-stroke" as const };
   const soft = { fill: "none", stroke: C.ink, strokeWidth: 1.3, strokeLinecap: "round" as const, vectorEffect: "non-scaling-stroke" as const };
   const fingers = [
-    { y: 25, len: 36, w: 15 },  // little
-    { y: 9, len: 48, w: 17 },   // ring
-    { y: -8, len: 53, w: 18 },  // middle
-    { y: -25, len: 47, w: 17 }, // index
+    { y: 22, len: 30, w: 11 },  // little
+    { y: 8, len: 40, w: 13 },   // ring
+    { y: -7, len: 44, w: 14 },  // middle
+    { y: -21, len: 39, w: 13 }, // index
   ];
   // back of the hand with the thumb as one outline; the thumb tip tucks in as the hand grips
   const tx = 10 - 6 * curl, ty = -50 - 12 * thumbOut + 10 * curl;
-  const thumbSide = `M-72 -25 C-60 -28 -50 -30 -42 -32 C-30 -40 -14 ${ty + 2} ${tx - 6} ${ty - 2} C${tx + 4} ${ty - 5} ${tx + 11} ${ty + 2} ${tx + 7} ${ty + 9} C${tx + 2} ${ty + 15} -2 -40 3 -34`;
-  const palm = `${thumbSide} C9 -22 9 22 3 34 C-22 36 -52 32 -72 27 Z`;
+  const thumbSide = `M-72 -22 C-60 -25 -50 -27 -42 -29 C-30 -37 -14 ${ty + 2} ${tx - 6} ${ty - 2} C${tx + 4} ${ty - 5} ${tx + 11} ${ty + 2} ${tx + 7} ${ty + 9} C${tx + 2} ${ty + 15} -2 -37 3 -31`;
+  const palm = `${thumbSide} C9 -20 9 20 3 31 C-22 33 -52 29 -72 24 Z`;
   return (
     <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${scale} ${mirror ? -scale : scale})`}>
       {shadow && <path d={palm} transform="translate(14 18) scale(1.1)" fill={C.ink} opacity={0.07} />}
       {/* sleeve with a cuff */}
-      <path d="M-160 -38 L-70 -31 C-64 -10 -64 12 -70 33 L-160 40 Z" fill={PROP.sleeve} {...st} />
-      <path d="M-84 -32 C-79 -10 -79 12 -84 34" {...soft} stroke={mix(PROP.sleeve, C.white, 0.3)} strokeWidth={2} />
-      <path d="M-128 -20 C-112 -14 -100 -16 -90 -22 M-132 18 C-116 12 -104 16 -94 22" {...soft} stroke={mix(PROP.sleeve, C.ink, 0.4)} />
+      <path d="M-160 -35 L-70 -28 C-64 -9 -64 11 -70 30 L-160 37 Z" fill={PROP.sleeve} {...st} />
+      {/* wrist line: a clean seam where the hand meets the cuff */}
+      <path d="M-72 -25 C-73 -8 -73 10 -72 27" {...soft} stroke={mix(PROP.sleeve, C.ink, 0.55)} strokeWidth={2.2} strokeOpacity={0.8} />
+      <path d="M-84 -29 C-79 -9 -79 11 -84 31" {...soft} stroke={mix(PROP.sleeve, C.white, 0.3)} strokeWidth={2} />
+      <path d="M-128 -18 C-112 -13 -100 -15 -90 -20 M-132 16 C-116 11 -104 14 -94 20" {...soft} stroke={mix(PROP.sleeve, C.ink, 0.4)} />
       {/* fingers side by side, from the little finger to the index */}
       {fingers.map((f, i) => {
         const L = f.len * (1 - 0.4 * curl);
         return (
           <g key={i} transform={`translate(0 ${f.y}) rotate(${(i - 1.5) * -2.5})`}>
-            <rect x={-12} y={-f.w / 2} width={L + 12} height={f.w} rx={f.w / 2} fill={PROP.skin} {...st} />
+            <rect x={-10} y={-f.w / 2} width={L + 10} height={f.w} rx={f.w / 2} fill={PROP.skin} {...st} />
             {/* middle joint crease, stronger when curled */}
-            <path d={`M${L * 0.52} ${-f.w / 2 + 3} q${-2 - 3 * curl} ${f.w / 2 - 3} 0 ${f.w - 6}`} {...soft} strokeOpacity={0.35 + 0.4 * curl} />
+            <path d={`M${L * 0.52} ${-f.w / 2 + 2.5} q${-2 - 3 * curl} ${f.w / 2 - 2.5} 0 ${f.w - 5}`} {...soft} strokeOpacity={0.4 + 0.4 * curl} />
             {/* nail, disappears as the tip curls under */}
-            {curl < 0.75 && <rect x={L - 12} y={-f.w * 0.27} width={9} height={f.w * 0.54} rx={3.5} fill={mix(PROP.skin, C.white, 0.55)} {...st} strokeWidth={1} strokeOpacity={0.55 * (1 - curl)} />}
+            {curl < 0.75 && <rect x={L - 10} y={-f.w * 0.27} width={7} height={f.w * 0.54} rx={3} fill={mix(PROP.skin, C.white, 0.6)} {...st} strokeWidth={1} strokeOpacity={0.6 * (1 - curl)} />}
           </g>
         );
       })}
       {/* back of the hand over the finger bases; no outline along the knuckles */}
       <path d={palm} fill={PROP.skin} />
       <path d={thumbSide} fill="none" {...st} />
-      <path d="M3 34 C-22 36 -52 32 -72 27" fill="none" {...st} />
-      {/* thumb nail + the crease where the thumb meets the hand */}
+      <path d="M3 31 C-22 33 -52 29 -72 24" fill="none" {...st} />
+      {/* thumb nail + the crease where the thumb meets the hand — the thumb reads as a separate digit */}
       <g transform={`translate(${tx + 1} ${ty + 3}) rotate(${-35 + 20 * curl})`}>
-        <rect x={-5} y={-4.5} width={9} height={9} rx={3.5} fill={mix(PROP.skin, C.white, 0.55)} {...st} strokeWidth={1} strokeOpacity={0.55} />
+        <rect x={-5} y={-4} width={8} height={8} rx={3} fill={mix(PROP.skin, C.white, 0.6)} {...st} strokeWidth={1} strokeOpacity={0.6} />
       </g>
-      <path d="M-26 -36 q8 6 20 2" {...soft} strokeOpacity={0.35} />
+      <path d="M-30 -33 q10 8 24 3" {...soft} strokeOpacity={0.55} strokeWidth={1.8} />
       {/* knuckles + tendons */}
-      {[-25, -8, 9, 25].map((ky, i) => <path key={i} d={`M-2 ${ky - 5} q5 5 0 10`} {...soft} strokeOpacity={0.4} />)}
-      {[-20, -6, 8, 21].map((ky, i) => <path key={i} d={`M-54 ${ky * 0.55} L-12 ${ky}`} {...soft} strokeOpacity={0.12} />)}
+      {[-22, -7, 8, 22].map((ky, i) => <path key={i} d={`M-2 ${ky - 5} q5 5 0 10`} {...soft} strokeOpacity={0.55} strokeWidth={1.6} />)}
+      {[-18, -6, 7, 19].map((ky, i) => <path key={i} d={`M-54 ${ky * 0.55} L-12 ${ky}`} {...soft} strokeOpacity={0.16} />)}
     </g>
   );
 };

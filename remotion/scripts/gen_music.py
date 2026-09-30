@@ -253,7 +253,44 @@ def warehouse():
     return tr
 
 
-TRACKS = {"three-ways": three_ways, "creator": creator, "warehouse": warehouse}
+def cosmetics():
+    """"Three ways cosmetics arrive ruined" (34 s). No music — quiet object
+    sounds only, locked to src/cosmetics/timeline.ts (T)."""
+    tr = Track(34.0, 53)
+    tr.add(0.5, (tr.swish(1.2, .1), .22))                                    # dolly-in whoosh
+    for i, at in enumerate([2.0, 2.25, 2.5]):                                # three mailers flop down
+        tr.add(at + .35, (tr.thump(85 - i * 4, .22, 20), .55), (tr.click(.03), .2), pan=.25 + i * .25)
+    tr.add(5.2, (tr.swish(.4, .3), .25))                                      # flap opens
+    tr.add(5.9, (tr.blip(1400, .1, 60), .12))                                 # cap gap
+    tr.add(9.0, (tr.click(.03), .8))                                         # cap snapped shut
+    tr.add(9.3, (tr.swish(.6, .5), .35), pan=.35)                            # tape pulled + wound
+    tr.add(10.0, (tr.swish(.4, .55), .3), pan=.6)                            # zip
+    tr.add(12.0, (tr.thump(150, .18, 24), .3))                               # into the clean mailer
+    for rt in (13.3, 14.3):
+        tr.add(rt, (tr.blip(1800, .08, 60), .1), (tr.blip(1900, .08, 60), .08), pan=.5)  # clink-clink
+    tr.cut_duck(15.35, 15.62, .5)
+    tr.add(15.62, (tr.thump(60, .3, 12), .9), (tr.blip(2400, .1, 30, bend=-.4), .35))    # drop + crack
+    tr.add(17.0, (tr.swish(.6, .35), .3), pan=.4)                            # bubble wrap pulled
+    for i in range(6):                                                       # bubbles popping softly
+        tr.add(17.6 + i * 0.12, (tr.click(.015), .12), pan=.45)
+    tr.add(19.0, (tr.swish(.5, .3), .25))                                    # filler crumpled in
+    tr.add(19.9, (tr.thump(140, .18, 24), .3))                               # mailer 2 closed
+    tr.add(21.8, (tr.blip(300, .35, 10), .18))                               # storage box set down
+    tr.add(24.0, (tr.swish(.5, .2), .22))                                    # box swapped for A2
+    tr.add(25.0, (tr.swish(.35, .5), .25), pan=.6)                           # zip bag
+    tr.add(26.2, (tr.thump(140, .18, 24), .3))                               # mailer 3 closed
+    tr.add(28.0, (tr.blip(1700, .07, 65), .16))                              # scale beep
+    for k in range(9):                                                       # label printer
+        tr.add(28.5 + k * 0.05, (tr.click(.012), .22), pan=.35)
+    tr.add(29.2, (tr.click(.02), .3))                                        # label stuck on
+    tr.add(29.75, (tr.blip(1700, .06, 65), .12), pan=.3)                     # scale beep, mailer 2
+    tr.add(30.15, (tr.blip(1700, .06, 65), .12), pan=.3)                     # scale beep, mailer 3
+    tr.add(30.9, (tr.swish(.7, .12), .2))                                    # pull back for the card
+    tr.add(31.6, (tr.blip(hz(74), 1.2, 3.5), .2), (tr.blip(hz(81), 1.2, 3.0), .1))  # logo
+    return tr
+
+
+TRACKS = {"three-ways": three_ways, "creator": creator, "warehouse": warehouse, "cosmetics": cosmetics}
 
 if __name__ == "__main__":
     name = sys.argv[1] if len(sys.argv) > 1 else "creator"

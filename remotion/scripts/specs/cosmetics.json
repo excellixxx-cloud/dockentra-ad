@@ -1,0 +1,36 @@
+{
+  "composition": "Cosmetics",
+  "duration": 34,
+  "segments": [
+    ["1 hook", 0, 2],
+    ["2 mailers", 2, 5],
+    ["3 the cap", 5, 13],
+    ["4 glass", 13, 21],
+    ["5 storage", 21, 28],
+    ["6 summary", 28, 31],
+    ["7 final", 31, 34]
+  ],
+  "interrupt_window": [15.4, 15.7],
+  "no_cuts_outside_interrupt": true,
+  "logo": {
+    "in": 31.6,
+    "box": [320, 596, 760, 940],
+    "must": {
+      "src/cosmetics/timeline.ts": ["logo: 31.6"],
+      "src/cosmetics/Cosmetics.tsx": ["(t - LOGO_IN) / 0.6", "const LOGO_IN = T.logo"]
+    }
+  },
+  "text_bands": {
+    "headline (y 140-480)": [140, 480],
+    "final price + url (y 1000-1190)": [1000, 1190],
+    "subtitles (y 1500-1680)": [1500, 1680]
+  },
+  "no_mint_bands": [[140, 480], [1500, 1680]],
+  "sources": ["src/cosmetics/Cosmetics.tsx", "src/cosmetics/timeline.ts"],
+  "script": "src/cosmetics/script.json",
+  "subtitle_src": "src/cosmetics/Cosmetics.tsx",
+  "max_big_words": 8,
+  "max_headline_words": 8,
+  "min_headline_s": 2.5,
+  "review_frames": [7, 16, 22, 29, 33]
+}

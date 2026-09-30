@@ -58,10 +58,10 @@ export type MailerState = {
   rot?: number;          // small in-plane jitter, degrees (screen)
 };
 export const KraftMailer: React.FC<{ m: MailerState }> = ({ m }) => {
-  const { x, y, w = 13, d = 9.5, num, open = 0, stain = 0, lift = 0, squash = 0 } = m;
+  const { x, y, w = 20, d = 14.5, num, open = 0, stain = 0, lift = 0, squash = 0 } = m;
   const z = (m.z ?? 0) + lift;
-  const h = 0.9 * (1 - 0.35 * squash);
-  const flap = 2.6;
+  const h = 1.1 * (1 - 0.35 * squash);
+  const flap = 3.6;
   // a closed mailer's padded top bulges a little
   const bulge = (1 - open) * 0.35;
   const [cx, cy] = sp([x + w / 2, y + d / 2, z + h]);
@@ -105,7 +105,7 @@ export const KraftMailer: React.FC<{ m: MailerState }> = ({ m }) => {
       )}
       {/* opened: the dark inside shows */}
       {open > 0.3 && <polygon points={poly([[x + w - flap - 0.2, y + 0.5, z + h], [x + w - flap + 0.1, y + 0.5, z + h - 0.1], [x + w - flap + 0.1, y + d - 0.5, z + h - 0.1], [x + w - flap - 0.2, y + d - 0.5, z + h]])} fill={C.ink} opacity={0.7} />}
-      {num && <TopText p={[x + w * 0.4, y + d * 0.45, z + h + 0.02]} size={60} weight={500} rot={-8}>{num}</TopText>}
+      {num && <TopText p={[x + w * 0.4, y + d * 0.45, z + h + 0.02]} size={82} weight={500} rot={-8}>{num}</TopText>}
     </g>
   );
 };
@@ -114,15 +114,15 @@ export const KraftMailer: React.FC<{ m: MailerState }> = ({ m }) => {
 export const MailerStack: React.FC<{ x?: number; y?: number }> = ({ x = 2, y = 30 }) => (
   <g>
     {Array.from({ length: 9 }, (_, i) => (
-      <Box key={i} x={x + (i % 2) * 0.35} y={y - (i % 3) * 0.3} z={i * 0.5} w={14} d={11} h={0.5} color={i % 2 ? PROP.kraft : mix(PROP.kraft, C.white, 0.08)} />
+      <Box key={i} x={x + (i % 2) * 0.35} y={y - (i % 3) * 0.3} z={i * 0.5} w={21} d={16} h={0.5} color={i % 2 ? PROP.kraft : mix(PROP.kraft, C.white, 0.08)} />
     ))}
-    <polyline points={poly([[x + 12.2, y, 4.5], [x + 12.2, y + 11, 4.5]])} stroke={PROP.kraftDark} strokeWidth={2} fill="none" />
+    <polyline points={poly([[x + 18.2, y, 4.5], [x + 18.2, y + 16, 4.5]])} stroke={PROP.kraftDark} strokeWidth={2} fill="none" />
     {/* roll of clear zip bags lying on the stack */}
-    <Cylinder c0={[x + 1.5, y + 5.5, 6.2]} c1={[x + 12.5, y + 5.5, 6.2]} axis="x" r={1.7} fill={mix(C.white, PROP.silver, 0.35)} end={C.white} gloss={1} opacity={0.95} />
-    <Cylinder c0={[x + 12.5, y + 5.5, 6.2]} c1={[x + 12.7, y + 5.5, 6.2]} axis="x" r={0.6} fill={PROP.silverDark} />
-    <polygon points={poly([[x + 2, y + 7.2, 5.9], [x + 12, y + 7.2, 5.9], [x + 12, y + 10, 4.6], [x + 2, y + 10, 4.6]])} fill={C.white} fillOpacity={0.55} {...LINE} strokeOpacity={0.5} />
+    <Cylinder c0={[x + 2, y + 8, 6.2]} c1={[x + 18.5, y + 8, 6.2]} axis="x" r={1.7} fill={mix(C.white, PROP.silver, 0.35)} end={C.white} gloss={1} opacity={0.95} />
+    <Cylinder c0={[x + 18.5, y + 8, 6.2]} c1={[x + 18.7, y + 8, 6.2]} axis="x" r={0.6} fill={PROP.silverDark} />
+    <polygon points={poly([[x + 2, y + 10, 5.9], [x + 17, y + 10, 5.9], [x + 17, y + 14.5, 4.6], [x + 2, y + 14.5, 4.6]])} fill={C.white} fillOpacity={0.55} {...LINE} strokeOpacity={0.5} />
     {/* zip line on the hanging bag */}
-    <polyline points={poly([[x + 2, y + 8.6, 5.25], [x + 12, y + 8.6, 5.25]])} stroke={C.ink} strokeOpacity={0.4} strokeWidth={1.5} strokeDasharray="3 2" fill="none" />
+    <polyline points={poly([[x + 2, y + 12.2, 5.25], [x + 17, y + 12.2, 5.25]])} stroke={C.ink} strokeOpacity={0.4} strokeWidth={1.5} strokeDasharray="3 2" fill="none" />
   </g>
 );
 
@@ -245,7 +245,7 @@ export const MaskingTape: React.FC<{ x?: number; y?: number }> = ({ x = 56, y = 
 /** Indices of a 40-point x-axis ring that face the camera (normal · (1,1,1) > 0). */
 const visibleArc = (rg: P[]) => [...rg.slice(35), ...rg.slice(0, 16)];
 export const LotionBottle: React.FC<{ p: P; lying?: boolean; capGap?: number; drop?: number; taped?: number }> = ({ p, lying = true, capGap = 0, drop = 0, taped = 0 }) => {
-  const r = 2.0, body = 10.5, capL = 2.3, rc = r * 0.8;
+  const r = 1.7, body = 12, capL = 2.4, rc = r * 0.8;
   if (!lying) {
     const [x, y, z] = p;
     return (
@@ -265,7 +265,7 @@ export const LotionBottle: React.FC<{ p: P; lying?: boolean; capGap?: number; dr
       <path d={smooth(blob(x + body / 2 + 0.5, y + 1, 0.02, body * 0.58, 2, 0.05))} fill={C.ink} opacity={0.09} />
       <Cylinder c0={[x, y, cz]} c1={[x + body, y, cz]} axis="x" r={r} fill={C.white} end={mix(C.white, C.grey, 0.6)} />
       {/* blank light-grey label wrapped round the body */}
-      <polygon points={pts2([...visibleArc(ring([x + 1.6, y, cz], "x", r + 0.02)).map(sp), ...visibleArc(ring([x + 7, y, cz], "x", r + 0.02)).map(sp).reverse()])} fill={mix(C.grey, C.ink, 0.06)} {...LINE} strokeOpacity={0.55} />
+      <polygon points={pts2([...visibleArc(ring([x + 2, y, cz], "x", r + 0.02)).map(sp), ...visibleArc(ring([x + 8.3, y, cz], "x", r + 0.02)).map(sp).reverse()])} fill={mix(C.grey, C.ink, 0.06)} {...LINE} strokeOpacity={0.55} />
       {/* gloss along the body */}
       {(() => { const a = sp([x + 0.6, y + 0.2, cz + r * 0.95]), b2 = sp([x + body - 0.4, y + 0.2, cz + r * 0.95]); return <line x1={a[0]} y1={a[1]} x2={b2[0]} y2={b2[1]} stroke={C.white} strokeWidth={5} strokeLinecap="round" />; })()}
       {/* tapered shoulder + neck */}
@@ -278,26 +278,20 @@ export const LotionBottle: React.FC<{ p: P; lying?: boolean; capGap?: number; dr
         {/* thumb notch on the lid */}
         {(() => { const a = sp([xs + capL - 0.1, y - 0.5, cz + rc * 0.75]), b2 = sp([xs + capL - 0.1, y + 0.5, cz + rc * 0.75]); return <line x1={a[0]} y1={a[1]} x2={b2[0]} y2={b2[1]} stroke={C.ink} strokeWidth={2.5} strokeLinecap="round" vectorEffect="non-scaling-stroke" />; })()}
       </g>
-      {/* lotion: a bead at the gap, a run down the cap, a small pool on the table */}
+      {/* lotion: one bead hanging at the seam, ready to fall — plus a small, palm-sized pool under the bottle */}
       {drop > 0 && (() => {
-        const seam = visibleArc(ring([xs + 0.72, y, cz], "x", rc + 0.15)).slice(8, 19).map(sp);
-        const ooze = `M${seam.map((q) => q.join(" ")).join(" L")}`;
-        const top = seam[seam.length - 3];
-        const side = sp([xs + 0.85, y + rc + 0.1, cz - 0.2]);
-        const low = sp([xs + 1.1, y + rc + 0.5, 0.05]);
-        const run = `M${sp([xs + 0.75, y + rc * 0.8, cz + rc * 0.6])} Q${side} ${low}`;
+        const gx = sp([xs + 0.85, y + 0.05, cz + rc * 0.7]);
+        const puddle: P = [xs + 0.6, y + rc + 1.7, 0.02];
         return (
-          <g opacity={Math.min(1, drop * 1.5)}>
-            <path d={smooth(blob(xs + 1.4, y + rc + 1.3, 0.03, 0.6 + 1.3 * drop, 4, 0.35, 20))} fill={C.white} {...LINE} />
-            {[ooze, run].map((d, i) => (
-              <g key={i}>
-                <path d={d} fill="none" stroke={C.ink} strokeWidth={i ? 7.5 : 9} strokeLinecap="round" strokeLinejoin="round" />
-                <path d={d} fill="none" stroke={C.white} strokeWidth={i ? 5 : 6.5} strokeLinecap="round" strokeLinejoin="round" />
-              </g>
-            ))}
-            <ellipse cx={top[0]} cy={top[1] - 1} rx={5 * drop} ry={4 * drop} fill={C.white} stroke={C.ink} strokeWidth={2} vectorEffect="non-scaling-stroke" />
-            <circle cx={top[0] - 1.8} cy={top[1] - 2.5} r={1.4} fill={PROP.silver} />
-            <ellipse cx={sp([xs + 1.1, y + rc + 1.1, 0.05])[0] - 5} cy={sp([xs + 1.1, y + rc + 1.1, 0.05])[1] - 2} rx={4} ry={1.6} fill={PROP.silver} opacity={0.7} />
+          <g opacity={Math.min(1, drop * 1.4)}>
+            <path d={smooth(blob(puddle[0], puddle[1], puddle[2], 1.3 + 0.9 * drop, 4, 0.4, 22))} fill={C.white} {...LINE} strokeOpacity={0.75} />
+            <path d={smooth(blob(puddle[0] + 0.15, puddle[1] - 0.1, puddle[2] + 0.005, 0.75 + 0.5 * drop, 9, 0.35, 16))} fill={mix(C.white, C.grey, 0.15)} opacity={0.55} />
+            {/* a single teardrop clinging to the cap seam */}
+            <path
+              d={`M${gx[0]} ${gx[1] - 5} C${gx[0] + 4.5} ${gx[1] - 1.5} ${gx[0] + 3.5} ${gx[1] + 6.5} ${gx[0]} ${gx[1] + 9} C${gx[0] - 3.5} ${gx[1] + 6.5} ${gx[0] - 4.5} ${gx[1] - 1.5} ${gx[0]} ${gx[1] - 5} Z`}
+              fill={C.white} stroke={C.ink} strokeWidth={2} vectorEffect="non-scaling-stroke" opacity={Math.min(1, drop * 1.6)}
+            />
+            <circle cx={gx[0] - 1.3} cy={gx[1] - 0.8} r={1.2} fill={PROP.silver} />
           </g>
         );
       })()}
@@ -310,7 +304,7 @@ export const LotionBottle: React.FC<{ p: P; lying?: boolean; capGap?: number; dr
 /* ------------------------------------------------------------------ B. amber glass cream jar (50 ml) */
 export const CreamJar: React.FC<{ p: P; crack?: number }> = ({ p, crack = 0 }) => {
   const [x, y, z] = p;
-  const r = 3.1, hG = 3.6, hC = 1.5;
+  const r = 2.5, hG = 3.0, hC = 1.2;
   const ridges = Array.from({ length: 18 }, (_, i) => {
     const a = ((-38 + (i / 17) * 166) * Math.PI) / 180;
     const b: P = [x + Math.cos(a) * r * 1.06, y + Math.sin(a) * r * 1.06, z + hG + 0.1];
@@ -335,21 +329,23 @@ export const CreamJar: React.FC<{ p: P; crack?: number }> = ({ p, crack = 0 }) =
       {/* ridged silver screw cap */}
       <Cylinder c0={[x, y, z + hG]} c1={[x, y, z + hG + hC]} axis="z" r={r * 1.06} fill={PROP.silver} end={mix(PROP.silver, C.white, 0.35)} />
       {ridges.map(([b, t], i) => <line key={i} x1={b[0]} y1={b[1]} x2={t[0]} y2={t[1]} stroke={PROP.silverDark} strokeWidth={1.2} vectorEffect="non-scaling-stroke" />)}
-      {/* crack from the cap edge down, cream pressing into it */}
+      {/* crack from the cap edge down almost to the base, cream pressing into it — unmissable at a glance */}
       {crack > 0 && (() => {
-        const main = `M${c0x} ${c0y} l4 7 l-5 6 l6 7 l-3 7 l5 6 l-4 6`;
-        const branch = `M${c0x + 1} ${c0y + 18} l-8 4 l-3 6 M${c0x + 3} ${c0y + 33} l8 3 l3 5`;
+        const main = `M${c0x} ${c0y} l5 8 l-6 7 l7 8 l-4 8 l6 8 l-5 7`;
+        const b1 = `M${c0x + 1} ${c0y + 15} l-9 5 l-4 7`;
+        const b2 = `M${c0x + 4} ${c0y + 29} l9 4 l4 6`;
         return (
           <g>
-            <path d={`M${c0x - 1} ${c0y + 10} q-6 4 -4 10 q4 3 6 -2 z`} fill={C.white} opacity={0.85 * crack} stroke={C.ink} strokeWidth={1} strokeOpacity={0.35} />
-            {[main, branch].map((d, i) => (
+            <path d={`M${c0x - 1} ${c0y + 8} q-8 5 -5 12 q5 4 8 -2 z`} fill={C.white} opacity={0.9 * crack} stroke={C.ink} strokeWidth={1} strokeOpacity={0.4} />
+            {[main, b1, b2].map((d, i) => (
               <g key={i}>
-                <path d={d} fill="none" stroke={C.ink} strokeWidth={i ? 5 : 8} strokeOpacity={0.8} strokeLinejoin="round" pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - crack} vectorEffect="non-scaling-stroke" />
-                <path d={d} fill="none" stroke={C.white} strokeWidth={i ? 2.5 : 4} strokeLinejoin="round" pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - crack} vectorEffect="non-scaling-stroke" />
+                <path d={d} fill="none" stroke={C.ink} strokeWidth={i ? 6 : 10} strokeOpacity={0.9} strokeLinejoin="round" pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - crack} vectorEffect="non-scaling-stroke" />
+                <path d={d} fill="none" stroke={C.white} strokeWidth={i ? 3 : 5} strokeLinejoin="round" pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - crack} vectorEffect="non-scaling-stroke" />
               </g>
             ))}
-            {/* a tiny chip of glass on the table */}
-            <polygon points={pts2([sp([x + r + 1.2, y + r * 0.2, 0.05]), sp([x + r + 1.7, y + r * 0.1, 0.05]), sp([x + r + 1.5, y + r * 0.5, 0.05])])} fill={PROP.amber} {...LINE} opacity={crack} />
+            {/* two chips of glass knocked loose onto the table */}
+            <polygon points={pts2([sp([x + r + 1.1, y + r * 0.15, 0.05]), sp([x + r + 1.6, y + r * 0.05, 0.05]), sp([x + r + 1.4, y + r * 0.45, 0.05])])} fill={PROP.amber} {...LINE} opacity={crack} />
+            <polygon points={pts2([sp([x - r * 0.2, y + r + 1.0, 0.05]), sp([x + r * 0.3, y + r + 1.3, 0.05]), sp([x + r * 0.05, y + r + 1.7, 0.05])])} fill={PROP.amber} {...LINE} opacity={crack} />
           </g>
         );
       })()}
@@ -360,10 +356,10 @@ export const CreamJar: React.FC<{ p: P; crack?: number }> = ({ p, crack = 0 }) =
 /* ------------------------------------------------------------------ C. lipstick + balm jar */
 export const Lipstick: React.FC<{ p: P; melted?: number; out?: number }> = ({ p, melted = 0, out = 1 }) => {
   const [x, y, z] = p;
-  const r = 1.2, caseL = 4.4, collar = 1.3, rb = 0.85;
+  const r = 0.72, caseL = 3.2, collar = 1.0, rb = 0.52;
   const cz = z + r;
   const x1 = x + caseL + collar;          // bullet leaves the collar here
-  const bl = 2.8 * out;                   // bullet length when upright
+  const bl = 2.0 * out;                   // bullet length when upright
   const W = rb * 2 * 12;                  // bullet width in scene units
   // centreline of the bullet: straight, or slumped over the collar onto the table
   const b0 = sp([x1 - 0.2, y, cz]);
@@ -379,11 +375,11 @@ export const Lipstick: React.FC<{ p: P; melted?: number; out?: number }> = ({ p,
       {/* melted: a glossy coral puddle and drops on the table */}
       {melted > 0 && (
         <g opacity={Math.min(1, melted * 1.4)}>
-          <path d={smooth(blob(x1 + 2.6, y + 1.6, 0.03, 0.5 + 1.1 * melted, 21, 0.4, 20))} fill={PROP.coral} {...LINE} />
-          {[[x1 + 4.4, y + 0.8, 0.35], [x1 + 1.2, y + 2.6, 0.3], [x1 + 3.9, y + 2.9, 0.22]].map(([dx, dy, rr], i) => (
-            <path key={i} d={smooth(blob(dx, dy, 0.03, rr * melted + 0.05, i + 30, 0.2, 12))} fill={PROP.coral} {...LINE} />
+          <path d={smooth(blob(x1 + 1.8, y + 1.1, 0.03, 0.35 + 0.75 * melted, 21, 0.4, 20))} fill={PROP.coral} {...LINE} />
+          {[[x1 + 3.0, y + 0.5, 0.24], [x1 + 0.8, y + 1.8, 0.2], [x1 + 2.6, y + 2.0, 0.15]].map(([dx, dy, rr], i) => (
+            <path key={i} d={smooth(blob(dx, dy, 0.03, rr * melted + 0.04, i + 30, 0.2, 12))} fill={PROP.coral} {...LINE} />
           ))}
-          <ellipse cx={sp([x1 + 2.3, y + 1.3, 0.03])[0] - 6} cy={sp([x1 + 2.3, y + 1.3, 0.03])[1] - 3} rx={7} ry={2.5} fill={C.white} opacity={0.8} />
+          <ellipse cx={sp([x1 + 1.6, y + 0.9, 0.03])[0] - 4} cy={sp([x1 + 1.6, y + 0.9, 0.03])[1] - 2} rx={5} ry={1.8} fill={C.white} opacity={0.8} />
         </g>
       )}
       {/* black glossy case + silver collar */}
@@ -404,7 +400,7 @@ export const Lipstick: React.FC<{ p: P; melted?: number; out?: number }> = ({ p,
 };
 export const BalmJar: React.FC<{ p: P; crater?: number; lidOff?: boolean }> = ({ p, crater = 0, lidOff = true }) => {
   const [x, y, z] = p;
-  const r = 2.7, h = 2.2;
+  const r = 2.15, h = 1.8;
   return (
     <g>
       <path d={smooth(blob(x + 0.5, y + 0.6, 0.02, r * 1.3, 8, 0.05))} fill={C.ink} opacity={0.1} />
@@ -434,7 +430,7 @@ export const BalmJar: React.FC<{ p: P; crater?: number; lidOff?: boolean }> = ({
 };
 /** The balm's clear lid, lying on the table. */
 export const ClearLid: React.FC<{ p: P }> = ({ p }) => (
-  <Cylinder c0={p} c1={[p[0], p[1], p[2] + 0.8]} axis="z" r={2.8} fill={C.white} end={mix(C.white, PROP.silver, 0.15)} opacity={0.55} gloss={1} />
+  <Cylinder c0={p} c1={[p[0], p[1], p[2] + 0.7]} axis="z" r={2.3} fill={C.white} end={mix(C.white, PROP.silver, 0.15)} opacity={0.55} gloss={1} />
 );
 
 /* ------------------------------------------------------------------ green stock box with a heat indicator */
@@ -454,15 +450,15 @@ export const StockBox: React.FC<{ p: P; cell: string; heat: number }> = ({ p, ce
       {/* cell label on the front (+y) face */}
       <polygon points={poly([[x + 0.8, y + d, z + h - 1.5], [x + 5.2, y + d, z + h - 1.5], [x + 5.2, y + d, z + h - 3.9], [x + 0.8, y + d, z + h - 3.9]])} fill={C.white} {...LINE} />
       <text transform={`matrix(${c} 0.5 0 1 ${lx} ${ly})`} fontFamily="IBM Plex Mono" fontWeight={600} fontSize={26} fill={C.ink} textAnchor="middle" dominantBaseline="central">{cell}</text>
-      {/* thermo strip: vertical, cool at the bottom, red zone at the top */}
-      <polygon points={poly([[x + 6.6, y + d, z + 0.8], [x + 8.8, y + d, z + 0.8], [x + 8.8, y + d, z + 6.8], [x + 6.6, y + d, z + 6.8]])} fill={C.white} {...LINE} />
+      {/* thermo strip: vertical, cool at the bottom, red zone at the top — sized to read without zooming in */}
+      <polygon points={poly([[x + 5.0, y + d, z + 0.3], [x + 9.6, y + d, z + 0.3], [x + 9.6, y + d, z + 7.7], [x + 5.0, y + d, z + 7.7]])} fill={C.white} {...LINE} strokeWidth={2.5} />
       {Array.from({ length: segs }, (_, i) => {
-        const z0 = z + 1.1 + i * 0.68, lit = i < Math.round(heat * segs);
+        const z0 = z + 0.75 + i * 0.83, lit = i < Math.round(heat * segs);
         const col = i >= segs - 2 ? PROP.red : C.green;
-        return <polygon key={i} points={poly([[x + 7, y + d + 0.01, z0], [x + 8.4, y + d + 0.01, z0], [x + 8.4, y + d + 0.01, z0 + 0.52], [x + 7, y + d + 0.01, z0 + 0.52]])} fill={lit ? col : mix(C.white, C.grey, 0.6)} stroke={C.ink} strokeWidth={1} strokeOpacity={0.5} />;
+        return <polygon key={i} points={poly([[x + 5.5, y + d + 0.01, z0], [x + 9.1, y + d + 0.01, z0], [x + 9.1, y + d + 0.01, z0 + 0.66], [x + 5.5, y + d + 0.01, z0 + 0.66]])} fill={lit ? col : mix(C.white, C.grey, 0.6)} stroke={C.ink} strokeWidth={1.4} strokeOpacity={0.6} />;
       })}
       {/* red-zone bracket */}
-      <polyline points={poly([[x + 9.1, y + d, z + 5.2], [x + 9.4, y + d, z + 5.2], [x + 9.4, y + d, z + 6.6], [x + 9.1, y + d, z + 6.6]])} fill="none" stroke={PROP.red} strokeWidth={2.5} vectorEffect="non-scaling-stroke" />
+      <polyline points={poly([[x + 10.0, y + d, z + 6.3], [x + 10.5, y + d, z + 6.3], [x + 10.5, y + d, z + 7.6], [x + 10.0, y + d, z + 7.6]])} fill="none" stroke={PROP.red} strokeWidth={3} vectorEffect="non-scaling-stroke" />
     </g>
   );
 };

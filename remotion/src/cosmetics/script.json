@@ -1,0 +1,78 @@
+{
+  "_note": "All on-screen text for the cosmetics ad. Read by Cosmetics.tsx and scripts/checklist.py. No voice/TTS — subtitles carry the voice-over text only; headlines never repeat them.",
+  "headlines": [
+    {
+      "id": "h0",
+      "lines": ["Three ways", "cosmetics", "arrive ruined."],
+      "start": 1.0,
+      "exit": 4.6,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "h1",
+      "lines": ["Tape it. Bag it."],
+      "start": 8.5,
+      "exit": 12.6,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "h2",
+      "lines": ["Nothing should move."],
+      "start": 16.5,
+      "exit": 20.6,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "h3",
+      "lines": ["Heat gets there first."],
+      "start": 23.5,
+      "exit": 26.9,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "h4",
+      "lines": ["Two are packing.", "One is storage."],
+      "start": 27.3,
+      "exit": 30.55,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    },
+    {
+      "id": "h5",
+      "lines": ["What do you sell?", "dockentra.ie"],
+      "start": 30.95,
+      "exit": null,
+      "stagger": 0.06,
+      "rise": 0.3,
+      "out": 0.22
+    }
+  ],
+  "subtitles": [
+    [5.2, 8.4, "One: the cap."],
+    [8.5, 12.8, "If it isn't taped and bagged, it leaks in transit."],
+    [13.2, 16.4, "Two: glass."],
+    [16.5, 20.8, "If anything moves when you shake the parcel, it breaks."],
+    [21.2, 23.4, "Three: storage."],
+    [23.5, 27.8, "Heat damages it before it's even packed."]
+  ],
+  "voiceover": [
+    [0.6, 5.0, "Three ways cosmetics arrive ruined."],
+    [5.2, 8.4, "One: the cap."],
+    [8.5, 12.8, "If it isn't taped and bagged, it leaks in transit."],
+    [13.2, 16.4, "Two: glass."],
+    [16.5, 20.8, "If anything moves when you shake the parcel, it breaks."],
+    [21.2, 23.4, "Three: storage."],
+    [23.5, 27.8, "Heat damages it before it's even packed."],
+    [28.0, 30.8, "Two of these are packing, one is storage."],
+    [31.4, 34.0, "What do you sell? Tell us at dockentra.ie."]
+  ]
+}

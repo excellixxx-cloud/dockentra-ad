@@ -15,7 +15,9 @@
     "render:creator-frozen": "remotion render src/index.ts CreatorSamples out/diag-creator-frozen.mp4 --props={\\\"freezeCamera\\\":true} --muted",
     "check:creator": "python3 scripts/checklist.py scripts/specs/creator-samples.json out/dockentra-creator-samples-2909.mp4 --frozen out/diag-creator-frozen.mp4",
     "render:warehouse": "remotion render src/index.ts WarehouseTour out/dockentra-warehouse-tour.mp4 --audio-codec=aac --audio-bitrate=192k",
-    "check:warehouse": "python3 scripts/checklist.py scripts/specs/warehouse-tour.json out/dockentra-warehouse-tour.mp4"
+    "check:warehouse": "python3 scripts/checklist.py scripts/specs/warehouse-tour.json out/dockentra-warehouse-tour.mp4",
+    "render:cosmetics": "remotion render src/index.ts Cosmetics out/dockentra-cosmetics-three-ways.mp4 --audio-codec=aac --audio-bitrate=192k",
+    "check:cosmetics": "python3 scripts/checklist.py scripts/specs/cosmetics.json out/dockentra-cosmetics-three-ways.mp4"
   },
   "keywords": [],
   "author": "",
