@@ -581,7 +581,7 @@ const ChapterCardAnim: React.FC<{ n: number; name: string; T: number }> = ({ n, 
 };
 
 /** Final card, in figures: logo with the brand diagonal fill, then the price lines as the voice reads them. */
-const Final: React.FC<{ T: number; t0: number; S: (k: number) => number }> = ({ T, t0, S }) => {
+const Final: React.FC<{ T: number; t0: number; end: number; S: (k: number) => number }> = ({ T, t0, end, S }) => {
   const logo = t0 + 0.6;
   const edge = -20 + EASE_LOGO(clamp((T - logo) / 0.6)) * 140;
   const mask = `linear-gradient(45deg, #000 ${edge}%, transparent ${edge + 1}%)`;
@@ -589,9 +589,9 @@ const Final: React.FC<{ T: number; t0: number; S: (k: number) => number }> = ({ 
     const k = ramp(T, a, 0.5, EASE_APPEAR);
     return <div style={{ marginTop: mt, fontFamily: family, fontWeight: weight, fontSize: size, letterSpacing: family === FONT.display ? "-0.03em" : 0, color: C.ink, opacity: Math.min(1, k * 1.4), transform: `translateY(${(1 - k) * 26}px)` }}>{txt}</div>;
   };
-  const drift = sine((T - t0) / 12);
+  const drift = sine((0.85 * (T - t0)) / (end - t0));   // still travelling on the last frame
   return (
-    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", flexDirection: "column", transform: `translateY(${-12 * drift}px) scale(${1 + 0.015 * drift})` }}>
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", flexDirection: "column", transform: `translateY(${-24 * drift}px) scale(${1 + 0.05 * drift})` }}>
       {T >= logo && <div style={{ width: 300, WebkitMaskImage: mask, maskImage: mask }}><Img src={staticFile("brand/dockentra-logo.png")} style={{ width: "100%", display: "block" }} /></div>}
       {line("From €2.60 per order", S(4), 80, 800, FONT.display, 36)}
       {line("€0.60 per additional item in the same order", S(4) + 2.6, 56, 600, FONT.body, 22)}
@@ -640,9 +640,9 @@ export const OpsChapter: React.FC<{ n: number }> = ({ n }) => {
         <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 760, opacity: 1 - dim, background: `linear-gradient(90deg, ${C.grey} 0%, ${C.grey} 70%, ${C.grey}00 100%)` }} />
       </AbsoluteFill>
       {runs.map((r, j) => <LeftCard key={j} card={r.card} T={Ts} a={r.a} b={r.b} />)}
-      {dim > 0 && <Final T={Ts} t0={finalAt} S={ctx.S} />}
+      {dim > 0 && <Final T={Ts} t0={finalAt} end={ch.dur} S={ctx.S} />}
       {n > 0 && T < ch.card + 0.1 && <ChapterCardAnim n={n} name={ch.name} T={T} />}
-      {n < CHAPTERS.length - 1 && T > ch.dur - 0.4 && <AbsoluteFill style={{ background: C.grey, transform: `translateY(${(1 - ramp(T, ch.dur - 0.4, 0.36, EASE_MOVE)) * 100}%)` }} />}
+      {n < CHAPTERS.length - 1 && T > ch.dur - 0.64 && <AbsoluteFill style={{ background: C.grey, transform: `translateY(${(1 - ramp(T, ch.dur - 0.64, 0.6, EASE_MOVE)) * 100}%)` }} />}
     </AbsoluteFill>
   );
 };

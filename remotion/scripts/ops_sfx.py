@@ -78,8 +78,8 @@ def printer(t, pan=.4):
         tr.add(t + k * .045, (tr.click(.012), .22), pan=pan)
 
 
-def chapter_card():            # full-screen card in, then the wipe up into the scene
-    tr.add(at(0.05), (tr.swish(.5, .12), .18))
+def chapter_card():            # Bay Grey slides up over the previous chapter's last 0.64 s, then wipes up into the scene
+    tr.add(at(-0.66), (tr.swish(.7, .12), .18))
     tr.add(at(1.68), (tr.swish(.45, .2), .25))
 
 

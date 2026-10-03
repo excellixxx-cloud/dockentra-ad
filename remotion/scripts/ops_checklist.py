@@ -148,11 +148,17 @@ report("5. Colours, fonts and logo per Brand Book", not stray and off_hue < 12 a
        f"logo: diagonal fill over 0.6 s with EASE_LOGO: {logo_fill}; on screen for the last {tail_s:.1f} s")
 
 # ---- Prohibited: text motionless for more than 2 s (left text card, final card) ----
-full_g = decode(args.video, 960, 540, "gray", 1)
-bands = {"left text card (x 40-330)": (slice(0, 540), slice(40, 330)), "final card (centre)": (slice(150, 420), slice(280, 680))}
+def decode_crop(path, crop):
+    raw = subprocess.run([FF, "-v", "error", "-i", path, "-vf", f"scale=960:540,crop={crop}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                         capture_output=True, check=True).stdout
+    w, h = map(int, crop.split(":")[:2])
+    return np.frombuffer(raw, np.uint8).reshape(-1, h, w)
+
+
+bands = {"left text card (x 40-330)": "290:540:40:0", "final card (centre)": "400:270:280:150"}
 lines, ok = [], True
-for name, (ys, xs) in bands.items():
-    crop = full_g[:, ys, xs].astype(np.int16)
+for name, cr in bands.items():
+    crop = decode_crop(args.video, cr)
     has_text = (crop < 90).sum(axis=(1, 2)) > 200
     if name.startswith("final"):
         has_text &= np.arange(len(crop)) >= int((logo_in + 1) * FPS)
@@ -162,7 +168,7 @@ for name, (ys, xs) in bands.items():
     alive = np.ones(len(crop) - step, bool)
     for i in range(len(crop) - step):
         if has_text[i] and has_text[i + step]:
-            alive[i] = (np.abs(crop[i + step] - crop[i]) > 20).sum() > 40
+            alive[i] = (np.abs(crop[i + step].astype(np.int16) - crop[i]) > 20).sum() > 40
     r, at = longest_still(alive)
     ok &= r == 0
     lines.append(f"{name}: windows of 2 s with no change in the text: {(~alive).sum()}" + (f" (first at {at:.2f} s)" if r else ""))
