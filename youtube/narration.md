@@ -1,7 +1,7 @@
 # Dockentra — warehouse operations, receiving to dispatch
 
 **Format:** YouTube, 16:9, about 6:30.
-**Voice:** recorded separately and laid over the picture.
+**Voice:** synthesised offline, kept as a separate track (narration.wav) so a human read can replace it without re-rendering the picture.
 
 **Tone:** an operator who built the warehouse, explaining it out loud.
 - Plain sentences.
