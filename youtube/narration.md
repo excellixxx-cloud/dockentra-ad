@@ -22,7 +22,7 @@
 *Card: none, this opens straight onto the warehouse.*
 *≈ 64 words · ≈ 26 s*
 
-> Ireland is the only TikTok Shop market without Fulfilled by TikTok. Here, there is one shipping option: Ship by Seller.
+> In Ireland, TikTok Shop gives a seller one shipping option: Ship by Seller. There is no Fulfilled by TikTok here.
 >
 > That means every seller either ships every order themselves, or hands that job to a warehouse.
 >
@@ -92,13 +92,11 @@
 
 ## 5. The order arrives — 3:30–4:05
 *Card: `05` · The order arrives*
-*≈ 69 words · ≈ 29 s*
+*≈ 71 words · ≈ 29 s*
 
-> Your customer buys on TikTok Shop or on your Shopify store. The order comes straight to the warehouse.
+> Your customer buys on TikTok Shop or on your Shopify store. That order has to reach the warehouse, with the items and the address together, before anything can be picked.
 >
-> Nobody exports a spreadsheet, and nobody types addresses across by hand. The order, the items and the address arrive together.
->
-> On TikTok Shop, the platform gives a seller 48 hours to ship an order. That's the platform's rule, not a promise of ours. It's the clock every order here starts on.
+> However it gets to us, the clock has already started. On TikTok Shop, the platform gives a seller 48 hours to ship an order. That's the platform's rule, not a promise of ours. It's the clock every order here starts on.
 
 ---
 
@@ -132,13 +130,13 @@
 
 ## 8. Label and dispatch — 5:25–6:00
 *Card: `08` · Label and dispatch*
-*≈ 80 words · ≈ 33 s*
+*≈ 81 words · ≈ 34 s*
 
 > The parcel goes on the scale. The weight and the order produce the shipping label, and the label goes on the parcel.
 >
 > Finished parcels go into the dispatch cage, and the cage is handed to the carrier.
 >
-> Once it's scanned, the tracking number goes back to the platform automatically, so your customer can follow the parcel.
+> The parcel leaves with a tracking number, and that number goes onto the order, so your customer can follow it.
 >
 > Every carrier has a daily collection cut-off. The warehouse plans the day backwards from it, so the packing is finished before the van arrives.
 
@@ -169,9 +167,9 @@
 | 5 | The order arrives | 3:30–4:05 | ≈ 29 s | 2 s |
 | 6 | Picking | 4:05–4:35 | ≈ 28 s | 2 s |
 | 7 | Packing | 4:35–5:25 | ≈ 48 s | 2 s |
-| 8 | Label and dispatch | 5:25–6:00 | ≈ 33 s | 2 s |
+| 8 | Label and dispatch | 5:25–6:00 | ≈ 34 s | 2 s |
 | 9 | And when it comes back | 6:00–6:30 | ≈ 29 s | 2 s |
-| | **Total** | **6:30** | **≈ 6:01** | **18 s** |
+| | **Total** | **6:30** | **≈ 6:04** | **18 s** |
 
 The remaining ≈ 11 s is breathing room at the chapter ends. It lets a slower read still fit each window without retiming the picture.
 
@@ -181,7 +179,7 @@ Every figure or claim in the text, and where it comes from:
 
 | In the text | Source |
 |---|---|
-| Ireland: Ship by Seller only, no Fulfilled by TikTok | approved list |
+| Ireland: Ship by Seller is the one shipping option TikTok Shop gives a seller; no Fulfilled by TikTok here (no claim about other markets) | approved list |
 | 48 hours to ship, stated as the platform's rule | approved list |
 | L × W × H ÷ 5000, the courier bills the larger figure | approved list |
 | a return is five operations | approved list |

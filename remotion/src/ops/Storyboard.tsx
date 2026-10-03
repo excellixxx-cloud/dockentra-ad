@@ -9,16 +9,16 @@ loadBrandFonts();
 
 /** 16:9 YouTube layout: the scene lives in the right two-thirds, text sits in the left third over the light wall. */
 export const OW = 1920, OH = 1080;
-const ANCHOR = { x: 1280, y: 560 };
-type Cam = { x: number; y: number; z: number; zoom: number };
-const sc = (cam: Cam, x: number, y: number, z: number) => {
+export const ANCHOR = { x: 1280, y: 560 };
+export type Cam = { x: number; y: number; z: number; zoom: number };
+export const sc = (cam: Cam, x: number, y: number, z: number) => {
   const p = iso(x, y, z), c = iso(cam.x, cam.y, cam.z);
   return { x: ANCHOR.x + (p.X - c.X) * cam.zoom, y: ANCHOR.y + (p.Y - c.Y) * cam.zoom };
 };
-const LN = { stroke: C.ink, strokeWidth: 2, strokeLinejoin: "round" as const, vectorEffect: "non-scaling-stroke" as const };
+export const LN = { stroke: C.ink, strokeWidth: 2, strokeLinejoin: "round" as const, vectorEffect: "non-scaling-stroke" as const };
 
 /* ------------------------------------------------------------ cameras */
-const CAM: Record<string, Cam> = {
+export const CAM: Record<string, Cam> = {
   wide: { x: 28, y: 18, z: 6, zoom: 1.25 },
   dispatch: { x: 47, y: 7, z: 8, zoom: 2.0 },
   recv: { x: 17, y: 21.5, z: 10, zoom: 2.35 },
@@ -31,31 +31,31 @@ const CAM: Record<string, Cam> = {
 };
 
 /* ------------------------------------------------------------ room states */
-const onTable = (i: number) => ({ x: JARS[i][0], y: JARS[i][1], z: RECV.top });
-const onShelf = (slot: number) => ({ x: SHELF.x0 + 1.2 + (slot % 6) * 1.8, y: SHELF.y0 + 1.8 + Math.floor(slot / 6) * 2.2, z: SHELF.levels[1] + 0.5 });
-const BIN_HOOK = { x: RECV.x1 + 0.2, y: RECV.y0 + 2.2, z: RECV.top - BIN.h + 0.4, hooked: true };
-const BIN_SHELF = { x: SHELF.x0 + SHELF.bay + 0.6, y: SHELF.y0 + 0.8, z: SHELF.levels[0] + 0.5, hooked: false };
-const base: RoomState = { carton: null, jars: [], mailer: null, printer: 0, cageOut: 0, recvFade: 1, flyLabel: null, holdBin: BIN_HOOK, highlightCells: false };
-const GOOD = JARS.map((_, i) => i).filter((i) => !DAMAGED.includes(i));
+export const onTable = (i: number) => ({ x: JARS[i][0], y: JARS[i][1], z: RECV.top });
+export const onShelf = (slot: number) => ({ x: SHELF.x0 + 1.2 + (slot % 6) * 1.8, y: SHELF.y0 + 1.8 + Math.floor(slot / 6) * 2.2, z: SHELF.levels[1] + 0.5 });
+export const BIN_HOOK = { x: RECV.x1 + 0.2, y: RECV.y0 + 2.2, z: RECV.top - BIN.h + 0.4, hooked: true };
+export const BIN_SHELF = { x: SHELF.x0 + SHELF.bay + 0.6, y: SHELF.y0 + 0.8, z: SHELF.levels[0] + 0.5, hooked: false };
+export const base: RoomState = { carton: null, jars: [], mailer: null, printer: 0, cageOut: 0, recvFade: 1, flyLabel: null, holdBin: BIN_HOOK, highlightCells: false };
+export const GOOD = JARS.map((_, i) => i).filter((i) => !DAMAGED.includes(i));
 
 /* ------------------------------------------------------------ overlay helpers (screen space) */
-const Tag: React.FC<{ x: number; y: number; children: React.ReactNode; fill?: string; color?: string }> = ({ x, y, children, fill = C.white, color = C.ink }) => (
+export const Tag: React.FC<{ x: number; y: number; children: React.ReactNode; fill?: string; color?: string }> = ({ x, y, children, fill = C.white, color = C.ink }) => (
   <div style={{ position: "absolute", left: x, top: y, transform: "translate(-50%, -100%)", background: fill, color, border: `2px solid ${C.ink}`, borderRadius: 8, padding: "6px 12px", fontFamily: FONT.mono, fontWeight: 500, fontSize: 22, letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{children}</div>
 );
-const Panel: React.FC<{ x: number; y: number; w: number; children: React.ReactNode }> = ({ x, y, w, children }) => (
+export const Panel: React.FC<{ x: number; y: number; w: number; children: React.ReactNode }> = ({ x, y, w, children }) => (
   <div style={{ position: "absolute", left: x, top: y, width: w, background: C.white, border: `2px solid ${C.ink}`, borderRadius: 16, boxShadow: `6px 6px 0 ${C.ink}`, padding: "18px 22px", boxSizing: "border-box" }}>{children}</div>
 );
-const Mono: React.FC<{ children: React.ReactNode; size?: number; op?: number }> = ({ children, size = 20, op = 0.7 }) => (
+export const Mono: React.FC<{ children: React.ReactNode; size?: number; op?: number }> = ({ children, size = 20, op = 0.7 }) => (
   <div style={{ fontFamily: FONT.mono, fontWeight: 500, fontSize: size, letterSpacing: "0.1em", color: C.ink, opacity: op }}>{children}</div>
 );
-const Bar: React.FC<{ label: string; w: number; tick?: boolean }> = ({ label, w, tick }) => (
+export const Bar: React.FC<{ label: string; w: number; tick?: boolean }> = ({ label, w, tick }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 12 }}>
     <div style={{ width: 130, fontFamily: FONT.body, fontSize: 22, color: C.ink }}>{label}</div>
     <div style={{ height: 14, width: w, background: mix(C.grey, C.ink, 0.25), borderRadius: 7 }} />
     {tick && <div style={{ width: 26, height: 26, borderRadius: 13, background: C.green, color: C.white, fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT.body, fontWeight: 700 }}>✓</div>}
   </div>
 );
-const Check: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const Check: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 12, fontFamily: FONT.body, fontSize: 26, color: C.ink }}>
     <div style={{ width: 30, height: 30, border: `2px solid ${C.ink}`, borderRadius: 6, background: C.green, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700 }}>✓</div>
     {children}
@@ -79,27 +79,27 @@ type Frame = {
   final?: boolean;
 };
 
-const Polybag: React.FC<{ x: number; y: number; z: number }> = ({ x, y, z }) => (
+export const Polybag: React.FC<{ x: number; y: number; z: number }> = ({ x, y, z }) => (
   <g>
     <polygon points={poly([[x, y, z + 0.05], [x + 4.6, y, z + 0.05], [x + 4.6, y + 3.4, z + 0.05], [x, y + 3.4, z + 0.05]])} fill={C.white} fillOpacity={0.55} {...LN} />
     <polyline points={poly([[x + 0.3, y + 0.5, z + 0.4], [x + 4.3, y + 0.5, z + 0.4]])} stroke={C.ink} strokeWidth={1.5} strokeDasharray="3 3" fill="none" vectorEffect="non-scaling-stroke" />
     <Box x={x + 1.2} y={y + 1} z={z + 0.05} w={2.2} d={1.6} h={0.5} color={C.white} />
   </g>
 );
-const PaddedMailer: React.FC<{ x: number; y: number; z: number }> = ({ x, y, z }) => (
+export const PaddedMailer: React.FC<{ x: number; y: number; z: number }> = ({ x, y, z }) => (
   <g>
     <Box x={x} y={y} z={z} w={4.6} d={3.4} h={0.9} color={C.white} />
     {[0.25, 0.5, 0.75].map((k, i) => <polyline key={i} points={poly([[x + 0.3, y + 3.4 * k, z + 0.92], [x + 3.6, y + 3.4 * k, z + 0.92]])} stroke={mix(C.grey, C.ink, 0.3)} strokeWidth={1.5} fill="none" vectorEffect="non-scaling-stroke" />)}
     <polyline points={poly([[x + 3.9, y, z + 0.92], [x + 3.9, y + 3.4, z + 0.92]])} stroke={C.ink} strokeWidth={1.5} fill="none" vectorEffect="non-scaling-stroke" />
   </g>
 );
-const Carton2: React.FC<{ x: number; y: number; z: number; w?: number; d?: number; h?: number }> = ({ x, y, z, w = 4, d = 3.4, h = 3 }) => (
+export const Carton2: React.FC<{ x: number; y: number; z: number; w?: number; d?: number; h?: number }> = ({ x, y, z, w = 4, d = 3.4, h = 3 }) => (
   <g>
     <Box x={x} y={y} z={z} w={w} d={d} h={h} color={C.green} />
     <polyline points={poly([[x + w / 2, y, z + h + 0.01], [x + w / 2, y + d, z + h + 0.01]])} stroke={mix(C.green, C.white, 0.35)} strokeWidth={5} fill="none" vectorEffect="non-scaling-stroke" />
   </g>
 );
-const WMailer: React.FC<{ x: number; y: number; z: number; label?: boolean }> = ({ x, y, z, label }) => (
+export const WMailer: React.FC<{ x: number; y: number; z: number; label?: boolean }> = ({ x, y, z, label }) => (
   <g>
     <Box x={x} y={y} z={z} w={5} d={3.6} h={0.7} color={C.white} />
     <polygon points={poly([[x + 0.4, y + 0.4, z + 0.7], [x + 2.5, y + 1.8, z + 0.7], [x + 0.4, y + 3.2, z + 0.7]])} fill="none" {...LN} />
@@ -111,7 +111,7 @@ export const FRAMES: Frame[] = [
   /* 0 — cold open */
   { ch: "0", tc: "0:04", cam: CAM.wide, card: { kicker: "IRELAND · TIKTOK SHOP", title: "Ship by Seller only.", body: "There is no Fulfilled by TikTok here." } },
   { ch: "0", tc: "0:20", cam: CAM.dispatch, room: { cageOut: 0.35 },
-    card: { kicker: "SO EVERY ORDER", title: "Ships from the seller, or from a warehouse.", body: "This is what happens in one, step by step." },
+    card: { kicker: "SO", title: "You ship every order. Or a warehouse does.", body: "This is what happens in one, step by step." },
     overlay: (cam) => <Dashed pts={[sc(cam, CAGE.x0 + 4, CAGE.y0 + 6, 2), sc(cam, 49, 1, 2)]} /> },
   /* 1 — before anything arrives */
   { ch: "1", tc: "0:30", chapterCard: { n: "01", name: "Before anything arrives" } },
@@ -193,7 +193,7 @@ export const FRAMES: Frame[] = [
       </Panel>) },
   /* 5 — the order arrives */
   { ch: "5", tc: "3:42", cam: CAM.pack, room: { holdBin: BIN_SHELF },
-    card: { kicker: "05 · THE ORDER ARRIVES", title: "Straight from TikTok Shop or Shopify.", body: "Nobody exports a spreadsheet." },
+    card: { kicker: "05 · THE ORDER ARRIVES", title: "The order has to reach the warehouse.", body: "Items and address together, before anything is picked." },
     overlay: (cam) => { const p = sc(cam, PACK.x0 + 9, PACK.y0 + 4, PACK.top + 1); return (
       <>
         <Dashed pts={[{ x: 1480, y: 150 }, { x: p.x, y: p.y - 40 }]} />

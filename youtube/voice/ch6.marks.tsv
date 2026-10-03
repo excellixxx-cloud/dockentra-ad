@@ -1,0 +1,8 @@
+0.0	2.67	Picking goes by location, not by memory.
+3.37	5.259	The order says which product.
+5.609	7.432	The record says which shelf.
+7.782	11.028	We go to that address and take the item from that cell.
+11.728	15.461	It sounds slower than someone who just knows where everything is.
+15.811	21.084	It isn't, and it doesn't break when that person is off, or when two products look almost the same.
+21.784	24.07	An address is something you can check.
+24.42	25.671	Memory isn't.

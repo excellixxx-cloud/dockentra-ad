@@ -12,6 +12,20 @@ import sherpa_onnx
 VOICES = Path("/tmp/claude-0/-home-user-dockentra-ad/95514b0c-98c1-59fa-bd4f-3e778dcff093/scratchpad/voices")
 NARR = Path(__file__).resolve().parent.parent / "narration.md"
 
+# What the voice reads, where the written form would be read badly (subtitles keep the written form).
+SAY = [
+    ("A1 to A6", "A one to A six"),
+    ("48 hours", "forty-eight hours"),
+    ("dockentra.ie", "Dock-entra dot I E"),   # brand: stress and full vowel on "Dock"
+    ("Dockentra", "Dock-entra"),
+    ("Couriers", "Kooriers"),
+    ("TikTok Shop and Shopify", "TikTok Shop, and Shopify"),
+]
+def say(sent):
+    for a, b in SAY:
+        sent = sent.replace(a, b)
+    return sent
+
 def chapter_paragraphs(n):
     s = NARR.read_text()
     body = s.split(f"\n## {n}.")[1].split("\n## ")[0]
@@ -36,7 +50,7 @@ def synth(n, voice, out, speed=1.0):
     for pi, para in enumerate(chapter_paragraphs(n)):
         sents = re.split(r"(?<=[.?])\s+", para)
         for si, sent in enumerate(sents):
-            a = tts.generate(sent, sid=sid, speed=speed)
+            a = tts.generate(say(sent), sid=sid, speed=speed)
             sr = a.sample_rate
             x = np.asarray(a.samples, dtype=np.float32)
             nz = np.where(np.abs(x) > 0.01)[0]                       # trim synth padding
