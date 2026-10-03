@@ -7,6 +7,7 @@ import { CreatorSamples, DURATION_S as CREATOR_S } from "./creator/CreatorSample
 import { CosmeticsKeyframes } from "./cosmetics/Keyframes";
 import { KeyframeSheet, SHEET } from "./cosmetics/KeyframeSheet";
 import { Cosmetics, DURATION_S as COSMETICS_S } from "./cosmetics/Cosmetics";
+import { OpsFrame, OpsStoryboardSheet, OW, OH, SHEET as OPS_SHEET } from "./ops/Storyboard";
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -15,6 +16,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="CosmeticsKeyframes" component={CosmeticsKeyframes} durationInFrames={1} fps={FPS} width={W} height={H} defaultProps={{ scene: 1 }} />
     <Composition id="CosmeticsKeyframeSheet" component={KeyframeSheet} durationInFrames={1} fps={FPS} width={SHEET.w} height={SHEET.h} />
     <Composition id="Cosmetics" component={Cosmetics} durationInFrames={COSMETICS_S * FPS} fps={FPS} width={W} height={H} />
+    <Composition id="OpsFrame" component={OpsFrame} durationInFrames={1} fps={FPS} width={OW} height={OH} defaultProps={{ i: 0 }} />
+    <Composition id="OpsStoryboardSheet" component={OpsStoryboardSheet} durationInFrames={1} fps={FPS} width={OPS_SHEET.w} height={OPS_SHEET.h} />
     <Composition id="SameOrderThreeWays" component={SameOrderThreeWays} durationInFrames={36 * FPS} fps={FPS} width={W} height={H} />
     <Composition id="HelloDockentra" component={HelloDockentra} durationInFrames={45} fps={30} width={1080} height={1920} />
   </>
