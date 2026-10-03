@@ -62,9 +62,9 @@
 
 ## 3. When something is wrong — 2:10–2:50
 *Card: `03` · When something is wrong*
-*≈ 91 words · ≈ 38 s*
+*≈ 96 words · ≈ 40 s*
 
-> Three things can go wrong at receiving.
+> Three things can go wrong.
 >
 > Something is damaged. Something is missing. Or something arrived that wasn't on the list.
 >
@@ -72,7 +72,7 @@
 >
 > Missing and extra items are counted against what you told us to expect.
 >
-> Then you decide. Return it, write it off, sell it as seconds. That's your stock and your call. The warehouse records the problem and keeps it separate. It doesn't decide for you.
+> Then it's your decision whether you send it back to your supplier, write it off, or sell it as seconds. Those are your decisions, not ours. The warehouse records the problem and keeps the stock apart until you've decided.
 
 ---
 
@@ -146,6 +146,7 @@
 
 ## 9. And when it comes back — 6:00–6:30
 *Card: `09` · And when it comes back*
+*Final on-screen card, in figures: From €2.60 per order · €0.60 per additional item in the same order · €275 minimum per month · No setup fee · dockentra.ie*
 *≈ 71 words · ≈ 29 s*
 
 > A return isn't one job. It's five.
@@ -163,7 +164,7 @@
 | 0 | Cold open | 0:00–0:30 | ≈ 26 s | — |
 | 1 | Before anything arrives | 0:30–1:10 | ≈ 36 s | 2 s |
 | 2 | Receiving and the photo report | 1:10–2:10 | ≈ 57 s | 2 s |
-| 3 | When something is wrong | 2:10–2:50 | ≈ 38 s | 2 s |
+| 3 | When something is wrong | 2:10–2:50 | ≈ 40 s | 2 s |
 | 4 | Putaway and the stock record | 2:50–3:30 | ≈ 37 s | 2 s |
 | 5 | The order arrives | 3:30–4:05 | ≈ 29 s | 2 s |
 | 6 | Picking | 4:05–4:35 | ≈ 28 s | 2 s |
