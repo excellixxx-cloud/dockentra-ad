@@ -17,4 +17,7 @@ python3 ../youtube/tts/loud.py out/ops/mix_raw.wav "$OUT/mix-master.wav" -14 -1
 # AAC carries no bit depth; it is encoded straight from the 48 kHz / 16-bit master at the same rate
 "$FF" -v error -y -i out/ops/picture.mp4 -i "$OUT/mix-master.wav" -map 0:v -map 1:a -c:v copy \
   -c:a aac -b:a 320k -ar 48000 -movflags +faststart -shortest "$OUT/dockentra-operations-full.mp4"
+# repo copy under GitHub's 100 MB file limit: two-pass 1.5 Mbit/s, same audio
+( cd out/ops && "$FF" -v error -y -i "../../$OUT/dockentra-operations-full.mp4" -c:v libx264 -preset slow -b:v 1500k -pass 1 -an -f mp4 /dev/null \
+  && "$FF" -v error -y -i "../../$OUT/dockentra-operations-full.mp4" -c:v libx264 -preset slow -b:v 1500k -pass 2 -pix_fmt yuv420p -c:a copy -movflags +faststart "../../$OUT/dockentra-operations-full-web.mp4" )
 echo "$OUT/dockentra-operations-full.mp4"
