@@ -37,7 +37,7 @@ total = t
 (ROOT / "remotion/src/ops/timeline.json").write_text(json.dumps({"total": round(total, 3), "fps": 30, "chapters": chapters}, indent=1))
 
 # narration.wav — the voice on the film's clock
-y = np.zeros(int(total * sr0) + sr0, np.float32)
+y = np.zeros(int(round(total * sr0)), np.float32)
 for at, x in track:
     i = int(at * sr0); y[i:i + len(x)] += x
 tmp = OUT / "_narr24k.wav"

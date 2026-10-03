@@ -1,6 +1,6 @@
-0.0	1.954	The parcel goes on the scale.
-2.304	7.042	The weight and the order produce the shipping label, and the label goes on the parcel.
-7.742	12.364	Finished parcels go into the dispatch cage, and the cage is handed to the carrier.
-13.064	18.936	The parcel leaves with a tracking number, and that number goes onto the order, so your customer can follow it.
-19.636	22.585	Every carrier has a daily collection cut-off.
-22.935	28.26	The warehouse plans the day backwards from it, so the packing is finished before the van arrives.
+0.0	2.133	The parcel goes on the scale.
+2.633	7.697	The weight and the order produce the shipping label, and the label goes on the parcel.
+8.697	13.63	Finished parcels go into the dispatch cage, and the cage is handed to the carrier.
+14.63	21.03	The parcel leaves with a tracking number, and that number goes onto the order, so your customer can follow it.
+22.03	25.236	Every carrier has a daily collection cut-off.
+25.736	31.435	The warehouse plans the day backwards from it, so the packing is finished before the van arrives.

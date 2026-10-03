@@ -1,10 +1,10 @@
 00:00 Intro
-00:26 Before anything arrives
-01:03 Receiving and the photo report
-01:59 When something is wrong
-02:41 Putaway and the stock record
-03:18 The order arrives
-03:50 Picking
-04:22 Packing
-05:12 Label and dispatch
-05:46 And when it comes back
+00:28 Before anything arrives
+01:09 Receiving and the photo report
+02:10 When something is wrong
+02:57 Putaway and the stock record
+03:38 The order arrives
+04:12 Picking
+04:47 Packing
+05:41 Label and dispatch
+06:19 And when it comes back

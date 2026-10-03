@@ -1,43 +1,43 @@
 {
- "total": 383.427,
+ "total": 418.72,
  "fps": 30,
  "chapters": [
   {
    "n": 0,
    "name": "Intro",
    "start": 0.0,
-   "dur": 26.062,
+   "dur": 28.717,
    "card": 0.0,
    "voice": 1.0,
    "sentences": [
     {
      "a": 1.0,
-     "b": 5.58,
+     "b": 5.942,
      "text": "In Ireland, TikTok Shop gives a seller one shipping option: Ship by Seller."
     },
     {
-     "a": 5.93,
-     "b": 8.432,
+     "a": 6.442,
+     "b": 9.07,
      "text": "There is no Fulfilled by TikTok here."
     },
     {
-     "a": 9.132,
-     "b": 14.65,
+     "a": 10.07,
+     "b": 16.038,
      "text": "That means every seller either ships every order themselves, or hands that job to a warehouse."
     },
     {
-     "a": 15.35,
-     "b": 17.588,
+     "a": 17.038,
+     "b": 19.413,
      "text": "I run that warehouse, in Limerick."
     },
     {
-     "a": 17.938,
-     "b": 22.324,
+     "a": 19.913,
+     "b": 24.676,
      "text": "This is what happens to your stock from the moment it arrives to the moment it leaves."
     },
     {
-     "a": 22.674,
-     "b": 24.262,
+     "a": 25.176,
+     "b": 26.917,
      "text": "One step at a time."
     }
    ]
@@ -45,49 +45,49 @@
   {
    "n": 1,
    "name": "Before anything arrives",
-   "start": 26.062,
-   "dur": 37.26,
+   "start": 28.717,
+   "dur": 40.856,
    "card": 2.0,
    "voice": 4.5,
    "sentences": [
     {
      "a": 4.5,
-     "b": 6.885,
+     "b": 7.009,
      "text": "The work starts before the van does."
     },
     {
-     "a": 7.585,
-     "b": 11.645,
+     "a": 8.009,
+     "b": 12.471,
      "text": "You tell us what's coming: which products, how many of each, and roughly when."
     },
     {
-     "a": 12.345,
-     "b": 16.239,
+     "a": 13.471,
+     "b": 17.546,
      "text": "That one message settles half the problems before they exist."
     },
     {
-     "a": 16.589,
-     "b": 19.26,
+     "a": 18.046,
+     "b": 20.894,
      "text": "We know which shelf the stock is going to."
     },
     {
-     "a": 19.61,
-     "b": 23.684,
+     "a": 21.394,
+     "b": 25.628,
      "text": "We know what a full delivery should look like, so we can tell when it isn't."
     },
     {
-     "a": 24.034,
-     "b": 28.668,
+     "a": 26.128,
+     "b": 31.286,
      "text": "And we know which items need extra care: glass, liquids, anything with a cap."
     },
     {
-     "a": 29.368,
-     "b": 32.02,
+     "a": 32.286,
+     "b": 35.263,
      "text": "When the carton turns up, nobody is guessing."
     },
     {
-     "a": 32.37,
-     "b": 35.46,
+     "a": 35.763,
+     "b": 39.056,
      "text": "We're checking it against a list you already gave us."
     }
    ]
@@ -95,69 +95,69 @@
   {
    "n": 2,
    "name": "Receiving and the photo report",
-   "start": 63.321,
-   "dur": 55.714,
+   "start": 69.573,
+   "dur": 61.183,
    "card": 2.0,
    "voice": 4.5,
    "sentences": [
     {
      "a": 4.5,
-     "b": 6.811,
+     "b": 6.989,
      "text": "This is the step I care about most."
     },
     {
-     "a": 7.511,
-     "b": 10.978,
+     "a": 7.989,
+     "b": 11.83,
      "text": "The carton goes onto the receiving table and gets opened."
     },
     {
-     "a": 11.328,
-     "b": 14.293,
+     "a": 12.33,
+     "b": 15.417,
      "text": "Everything comes out and is laid out in rows."
     },
     {
-     "a": 14.643,
-     "b": 18.123,
+     "a": 15.917,
+     "b": 19.646,
      "text": "Then the whole delivery is photographed in a single frame."
     },
     {
-     "a": 18.823,
-     "b": 22.566,
+     "a": 20.646,
+     "b": 24.697,
      "text": "Those photos go to you on the day the delivery is received."
     },
     {
-     "a": 22.916,
-     "b": 26.903,
+     "a": 25.197,
+     "b": 29.638,
      "text": "If something arrived crushed, short, or wrong, you see it that day."
     },
     {
-     "a": 27.253,
-     "b": 30.673,
+     "a": 30.138,
+     "b": 33.703,
      "text": "You find out about a problem before your customer does."
     },
     {
-     "a": 31.373,
-     "b": 33.931,
+     "a": 34.703,
+     "b": 37.309,
      "text": "There's a second reason we do it this way."
     },
     {
-     "a": 34.281,
-     "b": 42.65,
+     "a": 37.809,
+     "b": 46.793,
      "text": "When TikTok Shop looks into a delivery dispute, it asks for the item's condition at the time it was packed, and for proof that it was handed to the carrier."
     },
     {
-     "a": 43.0,
-     "b": 46.332,
+     "a": 47.293,
+     "b": 50.877,
      "text": "We collect exactly what's on that list, for every order."
     },
     {
-     "a": 47.032,
-     "b": 50.5,
+     "a": 51.877,
+     "b": 55.654,
      "text": "Whether the platform accepts it is the platform's decision."
     },
     {
-     "a": 50.85,
-     "b": 53.914,
+     "a": 56.154,
+     "b": 59.383,
      "text": "Our job is to make sure the evidence exists."
     }
    ]
@@ -165,59 +165,59 @@
   {
    "n": 3,
    "name": "When something is wrong",
-   "start": 119.035,
-   "dur": 42.659,
+   "start": 130.756,
+   "dur": 46.974,
    "card": 2.0,
    "voice": 4.5,
    "sentences": [
     {
      "a": 4.5,
-     "b": 6.332,
+     "b": 6.502,
      "text": "Three things can go wrong."
     },
     {
-     "a": 7.032,
-     "b": 8.636,
+     "a": 7.502,
+     "b": 9.318,
      "text": "Something is damaged."
     },
     {
-     "a": 8.986,
-     "b": 10.566,
+     "a": 9.818,
+     "b": 11.495,
      "text": "Something is missing."
     },
     {
-     "a": 10.916,
-     "b": 13.37,
+     "a": 11.995,
+     "b": 14.642,
      "text": "Or something arrived that wasn't on the list."
     },
     {
-     "a": 14.07,
-     "b": 16.607,
+     "a": 15.642,
+     "b": 18.365,
      "text": "Damaged stock does not go on a shelf."
     },
     {
-     "a": 16.957,
-     "b": 21.961,
+     "a": 18.865,
+     "b": 24.065,
      "text": "It goes into one box, marked damaged and on hold, so it can't be picked by mistake."
     },
     {
-     "a": 22.661,
-     "b": 27.087,
+     "a": 25.065,
+     "b": 29.755,
      "text": "Missing and extra items are counted against what you told us to expect."
     },
     {
-     "a": 27.787,
-     "b": 33.2,
+     "a": 30.755,
+     "b": 36.508,
      "text": "Then it's your decision whether you send it back to your supplier, write it off, or sell it as seconds."
     },
     {
-     "a": 33.55,
-     "b": 35.847,
+     "a": 37.008,
+     "b": 39.589,
      "text": "Those are your decisions, not ours."
     },
     {
-     "a": 36.197,
-     "b": 40.859,
+     "a": 40.089,
+     "b": 45.174,
      "text": "The warehouse records the problem and keeps the stock apart until you've decided."
     }
    ]
@@ -225,49 +225,49 @@
   {
    "n": 4,
    "name": "Putaway and the stock record",
-   "start": 161.694,
-   "dur": 36.732,
+   "start": 177.73,
+   "dur": 40.361,
    "card": 2.0,
    "voice": 4.5,
    "sentences": [
     {
      "a": 4.5,
-     "b": 6.485,
+     "b": 6.65,
      "text": "Good stock goes to the shelves."
     },
     {
-     "a": 6.835,
-     "b": 11.373,
+     "a": 7.15,
+     "b": 12.06,
      "text": "Every product gets a location, A1 to A6 in this bay, and a quantity."
     },
     {
-     "a": 12.073,
-     "b": 16.608,
+     "a": 13.06,
+     "b": 17.935,
      "text": "From that point the system says what's on the shelf, and the shelf has to agree with it."
     },
     {
-     "a": 17.308,
-     "b": 19.103,
+     "a": 18.935,
+     "b": 20.774,
      "text": "That doesn't happen by trust."
     },
     {
-     "a": 19.453,
-     "b": 21.077,
+     "a": 21.274,
+     "b": 23.107,
      "text": "It happens by counting."
     },
     {
-     "a": 21.427,
-     "b": 26.093,
+     "a": 23.607,
+     "b": 28.555,
      "text": "We recount locations and compare the number on the shelf with the number in the record."
     },
     {
-     "a": 26.443,
-     "b": 31.079,
+     "a": 29.055,
+     "b": 34.178,
      "text": "If they don't match, we find out why before it turns into an order we can't fill."
     },
     {
-     "a": 31.779,
-     "b": 34.932,
+     "a": 35.178,
+     "b": 38.561,
      "text": "A stock figure is only useful if someone checked it."
     }
    ]
@@ -275,39 +275,39 @@
   {
    "n": 5,
    "name": "The order arrives",
-   "start": 198.426,
-   "dur": 31.743,
+   "start": 218.091,
+   "dur": 34.352,
    "card": 2.0,
    "voice": 4.5,
    "sentences": [
     {
      "a": 4.5,
-     "b": 8.371,
+     "b": 8.614,
      "text": "Your customer buys on TikTok Shop or on your Shopify store."
     },
     {
-     "a": 8.721,
-     "b": 14.491,
+     "a": 9.114,
+     "b": 15.271,
      "text": "That order has to reach the warehouse, with the items and the address together, before anything can be picked."
     },
     {
-     "a": 15.191,
-     "b": 18.405,
+     "a": 16.271,
+     "b": 19.675,
      "text": "However it gets to us, the clock has already started."
     },
     {
-     "a": 18.755,
-     "b": 23.444,
+     "a": 20.175,
+     "b": 25.282,
      "text": "On TikTok Shop, the platform gives a seller 48 hours to ship an order."
     },
     {
-     "a": 23.794,
-     "b": 26.728,
+     "a": 25.782,
+     "b": 28.969,
      "text": "That's the platform's rule, not a promise of ours."
     },
     {
-     "a": 27.078,
-     "b": 29.943,
+     "a": 29.469,
+     "b": 32.552,
      "text": "It's the clock every order here starts on."
     }
    ]
@@ -315,49 +315,49 @@
   {
    "n": 6,
    "name": "Picking",
-   "start": 230.169,
-   "dur": 31.971,
+   "start": 252.443,
+   "dur": 35.024,
    "card": 2.0,
    "voice": 4.5,
    "sentences": [
     {
      "a": 4.5,
-     "b": 7.17,
+     "b": 7.389,
      "text": "Picking goes by location, not by memory."
     },
     {
-     "a": 7.87,
-     "b": 9.759,
+     "a": 8.389,
+     "b": 10.373,
      "text": "The order says which product."
     },
     {
-     "a": 10.109,
-     "b": 11.932,
+     "a": 10.873,
+     "b": 12.815,
      "text": "The record says which shelf."
     },
     {
-     "a": 12.282,
-     "b": 15.528,
+     "a": 13.315,
+     "b": 16.822,
      "text": "We go to that address and take the item from that cell."
     },
     {
-     "a": 16.228,
-     "b": 19.961,
+     "a": 17.822,
+     "b": 21.77,
      "text": "It sounds slower than someone who just knows where everything is."
     },
     {
-     "a": 20.311,
-     "b": 25.584,
+     "a": 22.27,
+     "b": 27.879,
      "text": "It isn't, and it doesn't break when that person is off, or when two products look almost the same."
     },
     {
-     "a": 26.284,
-     "b": 28.57,
+     "a": 28.879,
+     "b": 31.327,
      "text": "An address is something you can check."
     },
     {
-     "a": 28.92,
-     "b": 30.171,
+     "a": 31.827,
+     "b": 33.224,
      "text": "Memory isn't."
     }
    ]
@@ -365,59 +365,59 @@
   {
    "n": 7,
    "name": "Packing",
-   "start": 262.141,
-   "dur": 50.19,
+   "start": 287.467,
+   "dur": 54.518,
    "card": 2.0,
    "voice": 4.5,
    "sentences": [
     {
      "a": 4.5,
-     "b": 7.562,
+     "b": 7.796,
      "text": "Packaging is chosen by category, not by habit."
     },
     {
-     "a": 8.262,
-     "b": 11.064,
+     "a": 8.796,
+     "b": 11.873,
      "text": "A polybag for soft goods that can't break."
     },
     {
-     "a": 11.414,
-     "b": 14.911,
+     "a": 12.373,
+     "b": 16.062,
      "text": "A padded mailer for small things that need some cushioning."
     },
     {
-     "a": 15.261,
-     "b": 19.131,
+     "a": 16.562,
+     "b": 20.665,
      "text": "A box for glass, liquids and anything with a shape to protect."
     },
     {
-     "a": 19.831,
-     "b": 22.145,
+     "a": 21.665,
+     "b": 24.239,
      "text": "Size matters as much as protection."
     },
     {
-     "a": 22.495,
-     "b": 28.352,
+     "a": 24.739,
+     "b": 31.04,
      "text": "Couriers charge by dimensional weight: length times width times height, divided by five thousand."
     },
     {
-     "a": 28.702,
-     "b": 32.555,
+     "a": 31.54,
+     "b": 35.49,
      "text": "They bill whichever is bigger, that figure or the actual weight."
     },
     {
-     "a": 32.905,
-     "b": 37.407,
+     "a": 35.99,
+     "b": 40.754,
      "text": "So a light item in a box that's too big is paid for as a heavy one."
     },
     {
-     "a": 38.107,
-     "b": 45.4,
+     "a": 41.754,
+     "b": 49.479,
      "text": "For cosmetics the rules are specific: tape the cap and bag it, make sure glass can't move, and keep stock away from heat."
     },
     {
-     "a": 45.75,
-     "b": 48.39,
+     "a": 49.979,
+     "b": 52.718,
      "text": "There's a separate video on exactly that."
     }
    ]
@@ -425,39 +425,39 @@
   {
    "n": 8,
    "name": "Label and dispatch",
-   "start": 312.331,
-   "dur": 34.56,
+   "start": 341.985,
+   "dur": 37.735,
    "card": 2.0,
    "voice": 4.5,
    "sentences": [
     {
      "a": 4.5,
-     "b": 6.454,
+     "b": 6.633,
      "text": "The parcel goes on the scale."
     },
     {
-     "a": 6.804,
-     "b": 11.542,
+     "a": 7.133,
+     "b": 12.197,
      "text": "The weight and the order produce the shipping label, and the label goes on the parcel."
     },
     {
-     "a": 12.242,
-     "b": 16.864,
+     "a": 13.197,
+     "b": 18.13,
      "text": "Finished parcels go into the dispatch cage, and the cage is handed to the carrier."
     },
     {
-     "a": 17.564,
-     "b": 23.436,
+     "a": 19.13,
+     "b": 25.53,
      "text": "The parcel leaves with a tracking number, and that number goes onto the order, so your customer can follow it."
     },
     {
-     "a": 24.136,
-     "b": 27.085,
+     "a": 26.53,
+     "b": 29.736,
      "text": "Every carrier has a daily collection cut-off."
     },
     {
-     "a": 27.435,
-     "b": 32.76,
+     "a": 30.236,
+     "b": 35.935,
      "text": "The warehouse plans the day backwards from it, so the packing is finished before the van arrives."
     }
    ]
@@ -465,39 +465,39 @@
   {
    "n": 9,
    "name": "And when it comes back",
-   "start": 346.891,
-   "dur": 36.537,
+   "start": 379.72,
+   "dur": 39.0,
    "card": 2.0,
    "voice": 4.5,
    "sentences": [
     {
      "a": 4.5,
-     "b": 6.696,
+     "b": 6.808,
      "text": "A return isn't one job."
     },
     {
-     "a": 7.046,
-     "b": 8.009,
+     "a": 7.308,
+     "b": 8.295,
      "text": "It's five."
     },
     {
-     "a": 8.709,
-     "b": 14.368,
+     "a": 9.295,
+     "b": 15.181,
      "text": "We receive it, inspect it, grade it, repack it if it can be sold again, and put it back into stock."
     },
     {
-     "a": 15.068,
-     "b": 19.574,
+     "a": 16.181,
+     "b": 21.0,
      "text": "That's Dockentra, in Limerick, for brands on TikTok Shop and Shopify."
     },
     {
-     "a": 19.924,
-     "b": 28.967,
+     "a": 21.5,
+     "b": 31.086,
      "text": "From two euro sixty per order, sixty cents per additional item in the same order, a two hundred and seventy-five euro monthly minimum, no setup fee."
     },
     {
-     "a": 29.317,
-     "b": 32.537,
+     "a": 31.586,
+     "b": 35.0,
      "text": "Every price is published at dockentra.ie."
     }
    ]

@@ -1,8 +1,8 @@
-0.0	1.985	Good stock goes to the shelves.
-2.335	6.873	Every product gets a location, A1 to A6 in this bay, and a quantity.
-7.573	12.108	From that point the system says what's on the shelf, and the shelf has to agree with it.
-12.808	14.603	That doesn't happen by trust.
-14.953	16.577	It happens by counting.
-16.927	21.593	We recount locations and compare the number on the shelf with the number in the record.
-21.943	26.579	If they don't match, we find out why before it turns into an order we can't fill.
-27.279	30.432	A stock figure is only useful if someone checked it.
+0.0	2.15	Good stock goes to the shelves.
+2.65	7.56	Every product gets a location, A1 to A6 in this bay, and a quantity.
+8.56	13.435	From that point the system says what's on the shelf, and the shelf has to agree with it.
+14.435	16.274	That doesn't happen by trust.
+16.774	18.607	It happens by counting.
+19.107	24.055	We recount locations and compare the number on the shelf with the number in the record.
+24.555	29.678	If they don't match, we find out why before it turns into an order we can't fill.
+30.678	34.061	A stock figure is only useful if someone checked it.
