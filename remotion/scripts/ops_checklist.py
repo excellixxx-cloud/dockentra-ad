@@ -62,13 +62,31 @@ def report(name, ok, *lines):
         print(f"       {line}")
 
 
-g = decode(args.video, W, H, "gray", 1).astype(np.int16)
-n = len(g)
-fg = g < 170                                   # ink / green on the light set
-diff = np.abs(np.diff(g, axis=0)) > 12
-moving = (diff & (fg[1:] | fg[:-1])).sum(axis=(1, 2)) >= MOVE_PX
-chs = TL["chapters"]
+def frames(path, w, h):
+    """Stream grey frames one at a time (a 7-minute film does not fit in memory at once)."""
+    p = subprocess.Popen([FF, "-v", "error", "-i", path, "-vf", f"scale={w}:{h}", "-f", "rawvideo", "-pix_fmt", "gray", "-"], stdout=subprocess.PIPE)
+    size = w * h
+    while True:
+        buf = p.stdout.read(size)
+        if len(buf) < size:
+            break
+        yield np.frombuffer(buf, np.uint8).reshape(h, w).astype(np.int16)
+    p.wait()
 
+
+chs = TL["chapters"]
+card_frames = {int((c["start"] + 1.0) * FPS): c["n"] for c in chs[1:]}
+mv, fl, grey_at, prevf = [], [], {}, None
+for i, f in enumerate(frames(args.video, W, H)):
+    if i in card_frames:
+        grey_at[card_frames[i]] = ((f > 235) & (f < 250)).mean()     # Bay Grey #F5F7F8 fills the frame
+    if prevf is not None:
+        d = np.abs(f - prevf)
+        mv.append(((d > 12) & ((f < 170) | (prevf < 170))).sum() >= MOVE_PX)
+        fl.append(d.mean())
+    prevf = f
+moving, full = np.array(mv), np.array(fl)
+n = len(moving) + 1
 # ---- Hard rule ----
 r, at = longest_still(moving)
 report("Hard rule: no frame unchanged for more than 1 s", r < FPS, f"longest still {r / FPS:.2f} s at {at:.2f} s; frames mid-animation overall {moving.mean():.0%}")
@@ -80,7 +98,7 @@ for c in chs:
     r, at = longest_still(moving, lo, hi)
     share = moving[lo:hi].mean()
     ok &= r < FPS and share > 0.5
-    lines.append(f"ch{c['n']} {c['name'][:30]:30s} {share:4.0%} moving, longest still {r / FPS:.2f} s")
+    lines.append(f"ch{c['n']} {c['name'][:30]:30s} {share:4.0%} moving, longest still {r / FPS:.2f} s at {at:.2f} s")
 report("1. 0.25x review — motion in every chapter", ok, *lines)
 
 # ---- 2. five random pauses ----
@@ -91,16 +109,13 @@ report("2. Pause at 5 random timecodes — >= 4/5 mid-animation", sum(hits) >= 4
        f"seed {seed}: " + ", ".join(f"{p / FPS:.2f}s {'moving' if h else 'STILL'}" for p, h in zip(picks, hits)))
 
 # ---- 3. transitions: chapter cards are the pattern interrupt, entered by wipes, never by hard cuts ----
-full = np.abs(np.diff(g, axis=0)).mean(axis=(1, 2))
 prev = np.r_[0, full[:-1]]
 ahead = np.array([full[i:i + 10].max() for i in range(len(full))])
 local = np.array([np.median(full[max(0, i - 15):i + 15]) for i in range(len(full))])
 cuts = [i for i in range(len(full)) if full[i] / (local[i] + 0.5) > 6 and full[i] > 2.5 * prev[i] and full[i] >= 0.8 * ahead[i]]
 cards = []
 for c in chs[1:]:
-    f = g[int((c["start"] + 1.0) * FPS)]
-    grey_share = ((f > 235) & (f < 250)).mean()          # Bay Grey #F5F7F8 fills the frame
-    cards.append((c["n"], grey_share))
+    cards.append((c["n"], grey_at[c["n"]]))
 ok = not cuts and all(s > 0.75 for _, s in cards)
 report("3. Pattern interrupt: 9 full-screen chapter cards, every one entered by a wipe (no hard cuts)", ok,
        "chapter cards at +1.0 s (Bay Grey share): " + ", ".join(f"{k:02d} {s:.0%}" for k, s in cards),
@@ -118,18 +133,27 @@ report("4. More than one easing profile, no linear", len(beziers) > 1 and not li
        f"linear easings found: {len(linear)}")
 
 # ---- 5. colours, fonts, logo ----
-rgb = decode(args.video, 240, 135, "rgb24", 3).astype(np.float32) / 255
-mx, mn = rgb.max(-1), rgb.min(-1)
-sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-6), 0)
-d = np.maximum(mx - mn, 1e-6)
-r_, g_, b_ = rgb[..., 0], rgb[..., 1], rgb[..., 2]
-hue = np.where(mx == r_, ((g_ - b_) / d) % 6, np.where(mx == g_, (b_ - r_) / d + 2, (r_ - g_) / d + 4)) * 60
 c9 = chs[-1]
 logo_in = c9["start"] + c9["sentences"][3]["a"] + 0.3      # final(): S(3) - 0.3, logo 0.6 s later
-logo_frames = np.arange(len(rgb)) >= int(logo_in * FPS)
-colourful = (sat > 0.35) & (mx > 0.2)
-colourful[logo_frames, 30:60, 100:140] = False             # the official logo keeps its artwork colours
-off_hue = (colourful & ~((hue > 135) & (hue < 190))).sum(axis=(1, 2)).max()
+off_hue = 0
+p = subprocess.Popen([FF, "-v", "error", "-i", args.video, "-vf", "scale=240:135", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+fi = 0
+while True:
+    buf = p.stdout.read(240 * 135 * 3)
+    if len(buf) < 240 * 135 * 3:
+        break
+    rgb = np.frombuffer(buf, np.uint8).reshape(135, 240, 3).astype(np.float32) / 255
+    mx, mn = rgb.max(-1), rgb.min(-1)
+    sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-6), 0)
+    d = np.maximum(mx - mn, 1e-6)
+    r_, g_, b_ = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    hue = np.where(mx == r_, ((g_ - b_) / d) % 6, np.where(mx == g_, (b_ - r_) / d + 2, (r_ - g_) / d + 4)) * 60
+    colourful = (sat > 0.35) & (mx > 0.2)
+    if fi >= int(logo_in * FPS):
+        colourful[5:62, 88:152] = False                      # the official logo keeps its artwork colours
+    off_hue = max(off_hue, int((colourful & ~((hue > 135) & (hue < 190))).sum()))
+    fi += 1
+p.wait()
 hexes = set()
 for p in sources + [ROOT / "src/brand.ts"]:
     for line in p.read_text().splitlines():

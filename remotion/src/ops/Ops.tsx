@@ -529,7 +529,8 @@ const driftEnd = (s: Shot): Cam => ({ ...s.cam, zoom: s.cam.zoom * 1.05, x: s.ca
 function cameraAt(shots: Shot[], T: number, chDur: number) {
   let i = 0; while (i + 1 < shots.length && T >= shots[i + 1].at) i++;
   const dur = (j: number) => (j + 1 < shots.length ? shots[j + 1].at : chDur) - shots[j].at;
-  const at = (j: number, u: number) => lerpCam(shots[j].cam, driftEnd(shots[j]), sine(u / dur(j)));
+  const glide = (k: number) => { const c = clamp(k); return 1.3 * c - 0.3 * c * c; };   // eases out, never stops before the next shot
+  const at = (j: number, u: number) => lerpCam(shots[j].cam, driftEnd(shots[j]), glide(u / dur(j)));
   const u = T - shots[i].at;
   let cam = at(i, u);
   if (i > 0 && u < 0.9) cam = lerpCam(at(i - 1, dur(i - 1)), cam, EASE_MOVE(u / 0.9));
@@ -589,11 +590,20 @@ const Final: React.FC<{ T: number; t0: number; end: number; S: (k: number) => nu
     const k = ramp(T, a, 0.5, EASE_APPEAR);
     return <div style={{ marginTop: mt, fontFamily: family, fontWeight: weight, fontSize: size, letterSpacing: family === FONT.display ? "-0.03em" : 0, color: C.ink, opacity: Math.min(1, k * 1.4), transform: `translateY(${(1 - k) * 26}px)` }}>{txt}</div>;
   };
-  const drift = sine((0.85 * (T - t0)) / (end - t0));   // still travelling on the last frame
+  const kd = clamp((T - t0) / (end - t0));
+  const drift = 1.3 * kd - 0.3 * kd * kd;   // eases out but never stops: still travelling on the last frame
+  const typed = (txt: string, a: number, cps: number) => txt.slice(0, Math.max(0, Math.floor((T - a) * cps)));
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", flexDirection: "column", transform: `translateY(${-24 * drift}px) scale(${1 + 0.05 * drift})` }}>
-      {T >= logo && <div style={{ width: 300, WebkitMaskImage: mask, maskImage: mask }}><Img src={staticFile("brand/dockentra-logo.png")} style={{ width: "100%", display: "block" }} /></div>}
-      {line("From €2.60 per order", S(4), 80, 800, FONT.display, 36)}
+      {T >= logo && <div style={{ width: 260, WebkitMaskImage: mask, maskImage: mask }}><Img src={staticFile("brand/dockentra-logo.png")} style={{ width: "100%", display: "block" }} /></div>}
+      <div style={{ marginTop: 22, height: 40, fontFamily: FONT.mono, fontWeight: 500, fontSize: 30, letterSpacing: "0.14em", color: C.green }}>{typed("LIMERICK · IRELAND", S(3) + 0.9, 16)}</div>
+      <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 14, fontFamily: FONT.body, fontSize: 36, color: C.ink }}>
+        <span style={{ opacity: ramp(T, S(3) + 2.1, 0.4), transform: `translateY(${(1 - ramp(T, S(3) + 2.1, 0.4, EASE_APPEAR)) * 16}px)` }}>For brands on</span>
+        {([["TikTok Shop", S(3) + 2.7], ["Shopify", S(3) + 3.4]] as const).map(([l, a]) => (
+          <span key={l} style={{ opacity: Math.min(1, ramp(T, a, 0.35) * 1.4), transform: `scale(${0.8 + 0.2 * ramp(T, a, 0.35, EASE_APPEAR)})`, border: `2px solid ${C.ink}`, borderRadius: 10, padding: "4px 14px", fontFamily: FONT.mono, fontSize: 26, fontWeight: 500, boxShadow: `4px 4px 0 ${C.ink}` }}>{l}</span>))}
+      </div>
+      <div style={{ marginTop: 26, width: 520 * ramp(T, S(3) + 4.3, 0.9, EASE_MOVE), height: 4, background: C.mint }} />
+      {line("From €2.60 per order", S(4), 80, 800, FONT.display, 26)}
       {line("€0.60 per additional item in the same order", S(4) + 2.6, 56, 600, FONT.body, 22)}
       {line("€275 minimum per month · No setup fee", S(4) + 5.6, 56, 600, FONT.body, 12)}
       {line("dockentra.ie", S(5), 64, 800, FONT.display, 30)}
@@ -642,7 +652,7 @@ export const OpsChapter: React.FC<{ n: number }> = ({ n }) => {
       {runs.map((r, j) => <LeftCard key={j} card={r.card} T={Ts} a={r.a} b={r.b} />)}
       {dim > 0 && <Final T={Ts} t0={finalAt} end={ch.dur} S={ctx.S} />}
       {n > 0 && T < ch.card + 0.1 && <ChapterCardAnim n={n} name={ch.name} T={T} />}
-      {n < CHAPTERS.length - 1 && T > ch.dur - 0.64 && <AbsoluteFill style={{ background: C.grey, transform: `translateY(${(1 - ramp(T, ch.dur - 0.64, 0.6, EASE_MOVE)) * 100}%)` }} />}
+      {n < CHAPTERS.length - 1 && T > ch.dur - 0.64 && <AbsoluteFill style={{ background: C.grey, opacity: ramp(T, ch.dur - 0.64, 0.6, EASE_MOVE), transform: `translateY(${(1 - ramp(T, ch.dur - 0.64, 0.6, EASE_MOVE)) * 14}%)` }} />}
     </AbsoluteFill>
   );
 };

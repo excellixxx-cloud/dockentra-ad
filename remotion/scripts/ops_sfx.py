@@ -242,6 +242,9 @@ land(step[3] + .4, 150, .25, bounce=False)                       # fresh mailer
 tr.add(step[4] + .1, (tr.swish(.9, .15), .12))
 clink(step[4] + .9, .3)                                          # back on the shelf
 tr.add(S(3) + .3, (tr.swish(.6, .12), .14))                      # logo
+for d in (2.7, 3.4):                                             # TikTok Shop, Shopify chips
+    pop(S(3) + d, .5)
+tr.add(S(3) + 4.3, (tr.swish(.9, .2), .08))                      # separator rule draws
 
 
 # ---------------- render: dry + a little room, gated loudness to SFX_LUFS ----------------
