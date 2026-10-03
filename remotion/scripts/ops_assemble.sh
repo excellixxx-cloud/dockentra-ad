@@ -8,8 +8,13 @@ OUT=../youtube/out
 : > out/ops/list.txt
 for n in 0 1 2 3 4 5 6 7 8 9; do echo "file 'ch$n.mp4'" >> out/ops/list.txt; done
 "$FF" -v error -y -f concat -safe 0 -i out/ops/list.txt -c copy out/ops/picture.mp4
-# narration stays the lead; the SFX track is already 13 dB under it (ops_sfx.py)
-"$FF" -v error -y -i out/ops/picture.mp4 -i "$OUT/narration.wav" -i "$OUT/sfx.wav" \
-  -filter_complex "[1:a]aformat=channel_layouts=stereo,aresample=48000[v];[2:a]aresample=48000[s];[v][s]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.89:level=false[a]" \
-  -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -movflags +faststart -shortest "$OUT/dockentra-operations-full.mp4"
+# narration stays the lead; the SFX track is already 13 dB under it (ops_sfx.py).
+# Mix master: 48 kHz 16-bit, -14 LUFS (YouTube's reference), true peak <= -1 dBTP.
+"$FF" -v error -y -i "$OUT/narration.wav" -i "$OUT/sfx.wav" \
+  -filter_complex "[0:a]aformat=channel_layouts=stereo[v];[v][1:a]amix=inputs=2:duration=first:normalize=0[a]" \
+  -map "[a]" -ar 48000 -c:a pcm_s16le out/ops/mix_raw.wav
+python3 ../youtube/tts/loud.py out/ops/mix_raw.wav "$OUT/mix-master.wav" -14 -1
+# AAC carries no bit depth; it is encoded straight from the 48 kHz / 16-bit master at the same rate
+"$FF" -v error -y -i out/ops/picture.mp4 -i "$OUT/mix-master.wav" -map 0:v -map 1:a -c:v copy \
+  -c:a aac -b:a 320k -ar 48000 -movflags +faststart -shortest "$OUT/dockentra-operations-full.mp4"
 echo "$OUT/dockentra-operations-full.mp4"

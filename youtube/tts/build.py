@@ -1,6 +1,6 @@
 """Lay the synthesised chapters on the film's timeline and write everything that depends on it:
   remotion/src/ops/timeline.json   chapter + sentence timing the animation keys off
-  youtube/out/narration.wav        the voice alone, full length, 48 kHz (replaceable by a human read)
+  youtube/out/narration.wav        the voice alone, full length, 48 kHz 16-bit, -16 LUFS, <= -2 dBTP (replaceable by a human read)
   youtube/out/subtitles.srt        one cue per spoken phrase, prices in figures
   youtube/out/chapters.txt         YouTube chapter list
 Layout per chapter: [2 s title card] [2.5 s picture before the voice] voice [1.8 s tail]. Chapter 0 has
@@ -8,6 +8,7 @@ no card and a 1 s lead; chapter 9 holds the final card 4 s after the voice."""
 import json, re, subprocess, wave
 from pathlib import Path
 import numpy as np, imageio_ffmpeg
+from loud import loudnorm
 
 ROOT = Path(__file__).resolve().parents[2]
 VOICE = ROOT / "youtube/voice"
@@ -42,7 +43,7 @@ for at, x in track:
 tmp = OUT / "_narr24k.wav"
 with wave.open(str(tmp), "wb") as w:
     w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr0); w.writeframes((np.clip(y, -1, 1) * 32767).astype("<i2").tobytes())
-subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-loglevel", "error", "-y", "-i", str(tmp), "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", "48000", "-ac", "1", str(OUT / "narration.wav")], check=True)
+loudnorm(tmp, OUT / "narration.wav", I=-16, TP=-2.0, channels=1)          # 48 kHz 16-bit, true peak <= -2 dBTP
 tmp.unlink()
 
 # subtitles — one cue per phrase; long sentences split at commas, timed by length

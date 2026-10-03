@@ -1,10 +1,10 @@
 """Offline narration synthesis (sherpa-onnx). Sentence by sentence, with
-controlled pauses: 0.35 s between sentences, 0.7 s between paragraphs.
+controlled pauses: 0.5 s between sentences, 1.0 s between paragraphs (speed 0.86 ≈ 145-150 wpm).
 
     python3 youtube/tts/synth.py <chapter 0-9> <voice> <out.wav> [speed]
 voices: george | lewis (Kokoro v0.19, British male) | alan (piper en_GB medium)
 """
-import re, sys, wave
+import os, re, sys, wave
 from pathlib import Path
 import numpy as np
 import sherpa_onnx
@@ -15,6 +15,7 @@ NARR = Path(__file__).resolve().parent.parent / "narration.md"
 # What the voice reads, where the written form would be read badly (subtitles keep the written form).
 SAY = [
     ("A1 to A6", "A one to A six"),
+    ("your stock from", "your stock, from"),     # slower read swallowed the final k without the pause
     ("48 hours", "forty-eight hours"),
     ("dockentra.ie", "Dock-entra dot I E"),   # brand: stress and full vowel on "Dock"
     ("Dockentra", "Dock-entra"),
@@ -44,6 +45,9 @@ def make_tts(voice):
             data_dir=str(d / "espeak-ng-data")), num_threads=4))
     return sherpa_onnx.OfflineTts(cfg), 0
 
+GAP_S = float(os.environ.get("GAP_S", 0.5))    # between sentences
+GAP_P = float(os.environ.get("GAP_P", 1.0))    # between paragraphs
+
 def synth(n, voice, out, speed=1.0):
     tts, sid = make_tts(voice)
     sr, parts, marks, t = None, [], [], 0.0
@@ -57,7 +61,7 @@ def synth(n, voice, out, speed=1.0):
             if len(nz): x = x[max(0, nz[0] - int(.03 * sr)): nz[-1] + int(.06 * sr)]
             marks.append((round(t, 3), round(t + len(x) / sr, 3), sent))
             parts.append(x); t += len(x) / sr
-            gap = 0.35 if si < len(sents) - 1 else 0.7
+            gap = GAP_S if si < len(sents) - 1 else GAP_P
             parts.append(np.zeros(int(gap * sr), np.float32)); t += gap
     y = np.concatenate(parts[:-1])
     y = y / max(1e-6, np.abs(y).max()) * 0.89

@@ -3,3 +3,4 @@ video/three-ways/node_modules
 video/three-ways/out/still-*.png
 youtube/tts/__pycache__/
 youtube/out/sfx.wav
+youtube/out/mix-master.wav
