@@ -88,7 +88,7 @@ const Carton: React.FC<{ x: number; y: number; z: number; flaps: number; collaps
 const Jar: React.FC<{ x: number; y: number; z: number }> = ({ x, y, z }) => <Cyl x={x} y={y} z={z} r={0.75} h={1.8} color={C.white} topColor={C.grey} />;
 
 /* ---------- the room ---------- */
-export const Room: React.FC<{ s: RoomState; bare?: boolean }> = ({ s, bare = false }) => {
+export const Room: React.FC<{ s: RoomState; bare?: boolean; noStand?: boolean }> = ({ s, bare = false, noStand = false }) => {
   const { W, D, H } = ROOM;
   const cy = CAGE.y0 - (CAGE.y0 - 0.2) * s.cageOut; // cage rolls toward the door
   const m = s.mailer;
@@ -120,7 +120,7 @@ export const Room: React.FC<{ s: RoomState; bare?: boolean }> = ({ s, bare = fal
         <g opacity={s.recvFade} transform={`translate(0 ${(1 - s.recvFade) * 30})`}>
           <Table t={RECV} edge={C.green} />
           {/* copy-stand pole at the back-right corner, behind the products */}
-          <Box x={STAND.pole.x} y={STAND.pole.y} z={RECV.top} w={0.6} d={0.6} h={STAND.armZ - RECV.top + 0.5} color={C.ink} line={false} />
+          {!noStand && <Box x={STAND.pole.x} y={STAND.pole.y} z={RECV.top} w={0.6} d={0.6} h={STAND.armZ - RECV.top + 0.5} color={C.ink} line={false} />}
           {s.carton && <Carton x={RECV.x0 + 1.2} y={RECV.y0 + 1.5} z={RECV.top + s.carton.z} flaps={s.carton.flaps} collapse={s.carton.collapse} />}
         </g>
       )}
@@ -158,7 +158,7 @@ export const Room: React.FC<{ s: RoomState; bare?: boolean }> = ({ s, bare = fal
       {/* product jars, wherever they are (table, air, shelf) */}
       {s.jars.map((j, i) => <Jar key={i} x={j.x} y={j.y} z={j.z} />)}
       {/* copy-stand arm and camera, lens pointing straight down at the rows of products */}
-      {s.recvFade > 0.001 && (
+      {s.recvFade > 0.001 && !noStand && (
         <g opacity={s.recvFade} transform={`translate(0 ${(1 - s.recvFade) * 30})`}>
           <Box x={STAND.pole.x} y={STAND.pole.y} z={STAND.armZ} w={0.6} d={STAND.head.y - STAND.pole.y + 0.3} h={0.5} color={C.ink} line={false} />
           <Box x={STAND.head.x + 0.8} y={STAND.head.y} z={STAND.armZ} w={STAND.pole.x - STAND.head.x - 0.2} d={0.6} h={0.5} color={C.ink} line={false} />
