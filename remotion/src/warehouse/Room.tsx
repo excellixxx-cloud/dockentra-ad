@@ -88,7 +88,7 @@ const Carton: React.FC<{ x: number; y: number; z: number; flaps: number; collaps
 const Jar: React.FC<{ x: number; y: number; z: number }> = ({ x, y, z }) => <Cyl x={x} y={y} z={z} r={0.75} h={1.8} color={C.white} topColor={C.grey} />;
 
 /* ---------- the room ---------- */
-export const Room: React.FC<{ s: RoomState }> = ({ s }) => {
+export const Room: React.FC<{ s: RoomState; bare?: boolean }> = ({ s, bare = false }) => {
   const { W, D, H } = ROOM;
   const cy = CAGE.y0 - (CAGE.y0 - 0.2) * s.cageOut; // cage rolls toward the door
   const m = s.mailer;
@@ -125,7 +125,8 @@ export const Room: React.FC<{ s: RoomState }> = ({ s }) => {
         </g>
       )}
 
-      {/* packing table: tape, scale, label printer, a stack of mailers */}
+      {/* packing table: tape, scale, label printer, a stack of mailers (bare: a video draws its own) */}
+      {!bare && <>
       <Table t={PACK} />
       <Mailer x={PACK.x0 + 1} y={PACK.y1 - 4.2} z={PACK.top} />
       <Mailer x={PACK.x0 + 1} y={PACK.y1 - 4.2} z={PACK.top + 0.7} />
@@ -145,7 +146,7 @@ export const Room: React.FC<{ s: RoomState }> = ({ s }) => {
           {s.printer > 0.9 && [0, 1, 2].map((k) => <polyline key={k} points={poly([[PACK.x1 + 0.2 + k * 0.4, PACK.y0 + 2.3, PACK.top + 1.8], [PACK.x1 + 0.2 + k * 0.4, PACK.y0 + 3.7, PACK.top + 1.8]])} stroke={C.ink} strokeWidth={1.5} fill="none" vectorEffect="non-scaling-stroke" />)}
         </g>
       )}
-
+      </>}
 
       {/* a pallet of boxes in the front corner */}
       <Box x={1.5} y={30} z={0} w={8} d={8} h={1.2} color={C.white} />

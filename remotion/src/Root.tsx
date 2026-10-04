@@ -7,6 +7,7 @@ import { CreatorSamples, DURATION_S as CREATOR_S } from "./creator/CreatorSample
 import { CosmeticsKeyframes } from "./cosmetics/Keyframes";
 import { KeyframeSheet, SHEET } from "./cosmetics/KeyframeSheet";
 import { Cosmetics, DURATION_S as COSMETICS_S } from "./cosmetics/Cosmetics";
+import { TwoBoxesKeyframe, KEYFRAMES as TB_KF } from "./twoboxes/TwoBoxes";
 import { OpsChapter, OpsThumb, CHAPTERS as OPS_CH } from "./ops/Ops";
 import { OpsFrame, OpsStoryboardSheet, OW, OH, SHEET as OPS_SHEET } from "./ops/Storyboard";
 
@@ -23,6 +24,7 @@ export const RemotionRoot: React.FC = () => (
       <Composition key={c.n} id={`Ops${c.n}`} component={OpsChapter} durationInFrames={Math.round(c.dur * 30)} fps={30} width={1920} height={1080} defaultProps={{ n: c.n }} />
     ))}
     <Composition id="OpsThumb" component={OpsThumb} durationInFrames={1} fps={30} width={1920} height={1080} />
+    <Composition id="TwoBoxesKeyframe" component={TwoBoxesKeyframe} durationInFrames={1} fps={30} width={1080} height={1920} defaultProps={{ i: 0 }} />
     <Composition id="SameOrderThreeWays" component={SameOrderThreeWays} durationInFrames={36 * FPS} fps={FPS} width={W} height={H} />
     <Composition id="HelloDockentra" component={HelloDockentra} durationInFrames={45} fps={30} width={1080} height={1920} />
   </>
