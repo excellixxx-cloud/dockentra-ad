@@ -1,5 +1,6 @@
 import React from "react";
-import { AbsoluteFill, Img, staticFile } from "remotion";
+import { AbsoluteFill, Audio, Img, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import LINES from "./lines.json";
 import { C, EASE_APPEAR, EASE_LOGO, EASE_MOVE, FONT, clamp, lerp, ramp } from "../brand";
 import { Box, Cyl, FaceText, LINE, iso, mix, poly } from "../warehouse/iso";
 import { BIN, P3, RECV, Room, RoomState } from "../warehouse/Room";
@@ -23,6 +24,7 @@ const PR = 0.9, PH = 0.6;                                         // the product
 const ON_TABLE: P3 = { x: 40.6, y: 26.0, z: T.top };
 const ON_SCALE: P3 = { x: SC.x0 + SC.w / 2, y: SC.y0 + SC.d / 2, z: T.top + SC.h };
 const IN_MAILER: P3 = { x: M.x0 + M.w / 2, y: M.y0 + M.d / 2, z: T.top + 0.12 };
+const AT_MOUTH: P3 = { x: M.x0 + M.w + 1.2, y: M.y0 + M.d / 2, z: T.top + 0.12 };     // in front of the open end
 const TAPE_HOME: P3 = { x: 43.0, y: 27.4, z: T.top };             // the coiled tape, in front between the two packages
 
 const arc = (a: P3, b: P3, k: number, h: number): P3 => ({ x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), z: lerp(a.z, b.z, k) + Math.sin(Math.PI * clamp(k)) * h });
@@ -39,15 +41,15 @@ export const TL = {
   push: [0.3, 2.4] as [number, number], mailerLand: 1.2, boxLand: 1.5, prodLand: 1.85, tapeLand: 2.15,
   toScale: 5.3, onScale: 5.95, offScale: 8.9, close: 4.35,
   mL: 11.6, mW: 12.6, mH: 13.6, fM: [12.3, 13.3, 14.2, 14.8, 15.4], tapeIn: 16.6, mGone: 18.7,
-  bL: 19.4, bW: 20.2, bH: 20.9, fB: [20.0, 20.7, 21.35, 21.7, 22.1], cmpA: 22.5, cmpB: 22.8, tapeIn2: 24.4,
+  bL: 19.4, bW: 20.2, bH: 20.9, fB: [19.9, 20.6, 21.2, 21.5, 21.85], cmpA: 21.95, cmpB: 22.25, tapeIn2: 24.4,
   openM: 26.0, intoMailer: 26.3, inMailer: 27.15, closeM: 27.3, boxOut: 27.5,
   pull: 29.0, logo: 29.9,
 };
 export const HEADLINES: [number, number, string][] = [
   [0.4, 5.0, "Same product. Same weight."],
   [5.15, 11.0, "The scale agrees."],
-  [11.15, 22.75, "But the courier measures air."],
-  [22.8, 26.0, "Billed as six times heavier."],
+  [11.15, 22.2, "But the courier measures air."],
+  [22.25, 26.0, "Billed as six times heavier."],
   [26.05, 29.0, "Same product. Smaller box."],
   [29.05, 32.0, "Measure yours."],
 ];
@@ -63,10 +65,10 @@ const lc = (a: Cam, b: Cam, k: number): Cam => ({ x: lerp(a.x, b.x, k), y: lerp(
 
 function cameraAt(t: number): Cam {
   const keys: [number, Cam][] = [
-    [TL.push[0], CAM_WIDE], [TL.push[1], CAM_TABLE], [5.0, { ...CAM_TABLE, zoom: 3.15 }], [5.8, CAM_SCALE], [10.6, { ...CAM_SCALE, zoom: 3.45 }],
-    [11.4, CAM_MAILER], [18.6, { ...CAM_MAILER, zoom: 3.55, x: 38.9 }], [19.4, CAM_BOX], [22.75, { ...CAM_BOX, zoom: 3.33 }],
-    [22.85, { ...CAM_BOX, zoom: 3.5, x: 46.2 }],                                // the halt: one sharp step in on the comparison
-    [25.9, { ...CAM_BOX, zoom: 3.57, x: 46.2 }], [26.6, CAM_TABLE], [28.9, { ...CAM_TABLE, zoom: 3.15 }], [30.4, CAM_END], [32, { ...CAM_END, zoom: 1.88 }],
+    [TL.push[0], CAM_WIDE], [TL.push[1], CAM_TABLE], [5.0, { ...CAM_TABLE, zoom: 3.25, x: 42.6 }], [5.8, CAM_SCALE], [8.9, { ...CAM_SCALE, zoom: 3.8, x: 40.9, y: 23.2, z: 9.9 }], [10.6, { ...CAM_SCALE, zoom: 3.55 }],
+    [11.4, CAM_MAILER], [18.6, { ...CAM_MAILER, zoom: 3.55, x: 38.9 }], [19.4, CAM_BOX], [22.2, { ...CAM_BOX, zoom: 3.33 }],
+    [22.3, { ...CAM_BOX, zoom: 3.5, x: 46.2 }],                                // the halt: one sharp step in on the comparison
+    [25.9, { ...CAM_BOX, zoom: 3.8, x: 46.6 }], [26.6, CAM_TABLE], [28.9, { ...CAM_TABLE, zoom: 3.25 }], [30.4, CAM_END], [32, { ...CAM_END, zoom: 1.8, y: 20.8 }],
   ];
   if (t <= keys[0][0]) return keys[0][1];
   for (let i = 0; i < keys.length - 1; i++) {
@@ -99,7 +101,7 @@ type St = {
   cam: Cam;
   mailer: { z: number; flap: number; on: boolean };
   box: { z: number; flaps: number; dy: number; on: boolean };
-  prod: P3 | null; prodInMailer: boolean;
+  prod: P3 | null; prodInMailer: boolean; sliding: boolean;
   tape: { at: P3; strip: null | { from: P3; to: P3 } } | null;
   display: string; displayLit: number;
 };
@@ -122,10 +124,20 @@ export function stateAt(t: number): St {
   let prod: P3 | null = pz === null ? null : { ...ON_TABLE, z: ON_TABLE.z + pz };
   if (t >= TL.toScale) prod = arc(ON_TABLE, ON_SCALE, EASE_MOVE(clamp((t - TL.toScale) / (TL.onScale - TL.toScale))), 2.2);
   if (t >= TL.offScale) prod = arc(ON_SCALE, ON_TABLE, EASE_MOVE(clamp((t - TL.offScale) / 0.6)), 2.0);
-  if (t >= TL.intoMailer) prod = arc(ON_TABLE, IN_MAILER, EASE_MOVE(clamp((t - TL.intoMailer) / (TL.inMailer - TL.intoMailer))), 2.6);
+  // into the mailer: a short hop to the open end, then it slides in (and the mailer hides it)
+  const mid = TL.intoMailer + 0.5;
+  let sliding = false;
+  if (t >= TL.intoMailer) prod = arc(ON_TABLE, AT_MOUTH, EASE_MOVE(clamp((t - TL.intoMailer) / 0.5)), 1.4);
+  if (t >= mid) { prod = arc(AT_MOUTH, IN_MAILER, EASE_MOVE(clamp((t - mid) / (TL.inMailer - mid))), 0); sliding = true; }
   const prodInMailer = t >= TL.inMailer;
-  // the empty box leaves to the left in 5
-  const out = ramp(t, TL.boxOut, 1.1, EASE_MOVE);
+  // the empty box leaves to the left in 5: slides to the front edge, drops to the floor with its weight, slides away
+  const o = TL.boxOut;
+  const slide1 = EASE_MOVE(clamp((t - o) / 0.5)) * 5.4;
+  const fallK = clamp((t - o - 0.5) / 0.32);
+  const fall = fallK * fallK;                                     // gravity: accelerates down
+  const bounce = t > o + 0.82 && t < o + 1.3 ? 0.5 * Math.abs(Math.sin((Math.PI * (t - o - 0.82)) / 0.22)) * Math.exp(-(t - o - 0.82) * 7) : 0;
+  const slide2 = EASE_MOVE(clamp((t - o - 0.95) / 0.75)) * 26;
+  const boxDy = slide1 + slide2, boxZ = (t < o ? T.top + (bz ?? 0) : T.top * (1 - fall) + bounce);
   // the tape measure: comes to each edge, runs along it, winds back
   let tape: St["tape"] = tz === null ? null : { at: { ...TAPE_HOME, z: TAPE_HOME.z + tz }, strip: null };
   if (tape) {
@@ -146,8 +158,8 @@ export function stateAt(t: number): St {
   return {
     cam,
     mailer: { z: mz ?? 0, flap: mFlap, on: mz !== null },
-    box: { z: bz ?? 0, flaps: bFlaps, dy: 30 * out, on: bz !== null && out < 1 },
-    prod, prodInMailer, tape,
+    box: { z: boxZ, flaps: bFlaps, dy: boxDy, on: bz !== null && t < o + 1.75 },
+    prod, prodInMailer, sliding, tape,
     display: reading(t), displayLit: t >= TL.onScale && t < TL.offScale + 0.25 ? 1 : 0,
   };
 }
@@ -347,10 +359,11 @@ export const TwoBoxesScene: React.FC<{ t: number; cues?: [number, number, string
           <Room s={ROOM_STATE} bare noStand />
           <Table2 />
           <Scale text={s.display} lit={s.displayLit} />
+          {s.prod && s.sliding && !s.prodInMailer && <Product p={s.prod} />}
           {s.mailer.on && <Mailer2 x={M.x0} y={M.y0} z={T.top + s.mailer.z} flap={s.mailer.flap} />}
-          {s.prod && !s.prodInMailer && <Product p={s.prod} />}
+          {s.prod && !s.sliding && !s.prodInMailer && <Product p={s.prod} />}
           {s.tape && <Tape at={s.tape.at} strip={s.tape.strip} />}
-          {s.box.on && <Box2 x={B.x0} y={B.y0 + s.box.dy} z={T.top + s.box.z + Math.sin(Math.PI * clamp(s.box.dy / 30)) * 0.6} flaps={s.box.flaps} />}
+          {s.box.on && <Box2 x={B.x0} y={B.y0 + s.box.dy} z={s.box.z} flaps={s.box.flaps} />}
         </g>
       </svg>
       {EDGES.map((e, i) => <EdgeMark key={i} cam={s.cam} e={e} t={t} />)}
@@ -402,3 +415,13 @@ export const DRAFT_CUES: [number, number, string][] = [
 ];
 /** Stage-1 stills: every headline shown settled, as it stands for most of its time on screen. */
 export const TwoBoxesKeyframe: React.FC<{ i: number }> = ({ i }) => <TwoBoxesScene t={KEYFRAMES[i].t} cues={DRAFT_CUES} settled />;
+
+/* ---------------------------------------------------------------- stage 2: the film */
+export const CUES: [number, number, string][] = (LINES as { a: number; b: number; text: string; sub: boolean }[]).filter((l) => l.sub).map((l) => [l.a, l.b + 0.25, l.text]);
+export const TwoBoxes: React.FC<{ withAudio?: boolean }> = ({ withAudio = false }) => {
+  const f = useCurrentFrame(), { fps } = useVideoConfig();
+  return (<>
+    <TwoBoxesScene t={f / fps} cues={CUES} />
+    {withAudio && <Audio src={staticFile("twoboxes-mix.wav")} />}
+  </>);
+};

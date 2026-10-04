@@ -1,0 +1,51 @@
+[
+ {
+  "a": 0.6,
+  "b": 3.409,
+  "text": "Same product, same weight, two boxes.",
+  "spoken": "Same product, same weight, two boxes.",
+  "sub": false
+ },
+ {
+  "a": 5.4,
+  "b": 10.765,
+  "text": "Your courier bills whichever is bigger: the actual weight, or the volumetric one.",
+  "spoken": "Your courier bills whichever is bigger: the actual weight, or the volumetric one.",
+  "sub": true
+ },
+ {
+  "a": 11.25,
+  "b": 15.522,
+  "text": "Length times width times height, divided by five thousand.",
+  "spoken": "Length times width times height, divided by five thousand.",
+  "sub": true
+ },
+ {
+  "a": 15.85,
+  "b": 19.175,
+  "text": "In the mailer that's zero point three six kilos.",
+  "spoken": "In the mailer that's zero point three six kilos.",
+  "sub": true
+ },
+ {
+  "a": 20.95,
+  "b": 23.359,
+  "text": "In the box, two point two five.",
+  "spoken": "In the box, two point two five.",
+  "sub": true
+ },
+ {
+  "a": 23.65,
+  "b": 28.497,
+  "text": "Same product, billed as six times heavier, on every single order.",
+  "spoken": "Same product. Billed as six times heavier, on every single order.",
+  "sub": false
+ },
+ {
+  "a": 29.2,
+  "b": 30.414,
+  "text": "Measure yours.",
+  "spoken": "Measure yours.",
+  "sub": false
+ }
+]
