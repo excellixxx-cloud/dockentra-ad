@@ -88,7 +88,8 @@ const Carton: React.FC<{ x: number; y: number; z: number; flaps: number; collaps
 const Jar: React.FC<{ x: number; y: number; z: number }> = ({ x, y, z }) => <Cyl x={x} y={y} z={z} r={0.75} h={1.8} color={C.white} topColor={C.grey} />;
 
 /* ---------- the room ---------- */
-export const Room: React.FC<{ s: RoomState; bare?: boolean; noStand?: boolean }> = ({ s, bare = false, noStand = false }) => {
+export const Room: React.FC<{ s: RoomState; bare?: boolean; noStand?: boolean; empty?: boolean }> = ({ s, bare = false, noStand = false, empty = false }) => {
+  if (empty) return <EmptyRoom />;
   const { W, D, H } = ROOM;
   const cy = CAGE.y0 - (CAGE.y0 - 0.2) * s.cageOut; // cage rolls toward the door
   const m = s.mailer;
@@ -268,3 +269,24 @@ const Cage: React.FC<{ y0: number; s: RoomState }> = ({ y0, s }) => {
 };
 
 export { FONT };
+
+/** The same room with nothing in it yet: floor, walls, the roller door (a space, not a working warehouse). */
+const EmptyRoom: React.FC = () => {
+  const { W, D, H } = ROOM;
+  return (
+    <g>
+      {wall([[0, 0, 0], [W, 0, 0], [W, D, 0], [0, D, 0]], C.grey)}
+      {Array.from({ length: 5 }, (_, i) => (
+        <polyline key={i} points={poly([[0, 8 * (i + 1), 0], [W, 8 * (i + 1), 0]])} stroke={mix(C.grey, C.ink, 0.08)} strokeWidth={1.5} fill="none" />
+      ))}
+      {wall([[0, 0, 0], [0, D, 0], [0, D, H], [0, 0, H]], mix(C.grey, C.ink, 0.06))}
+      {wall([[0, 0, 0], [W, 0, 0], [W, 0, H], [0, 0, H]], C.white)}
+      {wall([[DOOR.x0, 0, 0], [DOOR.x1, 0, 0], [DOOR.x1, 0, DOOR.h], [DOOR.x0, 0, DOOR.h]], C.grey)}
+      {Array.from({ length: 12 }, (_, i) => {
+        const z = (DOOR.h / 12) * (i + 0.5);
+        return <polyline key={i} points={poly([[DOOR.x0, 0, z], [DOOR.x1, 0, z]])} stroke={C.ink} strokeWidth={1.5} fill="none" vectorEffect="non-scaling-stroke" />;
+      })}
+      <polygon points={poly([[DOOR.x0, 0, 0], [DOOR.x1, 0, 0], [DOOR.x1, 0, DOOR.h], [DOOR.x0, 0, DOOR.h]])} fill="none" {...LINE} />
+    </g>
+  );
+};

@@ -1,0 +1,191 @@
+{
+ "total": 118.53,
+ "scenes": [
+  {
+   "name": "hook",
+   "start": 0.0,
+   "end": 12.081,
+   "lines": [
+    {
+     "a": 1.8,
+     "b": 4.794,
+     "text": "Small sellers outgrow packing at home.",
+     "file": "s00.wav",
+     "sub": true
+    },
+    {
+     "a": 5.244,
+     "b": 8.198,
+     "text": "Small warehouses outgrow spreadsheets.",
+     "file": "s01.wav",
+     "sub": true
+    },
+    {
+     "a": 8.648,
+     "b": 10.681,
+     "text": "Dockentra is built for both.",
+     "file": "s02.wav",
+     "sub": true
+    }
+   ]
+  },
+  {
+   "name": "problem",
+   "start": 12.081,
+   "end": 28.785,
+   "lines": [
+    {
+     "a": 12.981,
+     "b": 16.805,
+     "text": "Most small 3PLs track stock in spreadsheets.",
+     "file": "s10.wav",
+     "sub": true
+    },
+    {
+     "a": 17.255,
+     "b": 22.204,
+     "text": "When a client complains about a lost or damaged order, nobody can trace it.",
+     "file": "s11.wav",
+     "sub": true
+    },
+    {
+     "a": 22.654,
+     "b": 27.985,
+     "text": "Warehouse software exists \u2014 but it starts at hundreds of euros a month before setup.",
+     "file": "s12.wav",
+     "sub": true
+    }
+   ]
+  },
+  {
+   "name": "portal",
+   "start": 28.785,
+   "end": 41.297,
+   "lines": [
+    {
+     "a": 29.785,
+     "b": 40.497,
+     "text": "With Dockentra, the warehouse's clients get their own portal \u2014 orders, files, deliveries, returns, stock, shipments and invoices, from a laptop or a phone.",
+     "file": "s20.wav",
+     "sub": true
+    }
+   ]
+  },
+  {
+   "name": "stores",
+   "start": 41.297,
+   "end": 54.372,
+   "lines": [
+    {
+     "a": 42.297,
+     "b": 53.472,
+     "text": "Dockentra is built to connect to a client's own Shopify, TikTok Shop, Amazon, eBay or WooCommerce store \u2014 tested end to end, going live with our first clients.",
+     "file": "s30.wav",
+     "sub": true
+    }
+   ]
+  },
+  {
+   "name": "floor",
+   "start": 54.372,
+   "end": 75.665,
+   "lines": [
+    {
+     "a": 55.272,
+     "b": 59.48,
+     "text": "Every unit is tracked by its inbound batch, from dock to parcel.",
+     "file": "s40.wav",
+     "sub": true
+    },
+    {
+     "a": 59.93,
+     "b": 62.274,
+     "text": "Staff scan to pick and pack.",
+     "file": "s41.wav",
+     "sub": true
+    },
+    {
+     "a": 62.724,
+     "b": 74.865,
+     "text": "A carrier label \u2014 An Post, DPD, UPS, DHL or FedEx \u2014 is built and tested, printing straight to a Zebra printer, ready to go live once carrier accounts are in place.",
+     "file": "s42.wav",
+     "sub": true
+    }
+   ]
+  },
+  {
+   "name": "handover",
+   "start": 75.665,
+   "end": 85.248,
+   "lines": [
+    {
+     "a": 76.565,
+     "b": 79.922,
+     "text": "Parcels are handed to couriers with a scanned check.",
+     "file": "s50.wav",
+     "sub": true
+    },
+    {
+     "a": 80.372,
+     "b": 84.448,
+     "text": "Every operation is billed automatically \u2014 no spreadsheets.",
+     "file": "s51.wav",
+     "sub": true
+    }
+   ]
+  },
+  {
+   "name": "trust",
+   "start": 85.248,
+   "end": 96.553,
+   "lines": [
+    {
+     "a": 86.448,
+     "b": 89.142,
+     "text": "Clients can never see each other's data.",
+     "file": "s60.wav",
+     "sub": true
+    },
+    {
+     "a": 89.592,
+     "b": 95.653,
+     "text": "Covered by more than nine thousand automated checks and four independent security reviews.",
+     "file": "s61.wav",
+     "sub": false
+    }
+   ]
+  },
+  {
+   "name": "ask",
+   "start": 96.553,
+   "end": 112.93,
+   "lines": [
+    {
+     "a": 97.553,
+     "b": 100.983,
+     "text": "Dockentra WMS is built and tested.",
+     "file": "s70.wav",
+     "sub": true
+    },
+    {
+     "a": 101.433,
+     "b": 106.125,
+     "text": "Our own warehouse space in Limerick will be the first pilot, once it's open.",
+     "file": "s71.wav",
+     "sub": true
+    },
+    {
+     "a": 106.575,
+     "b": 112.13,
+     "text": "Next: our first clients, then other small warehouses across Ireland and the UK.",
+     "file": "s72.wav",
+     "sub": true
+    }
+   ]
+  }
+ ],
+ "endCard": {
+  "start": 112.93,
+  "end": 118.53
+ }
+}
