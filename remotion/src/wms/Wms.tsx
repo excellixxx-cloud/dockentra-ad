@@ -293,7 +293,8 @@ const Floor: React.FC<SP> = ({ f, T, sc, settled }) => {
     const shot = phase === 1 ? SHOTS.pickActiveP : SHOTS.packP;
     const t0 = phase === 1 ? cut1 : cut2;
     const g = glide((T - t0) / 1.6);
-    const w = f.v ? 460 : 380, x = f.v ? 310 : 1180, y = f.v ? 520 : 150;
+    // the second cut also jumps the phone sideways and closer: the rhythm visibly changes
+    const w = (f.v ? 460 : 380) * (phase === 2 ? 1.12 : 1), x = phase === 2 ? (f.v ? 285 : 1000) : (f.v ? 310 : 1180), y = phase === 2 ? (f.v ? 470 : 110) : (f.v ? 520 : 150);
     const beam = 2040 + 150 * (((T - t0) * 0.9) % 1);                 // the scan line sweeping the barcode field
     body = <Phone x={x} y={y} w={w} shot={shot} zoom={1.25 + 0.45 * g} fy={lerp(0.6, 0.78, g)} beam={beam} />;
     head = ["No guessing", "on the floor."]; ha = cut1 + 0.1; hb = cutC;
@@ -354,9 +355,9 @@ const Trust: React.FC<SP> = ({ f, T, sc, settled }) => {
         const a = sc.start + 0.3 + i * 1.3, k = settled ? 1 : ramp(T, a, 0.55, EASE_APPEAR);
         const pos = f.v ? { x: 70, y: 220 + i * 290, w: 940, h: 250 } : { x: 110 + (i % 2) * 860, y: 120 + Math.floor(i / 2) * 330, w: 800, h: 270 };
         const words = txt.split(" ");
-        const drift = Math.sin((u + i) / 2.2) * 4;
+        const drift = Math.sin((u + i * 1.7) / 1.1) * 9;                  // the cards keep floating while they are read
         return (
-          <div key={i} style={{ position: "absolute", left: pos.x, top: pos.y, width: pos.w, height: pos.h, background: C.white, border: `2px solid ${C.ink}`, borderRadius: 22, boxShadow: `10px 10px 0 ${C.ink}`, opacity: Math.min(1, k * 1.4), transform: `translateY(${(1 - k) * 50 + drift}px)`, display: "flex", alignItems: "center", padding: "0 44px", boxSizing: "border-box", overflow: "hidden" }}>
+          <div key={i} style={{ position: "absolute", left: pos.x, top: pos.y, width: pos.w, height: pos.h, background: C.white, border: `2px solid ${C.ink}`, borderRadius: 22, boxShadow: `10px 10px 0 ${C.ink}`, opacity: Math.min(1, k * 1.4), transform: `translateY(${(1 - k) * 50 + drift}px) rotate(${Math.sin((u + i) / 1.6) * 0.6}deg)`, display: "flex", alignItems: "center", padding: "0 44px", boxSizing: "border-box", overflow: "hidden" }}>
             {i === 0 && <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 14, background: C.mint }} />}
             <div style={{ fontFamily: FONT.display, fontWeight: 800, fontSize: f.v ? 56 : 50, lineHeight: 1.1, letterSpacing: "-0.03em", color: C.ink }}>
               {words.map((w, j) => { const kw = settled ? 1 : ramp(T, a + 0.1 + j * 0.075, 0.45, EASE_APPEAR); return <span key={j} style={{ display: "inline-block", overflow: "hidden", verticalAlign: "top", paddingBottom: 6, marginBottom: -6 }}><span style={{ display: "inline-block", transform: `translateY(${(1 - kw) * 105}%)` }}>{w}{" "}</span></span>; })}
