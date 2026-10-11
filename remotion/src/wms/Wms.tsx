@@ -268,7 +268,7 @@ const Stores: React.FC<SP> = ({ f, T, sc, settled }) => {
     <AbsoluteFill>
       <Backdrop f={f} T={T} seed={3} />
       {!f.v && <Browser x={800} y={140} w={900} ch={560} shot={SHOTS.platformsD} view={view} k={kb} />}
-      <Phone x={f.v ? 320 : 1490} y={f.v ? 540 : 300} w={f.v ? 440 : 320} shot={SHOTS.platformsP} zoom={1.05 + 0.25 * glide(u / d) + (f.v ? 0.45 * z : 0)} fy={0.3} k={kp} />
+      <Phone x={f.v ? 320 : 1490} y={f.v ? 540 : 300} w={f.v ? 440 : 320} shot={SHOTS.platformsP} zoom={f.v ? 1.05 + 0.55 * glide(u / d) + 0.45 * z : 1.05 + 0.25 * glide(u / d)} fy={f.v ? lerp(0.22, 0.42, glide(u / d)) : 0.3} k={kp} />
       <Headline f={f} T={T} a={sc.start + 0.3} b={sc.end - 0.3} lines={["Shopify to", "WooCommerce."]} settled={settled} />
       <div style={{ position: "absolute", left: f.v ? 0 : 110, right: f.v ? 0 : undefined, textAlign: f.v ? "center" : "left", top: f.v ? 430 : 330, opacity: ramp(T, sc.start + 1.2, 0.4), transform: `translateY(${(1 - ramp(T, sc.start + 1.2, 0.4, EASE_APPEAR)) * 14}px)` }}>
         <Chip size={f.v ? 24 : 21}>Tested on simulators · not live yet</Chip>
