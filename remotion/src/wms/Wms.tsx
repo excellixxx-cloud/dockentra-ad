@@ -37,6 +37,10 @@ const SHOTS = {
   handoverD: D("07-peredacha-kurieru-zakryt-desktop"),
   handoverP: P("07-peredacha-kurieru-phone"),
   invoiceD: D("08-schet-sklad-desktop"),
+  newOrderD: { src: "wms/10-new-order-desktop.png", iw: 2000, ih: 1250, blur: [[1050, 336, 180, 38], [1050, 418, 205, 38], [1050, 502, 100, 38]] } as Shot,
+  newOrderP: { src: "wms/10-new-order-phone.png", iw: 924, ih: 2000, blur: [[100, 545, 260, 62], [100, 770, 370, 62], [100, 990, 180, 58]] } as Shot,
+  shipmentsD: { src: "wms/09-shipments-desktop.png", iw: 2000, ih: 1250, blur: [[928, 586, 145, 32], [928, 731, 145, 32], [928, 874, 125, 32], [928, 1018, 132, 32]] } as Shot,
+  shipmentsP: { src: "wms/09-shipments-phone.png", iw: 924, ih: 2000, blur: [[330, 1175, 310, 45], [330, 1652, 305, 45]] } as Shot,
 };
 type View = { cx: number; cy: number; w: number };
 const lv = (a: View, b: View, k: number): View => ({ cx: lerp(a.cx, b.cx, k), cy: lerp(a.cy, b.cy, k), w: lerp(a.w, b.w, k) });
@@ -64,7 +68,7 @@ const Chip: React.FC<{ children: React.ReactNode; size?: number }> = ({ children
 );
 
 /** Desktop screenshot in a browser frame. */
-const Browser: React.FC<{ x: number; y: number; w: number; ch: number; shot: Shot; view: View; k?: number; tilt?: number }> = ({ x, y, w, ch, shot, view, k = 1, tilt = 0 }) => {
+const Browser: React.FC<{ x: number; y: number; w: number; ch: number; shot: Shot; view: View; k?: number; tilt?: number; next?: { shot: Shot; view: View; p: number } }> = ({ x, y, w, ch, shot, view, k = 1, tilt = 0, next }) => {
   const bar = 46;
   return (
     <div style={{ position: "absolute", left: x, top: y, width: w, height: ch + bar, borderRadius: 16, border: `2px solid ${C.ink}`, background: C.white, boxShadow: `10px 10px 0 ${C.ink}`, overflow: "hidden", opacity: Math.min(1, k * 1.5), transform: `translateY(${(1 - k) * 60}px) rotate(${tilt}deg)` }}>
@@ -72,7 +76,10 @@ const Browser: React.FC<{ x: number; y: number; w: number; ch: number; shot: Sho
         {[0, 1, 2].map((i) => <div key={i} style={{ width: 13, height: 13, borderRadius: 7, border: `2px solid ${C.ink}`, background: i === 0 ? C.ink : C.white }} />)}
         <div style={{ marginLeft: 16, height: 28, flex: 1, marginRight: 18, borderRadius: 8, background: C.white, border: `1.5px solid ${mix(C.grey, C.ink, 0.25)}`, display: "flex", alignItems: "center", paddingLeft: 12, fontFamily: FONT.mono, fontSize: 15, color: mix(C.ink, C.grey, 0.35), letterSpacing: "0.04em", overflow: "hidden", whiteSpace: "nowrap" }}>Dockentra WMS · demo data · local test stand</div>
       </div>
-      <div style={{ position: "absolute", left: 0, right: 0, top: bar, height: ch }}><ShotView shot={shot} view={view} cw={w - 4} ch={ch} /></div>
+      <div style={{ position: "absolute", left: 0, right: 0, top: bar, height: ch, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, transform: `translateY(${next ? -next.p * ch : 0}px)` }}><ShotView shot={shot} view={view} cw={w - 4} ch={ch} /></div>
+        {next && next.p > 0 && <div style={{ position: "absolute", inset: 0, transform: `translateY(${(1 - next.p) * ch}px)` }}><ShotView shot={next.shot} view={next.view} cw={w - 4} ch={ch} /></div>}
+      </div>
     </div>
   );
 };
@@ -222,17 +229,29 @@ const Problem: React.FC<SP> = ({ f, T, sc, settled }) => {
   );
 };
 
+/** Portal: home, then a new order, then shipments, then invoices, as the voice names them. */
 const Portal: React.FC<SP> = ({ f, T, sc, settled }) => {
-  const u = T - sc.start, d = sc.end - sc.start;
-  const swapAt = sc.start + d * 0.55, p = ramp(T, swapAt, 0.55, EASE_MOVE);
+  const l = sc.lines[0], d = l.b - l.a;
+  // where the words fall in the line (orders ~0.33, shipments ~0.69, invoices ~0.77 of its length)
+  const cuts = [l.a + 0.30 * d, l.a + 0.64 * d, l.a + 0.78 * d];
   const kb = ramp(T, sc.start + 0.1, 0.7, EASE_APPEAR), kp = ramp(T, sc.start + 0.45, 0.7, EASE_APPEAR);
-  const g1 = glide((T - sc.start) / (swapAt - sc.start + 0.5)), g2 = glide((T - swapAt) / (sc.end - swapAt));
-  const view = lv({ cx: 1300, cy: 700, w: 2400 }, { cx: 1250, cy: 760, w: 2050 }, glide(u / d));
+  const seqP = [SHOTS.portalP, SHOTS.newOrderP, SHOTS.shipmentsP, SHOTS.invoiceP];
+  const seqD = [SHOTS.portalD, SHOTS.newOrderD, SHOTS.shipmentsD];
+  const viewsD: View[] = [{ cx: 1300, cy: 700, w: 2400 }, { cx: 1000, cy: 560, w: 1700 }, { cx: 1000, cy: 600, w: 1700 }];
+  const pick = (n: number) => { let i = 0; while (i < n - 1 && i < cuts.length && T >= cuts[i] + 0.5) i++; return i; };
+  const iP = pick(seqP.length), iD = pick(seqD.length);
+  const t0P = iP === 0 ? sc.start : cuts[iP - 1], t1P = iP < cuts.length ? cuts[iP] : sc.end;
+  const gP = glide((T - t0P) / (t1P - t0P + 0.5));
+  const nextP = iP < seqP.length - 1 ? { shot: seqP[iP + 1], zoom: 1.05, fy: 0.3, p: ramp(T, cuts[iP], 0.5, EASE_MOVE) } : undefined;
+  const t0D = iD === 0 ? sc.start : cuts[iD - 1], t1D = iD < seqD.length - 1 ? cuts[iD] : sc.end;
+  const gD = glide((T - t0D) / (t1D - t0D + 0.5));
+  const vD = (i: number, g: number): View => ({ ...viewsD[i], w: viewsD[i].w * (1 - 0.12 * g), cy: viewsD[i].cy + 60 * g });
+  const nextD = iD < seqD.length - 1 ? { shot: seqD[iD + 1], view: vD(iD + 1, 0), p: ramp(T, cuts[iD], 0.5, EASE_MOVE) } : undefined;
   return (
     <AbsoluteFill>
       <Backdrop f={f} T={T} seed={2} />
-      {!f.v && <Browser x={800} y={130} w={880} ch={550} shot={SHOTS.portalD} view={view} k={kb} />}
-      <Phone x={f.v ? 320 : 1460} y={f.v ? 540 : 250} w={f.v ? 440 : 340} shot={SHOTS.portalP} zoom={1 + 0.35 * g1} fy={lerp(0.3, 0.45, g1)} k={kp} next={{ shot: SHOTS.invoiceP, zoom: 1.05 + 0.3 * g2, fy: lerp(0.3, 0.55, g2), p }} />
+      {!f.v && <Browser x={800} y={130} w={880} ch={550} shot={seqD[iD]} view={vD(iD, gD)} k={kb} next={nextD} />}
+      <Phone x={f.v ? 320 : 1460} y={f.v ? 540 : 250} w={f.v ? 440 : 340} shot={seqP[iP]} zoom={1.05 + 0.25 * gP} fy={lerp(0.3, 0.45, gP)} k={kp} next={nextP} />
       <Headline f={f} T={T} a={sc.start + 0.3} b={sc.end - 0.3} lines={["A portal for", "every client."]} settled={settled} />
     </AbsoluteFill>
   );
@@ -325,7 +344,7 @@ const Handover: React.FC<SP> = ({ f, T, sc, settled }) => {
   );
 };
 
-const CARDS = ["Client data separated at database level", "9,339 automated checks, 0 failures", "4 independent security reviews", "Buyer data deleted per marketplace rules (GDPR)"];
+const CARDS = ["Client data separated at database level", "9,339 automated checks, 0 failures", "4 security reviews", "Buyer data deleted per marketplace rules (GDPR)"];
 const Trust: React.FC<SP> = ({ f, T, sc, settled }) => {
   const u = T - sc.start;
   return (
@@ -422,7 +441,8 @@ export const WMS_KEYS: { t: number; label: string }[] = [
   { t: scene("hook").lines[0].a + 1.2, label: "1 hook: the warehouse shelf" },
   { t: scene("hook").lines[2].a + 1.4, label: "1 hook: the logo" },
   { t: at("problem", 1), label: "2 problem: the spreadsheet" },
-  { t: at("portal", 0, 3), label: "3 client portal" },
+  { t: at("portal", 0, 4.8), label: "3a client portal: new order" },
+  { t: at("portal", 0, 7.6), label: "3b client portal: shipments" },
   { t: at("stores", 0, 6), label: "4 connected stores (after the snap-zoom)" },
   { t: at("floor", 0, 1.8), label: "5a floor: picking" },
   { t: at("floor", 1, 0.4), label: "5b floor: scan to pack" },

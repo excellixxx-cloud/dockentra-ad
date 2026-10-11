@@ -14,13 +14,13 @@ SPEED = 0.86
 SCENES = [
     ("hook", ["Small sellers outgrow packing at home.", "Small warehouses outgrow spreadsheets.", "Dockentra is built for both."]),
     ("problem", ["Most small 3PLs track stock in spreadsheets.", "When a client complains about a lost or damaged order, nobody can trace it.",
-                 "Warehouse software exists — but it starts at hundreds of euros a month before setup."]),
+                 "Warehouse software can cost hundreds of euros a month before setup."]),
     ("portal", ["With Dockentra, the warehouse's clients get their own portal — orders, files, deliveries, returns, stock, shipments and invoices, from a laptop or a phone."]),
     ("stores", ["Dockentra is built to connect to a client's own Shopify, TikTok Shop, Amazon, eBay or WooCommerce store — tested end to end, going live with our first clients."]),
     ("floor", ["Every unit is tracked by its inbound batch, from dock to parcel.", "Staff scan to pick and pack.",
                "A carrier label — An Post, DPD, UPS, DHL or FedEx — is built and tested, printing straight to a Zebra printer, ready to go live once carrier accounts are in place."]),
     ("handover", ["Parcels are handed to couriers with a scanned check.", "Every operation is billed automatically — no spreadsheets."]),
-    ("trust", ["Clients can never see each other's data.", "Covered by more than nine thousand automated checks and four independent security reviews."]),
+    ("trust", ["Clients can never see each other's data.", "Covered by more than nine thousand automated checks and four security reviews."]),
     ("ask", ["Dockentra WMS is built and tested.", "Our own warehouse space in Limerick will be the first pilot, once it's open.",
              "Next: our first clients, then other small warehouses across Ireland and the UK."]),
 ]

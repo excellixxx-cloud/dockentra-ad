@@ -24,7 +24,7 @@
   "text": "Dockentra is built for both.",
   "spoken": "Dockentra is built for both.",
   "file": "s02.wav",
-  "dur": 2.033
+  "dur": 2.211
  },
  {
   "scene": "problem",
@@ -33,7 +33,7 @@
   "text": "Most small 3PLs track stock in spreadsheets.",
   "spoken": "Most small three P Ls track stock in spreadsheets.",
   "file": "s10.wav",
-  "dur": 3.824
+  "dur": 3.823
  },
  {
   "scene": "problem",
@@ -42,16 +42,16 @@
   "text": "When a client complains about a lost or damaged order, nobody can trace it.",
   "spoken": "When a client complains about a lost or damaged order, nobody can trace it.",
   "file": "s11.wav",
-  "dur": 4.949
+  "dur": 4.947
  },
  {
   "scene": "problem",
   "i": 1,
   "k": 2,
-  "text": "Warehouse software exists \u2014 but it starts at hundreds of euros a month before setup.",
-  "spoken": "Warehouse software exists, but it starts at hundreds of euros a month before setup.",
+  "text": "Warehouse software can cost hundreds of euros a month before setup.",
+  "spoken": "Warehouse software can cost hundreds of euros a month before setup.",
   "file": "s12.wav",
-  "dur": 5.331
+  "dur": 4.324
  },
  {
   "scene": "portal",
@@ -60,7 +60,7 @@
   "text": "With Dockentra, the warehouse's clients get their own portal \u2014 orders, files, deliveries, returns, stock, shipments and invoices, from a laptop or a phone.",
   "spoken": "With Dockentra, the warehouse's clients get their own portal, orders, files, deliveries, returns, stock, shipments and invoices, from a laptop or a phone.",
   "file": "s20.wav",
-  "dur": 10.712
+  "dur": 10.713
  },
  {
   "scene": "stores",
@@ -78,7 +78,7 @@
   "text": "Every unit is tracked by its inbound batch, from dock to parcel.",
   "spoken": "Every unit is tracked by its inbound batch, from dock to parcel.",
   "file": "s40.wav",
-  "dur": 4.208
+  "dur": 4.21
  },
  {
   "scene": "floor",
@@ -87,7 +87,7 @@
   "text": "Staff scan to pick and pack.",
   "spoken": "Staff scan to pick and pack.",
   "file": "s41.wav",
-  "dur": 2.344
+  "dur": 2.189
  },
  {
   "scene": "floor",
@@ -96,7 +96,7 @@
   "text": "A carrier label \u2014 An Post, DPD, UPS, DHL or FedEx \u2014 is built and tested, printing straight to a Zebra printer, ready to go live once carrier accounts are in place.",
   "spoken": "A carrier label, An Post, D P D, U P S, D H L or FedEx, is built and tested, printing straight to a Zebra printer, ready to go live once carrier accounts are in place.",
   "file": "s42.wav",
-  "dur": 12.141
+  "dur": 12.14
  },
  {
   "scene": "handover",
@@ -105,7 +105,7 @@
   "text": "Parcels are handed to couriers with a scanned check.",
   "spoken": "Parcels are handed to couriers with a scanned check.",
   "file": "s50.wav",
-  "dur": 3.357
+  "dur": 3.355
  },
  {
   "scene": "handover",
@@ -114,7 +114,7 @@
   "text": "Every operation is billed automatically \u2014 no spreadsheets.",
   "spoken": "Every operation is billed automatically, no spreadsheets.",
   "file": "s51.wav",
-  "dur": 4.076
+  "dur": 4.075
  },
  {
   "scene": "trust",
@@ -123,16 +123,16 @@
   "text": "Clients can never see each other's data.",
   "spoken": "Clients can never see each other's data.",
   "file": "s60.wav",
-  "dur": 2.694
+  "dur": 2.693
  },
  {
   "scene": "trust",
   "i": 6,
   "k": 1,
-  "text": "Covered by more than nine thousand automated checks and four independent security reviews.",
-  "spoken": "Covered by more than nine thousand automated checks and four independent security reviews.",
+  "text": "Covered by more than nine thousand automated checks and four security reviews.",
+  "spoken": "Covered by more than nine thousand automated checks and four security reviews.",
   "file": "s61.wav",
-  "dur": 6.061
+  "dur": 5.248
  },
  {
   "scene": "ask",
@@ -141,7 +141,7 @@
   "text": "Dockentra WMS is built and tested.",
   "spoken": "Dockentra W M S is built and tested.",
   "file": "s70.wav",
-  "dur": 3.43
+  "dur": 3.429
  },
  {
   "scene": "ask",
@@ -150,7 +150,7 @@
   "text": "Our own warehouse space in Limerick will be the first pilot, once it's open.",
   "spoken": "Our own warehouse space in Limerick will be the first pilot, once it's open.",
   "file": "s71.wav",
-  "dur": 4.692
+  "dur": 4.691
  },
  {
   "scene": "ask",
@@ -159,6 +159,6 @@
   "text": "Next: our first clients, then other small warehouses across Ireland and the UK.",
   "spoken": "Next, our first clients, then other small warehouses across Ireland and the UK.",
   "file": "s72.wav",
-  "dur": 5.555
+  "dur": 5.556
  }
 ]

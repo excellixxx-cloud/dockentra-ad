@@ -1,10 +1,10 @@
 {
- "total": 118.53,
+ "total": 116.727,
  "scenes": [
   {
    "name": "hook",
    "start": 0.0,
-   "end": 12.081,
+   "end": 12.259,
    "lines": [
     {
      "a": 1.8,
@@ -22,7 +22,7 @@
     },
     {
      "a": 8.648,
-     "b": 10.681,
+     "b": 10.859,
      "text": "Dockentra is built for both.",
      "file": "s02.wav",
      "sub": true
@@ -31,27 +31,27 @@
   },
   {
    "name": "problem",
-   "start": 12.081,
-   "end": 28.785,
+   "start": 12.259,
+   "end": 27.953,
    "lines": [
     {
-     "a": 12.981,
-     "b": 16.805,
+     "a": 13.159,
+     "b": 16.982,
      "text": "Most small 3PLs track stock in spreadsheets.",
      "file": "s10.wav",
      "sub": true
     },
     {
-     "a": 17.255,
-     "b": 22.204,
+     "a": 17.432,
+     "b": 22.379,
      "text": "When a client complains about a lost or damaged order, nobody can trace it.",
      "file": "s11.wav",
      "sub": true
     },
     {
-     "a": 22.654,
-     "b": 27.985,
-     "text": "Warehouse software exists \u2014 but it starts at hundreds of euros a month before setup.",
+     "a": 22.829,
+     "b": 27.153,
+     "text": "Warehouse software can cost hundreds of euros a month before setup.",
      "file": "s12.wav",
      "sub": true
     }
@@ -59,12 +59,12 @@
   },
   {
    "name": "portal",
-   "start": 28.785,
-   "end": 41.297,
+   "start": 27.953,
+   "end": 40.466,
    "lines": [
     {
-     "a": 29.785,
-     "b": 40.497,
+     "a": 28.953,
+     "b": 39.666,
      "text": "With Dockentra, the warehouse's clients get their own portal \u2014 orders, files, deliveries, returns, stock, shipments and invoices, from a laptop or a phone.",
      "file": "s20.wav",
      "sub": true
@@ -73,12 +73,12 @@
   },
   {
    "name": "stores",
-   "start": 41.297,
-   "end": 54.372,
+   "start": 40.466,
+   "end": 53.541,
    "lines": [
     {
-     "a": 42.297,
-     "b": 53.472,
+     "a": 41.466,
+     "b": 52.641,
      "text": "Dockentra is built to connect to a client's own Shopify, TikTok Shop, Amazon, eBay or WooCommerce store \u2014 tested end to end, going live with our first clients.",
      "file": "s30.wav",
      "sub": true
@@ -87,26 +87,26 @@
   },
   {
    "name": "floor",
-   "start": 54.372,
-   "end": 75.665,
+   "start": 53.541,
+   "end": 74.68,
    "lines": [
     {
-     "a": 55.272,
-     "b": 59.48,
+     "a": 54.441,
+     "b": 58.651,
      "text": "Every unit is tracked by its inbound batch, from dock to parcel.",
      "file": "s40.wav",
      "sub": true
     },
     {
-     "a": 59.93,
-     "b": 62.274,
+     "a": 59.101,
+     "b": 61.29,
      "text": "Staff scan to pick and pack.",
      "file": "s41.wav",
      "sub": true
     },
     {
-     "a": 62.724,
-     "b": 74.865,
+     "a": 61.74,
+     "b": 73.88,
      "text": "A carrier label \u2014 An Post, DPD, UPS, DHL or FedEx \u2014 is built and tested, printing straight to a Zebra printer, ready to go live once carrier accounts are in place.",
      "file": "s42.wav",
      "sub": true
@@ -115,19 +115,19 @@
   },
   {
    "name": "handover",
-   "start": 75.665,
-   "end": 85.248,
+   "start": 74.68,
+   "end": 84.26,
    "lines": [
     {
-     "a": 76.565,
-     "b": 79.922,
+     "a": 75.58,
+     "b": 78.935,
      "text": "Parcels are handed to couriers with a scanned check.",
      "file": "s50.wav",
      "sub": true
     },
     {
-     "a": 80.372,
-     "b": 84.448,
+     "a": 79.385,
+     "b": 83.46,
      "text": "Every operation is billed automatically \u2014 no spreadsheets.",
      "file": "s51.wav",
      "sub": true
@@ -136,20 +136,20 @@
   },
   {
    "name": "trust",
-   "start": 85.248,
-   "end": 96.553,
+   "start": 84.26,
+   "end": 94.751,
    "lines": [
     {
-     "a": 86.448,
-     "b": 89.142,
+     "a": 85.46,
+     "b": 88.153,
      "text": "Clients can never see each other's data.",
      "file": "s60.wav",
      "sub": true
     },
     {
-     "a": 89.592,
-     "b": 95.653,
-     "text": "Covered by more than nine thousand automated checks and four independent security reviews.",
+     "a": 88.603,
+     "b": 93.851,
+     "text": "Covered by more than nine thousand automated checks and four security reviews.",
      "file": "s61.wav",
      "sub": false
     }
@@ -157,26 +157,26 @@
   },
   {
    "name": "ask",
-   "start": 96.553,
-   "end": 112.93,
+   "start": 94.751,
+   "end": 111.127,
    "lines": [
     {
-     "a": 97.553,
-     "b": 100.983,
+     "a": 95.751,
+     "b": 99.18,
      "text": "Dockentra WMS is built and tested.",
      "file": "s70.wav",
      "sub": true
     },
     {
-     "a": 101.433,
-     "b": 106.125,
+     "a": 99.63,
+     "b": 104.321,
      "text": "Our own warehouse space in Limerick will be the first pilot, once it's open.",
      "file": "s71.wav",
      "sub": true
     },
     {
-     "a": 106.575,
-     "b": 112.13,
+     "a": 104.771,
+     "b": 110.327,
      "text": "Next: our first clients, then other small warehouses across Ireland and the UK.",
      "file": "s72.wav",
      "sub": true
@@ -185,7 +185,7 @@
   }
  ],
  "endCard": {
-  "start": 112.93,
-  "end": 118.53
+  "start": 111.127,
+  "end": 116.727
  }
 }
