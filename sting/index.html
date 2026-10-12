@@ -150,12 +150,12 @@ function iconTile(x, y, op, kind) {
 
 /* ------------------------------------------------------------------ S2  app icon + orbit  (f72–100) */
 function S2(f) {
-  const size = f <= 86 ? kf(f, [[72, 276], [86, 178, E.expo]]) : kf(f, [[86, 178], [88, 176], [100, 40, E.in]]);
+  const size = f <= 86 ? kf(f, [[72, 276], [86, 178, E.expo]]) : kf(f, [[86, 178], [88, 173], [100, 40, E.in]]);
   const halo = kf(f, [[72, 200], [75, 240], [86, 326, E.out], [88, 326], [100, 120, E.in]]);
   const haloOp = kf(f, [[72, 0.6], [75, 1], [94, 1], [100, 0]]);
   const blur = f < 88 ? 0 : kf(f, [[88, 0.3], [100, 6, E.in]]);
   const cx = 540, cy = 540;
-  const spin = kf(f, [[72, 300], [86, 0, E.expo]]);               // degrees, counter-clockwise into place
+  const spin = kf(f, [[72, 300], [86, 0, E.expo]]) - Math.max(0, f - 86) * 1.6;   // degrees, counter-clockwise into place, then a slow turn
   const R = kf(f, [[72, 470], [86, 216, E.expo]]);
   const sq0 = 92, rowK = f < 88 ? 0 : E.in(clamp((f - 88) / 12));
   const icon = size;
@@ -198,7 +198,7 @@ function typed(f) {
 }
 function S3(f) {
   const enterBl = kf(f, [[101, 3], [110, 0, E.out]]);
-  const pan = kf(f, [[115, 0], [130, 125, E.io]]);
+  const pan = kf(f, [[115, 0], [130, 125, E.io]]) + (f - 101) * 0.7;
   const lift = f < 136 ? 0 : kf(f, [[136, 0], [158, -210, E.in]]);        // drift up → whip-tilt (≈25 px/frame at f158)
   const vlift = Math.abs(vel((g) => (g < 136 ? 0 : kf(g, [[136, 0], [158, -210, E.in]])), f));
   const tilt = vlift > 2 ? dblur(0.3, Math.min(vlift * 0.3, 8)) : "none";
@@ -212,7 +212,7 @@ function S3(f) {
   const n = typed(f);
   // cursor: rises from below, sits on the mark, presses
   const mx = 557, my = 507;
-  const ccx = kf(f, [[102, 640], [111, mx + 6, E.expo]]), ccy = kf(f, [[102, 1120], [111, my + 10, E.expo]]);
+  const ccx = kf(f, [[102, 640], [113, mx + 6, E.out]]), ccy = kf(f, [[102, 1120], [113, my + 10, E.out]]);
   const csc = kf(f, [[113, 1], [115, 0.85, E.out], [117, 1, E.out]]);
   const cop = 1 - clamp((f - 120) / 4);
   const wall = `
@@ -266,7 +266,7 @@ function S3(f) {
       </div>
     </div>
     ${glass}
-    ${f < 124 ? CURSOR(ccx + pan, ccy, -8, csc, cop, dblur(0.2, Math.min(Math.abs(vel((g) => kf(g, [[102, 1120], [111, my + 10, E.expo]]), f)) * 0.08, 6))) : ""}
+    ${f < 124 ? CURSOR(ccx + pan, ccy, -8, csc, cop, dblur(0.2, Math.min(Math.abs(vel((g) => kf(g, [[102, 1120], [113, my + 10, E.out]]), f)) * 0.08, 6))) : ""}
   </div>
   <div class="abs" style="inset:0;background:${P.ice};opacity:${tint * 0.85}"></div>`;
 }
@@ -391,8 +391,8 @@ function glassCard(id, art, pill, title) {
     <rect width="538" height="348" rx="57" fill="none" stroke="rgba(11,13,16,0.06)"/>
   </svg>`;
 }
-const topY = (f) => (f <= 230 ? kf(f, [[215, 264], [224, 182, E.out], [230, 168, E.out]]) : 168 - (f - 230) * 3 - (f > 238 ? Math.pow(f - 238, 2.2) * 2.4 : 0));
-const botY = (f) => (f <= 230 ? kf(f, [[215, 927], [217, 860], [226, 575, E.out], [230, 552, E.out]]) : 552 - (f - 230) * 3 - (f > 238 ? Math.pow(f - 238, 2.2) * 2.4 : 0));
+const topY = (f) => (f <= 230 ? kf(f, [[215, 264], [224, 186, E.out], [230, 177, E.out]]) - Math.max(0, f - 224) * 1.5 : 168 - (f - 230) * 3 - (f > 238 ? Math.pow(f - 238, 2.2) * 2.4 : 0));
+const botY = (f) => (f <= 230 ? kf(f, [[215, 927], [217, 860], [226, 567, E.out], [230, 558, E.out]]) - Math.max(0, f - 226) * 1.5 : 552 - (f - 230) * 3 - (f > 238 ? Math.pow(f - 238, 2.2) * 2.4 : 0));
 let CARDS = null;
 function S6(f) {
   const bl = kf(f, [[215, 12], [224, 0, E.out]]);
@@ -409,16 +409,20 @@ function S6(f) {
 
 /* ------------------------------------------------------------------ S7  logo disc  (f245–300) */
 function S7(f) {
-  const top = f <= 269 ? kf(f, [[245, 569], [250, 491, E.out], [255, 468, E.out], [269, 456, E.out]]) : 456;
-  const d = f <= 287 ? 168 : kf(f, [[287, 168], [300, 123, E.in]]);
+  const rise = (g) => 456 + 113 * Math.exp(-(g - 245) / 4.27);
+  const top = f <= 269 ? rise(f) : 456;
+  const kd = clamp((f - 287) / 13), d = f <= 287 ? 168 : 168 - 45 * (0.22 * kd + 0.78 * kd * kd * kd);
   const cy = top + 84;
-  const smear = f < 246.5 ? dblur(0.4, 14 * (1 - clamp(f - 245))) : f < 269 ? dblur(0.1, Math.min(Math.abs(vel((g) => kf(g, [[245, 569], [250, 491, E.out], [255, 468, E.out], [269, 456, E.out]]), f)) * 0.15, 6)) : "none";
+  const smear = f < 246.5 ? dblur(0.4, 14 * (1 - clamp(f - 245))) : f < 269 ? dblur(0.1, Math.min(Math.abs(vel(rise, f)) * 0.15, 6)) : "none";
   const shrinkBl = f > 287 ? kf(f, [[287, 0], [300, 1.6, E.in]]) : 0;
+  // positioned with a sub-pixel transform: the slow settle and the start of the shrink stay continuous
   return `
   <div class="abs" style="inset:0;background:#FDFDFB"></div>
   <div class="abs" style="left:0;top:0;width:1080px;height:1080px;filter:${shrinkBl > 0.05 ? rb(shrinkBl) : smear}">
-    <div class="abs" style="left:${540 - d / 2}px;top:${cy - d / 2}px;width:${d}px;height:${d}px;border-radius:50%;background:#F6F6F6;box-shadow:inset 0 0 0 1px #ECECEC, 0 8px 24px rgba(11,13,16,0.06)"></div>
-    ${DMARK(540 - d * 0.29, cy - d * 0.285, d * 0.57)}
+    <div class="abs" style="left:0;top:0;width:168px;height:168px;transform-origin:0 0;transform:translate3d(${540 - d / 2}px, ${cy - d / 2}px, 0) scale(${d / 168});will-change:transform">
+      <div class="abs" style="left:0;top:0;width:168px;height:168px;border-radius:50%;background:#F6F6F6;box-shadow:inset 0 0 0 1px #ECECEC, 0 8px 24px rgba(11,13,16,0.06)"></div>
+      ${DMARK(84 - 168 * 0.29, 84 - 168 * 0.285, 168 * 0.57)}
+    </div>
   </div>`;
 }
 
