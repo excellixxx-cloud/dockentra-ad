@@ -9,6 +9,7 @@ import { KeyframeSheet, SHEET } from "./cosmetics/KeyframeSheet";
 import { Cosmetics, DURATION_S as COSMETICS_S } from "./cosmetics/Cosmetics";
 import { TwoBoxesKeyframe, TwoBoxes, DURATION_S as TB_S } from "./twoboxes/TwoBoxes";
 import { WmsH, WmsV, WmsKey, TOTAL as WMS_T } from "./wms/Wms";
+import { AppleWms, AppleKey, TOTAL as APPLE_T } from "./apple/Apple";
 import { OpsChapter, OpsThumb, CHAPTERS as OPS_CH } from "./ops/Ops";
 import { OpsFrame, OpsStoryboardSheet, OW, OH, SHEET as OPS_SHEET } from "./ops/Storyboard";
 
@@ -29,6 +30,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="WmsV" component={WmsV} durationInFrames={Math.ceil(WMS_T * 30)} fps={30} width={1080} height={1920} defaultProps={{ withAudio: false }} />
     <Composition id="WmsKeyH" component={WmsKey} durationInFrames={1} fps={30} width={1920} height={1080} defaultProps={{ i: 0, v: false }} />
     <Composition id="WmsKeyV" component={WmsKey} durationInFrames={1} fps={30} width={1080} height={1920} defaultProps={{ i: 0, v: true }} />
+    <Composition id="AppleWms" component={AppleWms} durationInFrames={APPLE_T * 30} fps={30} width={1920} height={1080} />
+    <Composition id="AppleKey" component={AppleKey} durationInFrames={1} fps={30} width={1920} height={1080} defaultProps={{ i: 0 }} />
     <Composition id="TwoBoxes" component={TwoBoxes} durationInFrames={TB_S * 30} fps={30} width={1080} height={1920} defaultProps={{ withAudio: false }} />
     <Composition id="TwoBoxesKeyframe" component={TwoBoxesKeyframe} durationInFrames={1} fps={30} width={1080} height={1920} defaultProps={{ i: 0 }} />
     <Composition id="SameOrderThreeWays" component={SameOrderThreeWays} durationInFrames={36 * FPS} fps={FPS} width={W} height={H} />

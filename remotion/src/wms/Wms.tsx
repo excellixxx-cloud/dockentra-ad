@@ -18,10 +18,10 @@ export const TOTAL = TL.total;
 const glide = (k: number) => { const c = clamp(k); return 1.3 * c - 0.3 * c * c; };   // eases out, never stops
 
 /* ---------------------------------------------------------------- screenshots */
-type Shot = { src: string; iw: number; ih: number; blur?: [number, number, number, number][] };
+export type Shot = { src: string; iw: number; ih: number; blur?: [number, number, number, number][] };
 const D = (n: string, blur?: Shot["blur"]): Shot => ({ src: `wms/${n}.png`, iw: 2880, ih: 1800, blur });
 const P = (n: string, blur?: Shot["blur"]): Shot => ({ src: `wms/${n}.png`, iw: 1170, ih: 2532, blur });
-const SHOTS = {
+export const SHOTS = {
   portalD: D("01-portal-klienta-desktop"),
   portalP: P("01-portal-klienta-phone"),
   invoiceP: P("08-schet-klient-phone"),
@@ -42,11 +42,11 @@ const SHOTS = {
   shipmentsD: { src: "wms/09-shipments-desktop.png", iw: 2000, ih: 1250, blur: [[928, 586, 145, 32], [928, 731, 145, 32], [928, 874, 125, 32], [928, 1018, 132, 32]] } as Shot,
   shipmentsP: { src: "wms/09-shipments-phone.png", iw: 924, ih: 2000, blur: [[330, 1175, 310, 45], [330, 1652, 305, 45]] } as Shot,
 };
-type View = { cx: number; cy: number; w: number };
+export type View = { cx: number; cy: number; w: number };
 const lv = (a: View, b: View, k: number): View => ({ cx: lerp(a.cx, b.cx, k), cy: lerp(a.cy, b.cy, k), w: lerp(a.w, b.w, k) });
 
 /** The screenshot seen through a cw x ch window, centred on view (image px), with its blur boxes. */
-const ShotView: React.FC<{ shot: Shot; view: View; cw: number; ch: number }> = ({ shot, view, cw, ch }) => {
+export const ShotView: React.FC<{ shot: Shot; view: View; cw: number; ch: number }> = ({ shot, view, cw, ch }) => {
   const s = cw / view.w, vh = ch / s;
   const left = -(view.cx - view.w / 2) * s, top = -(view.cy - vh / 2) * s;
   const W = shot.iw * s, H = shot.ih * s;
