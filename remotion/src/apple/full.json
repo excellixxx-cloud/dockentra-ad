@@ -1,0 +1,272 @@
+{
+ "total": 99.84,
+ "scenes": [
+  {
+   "name": "open",
+   "start": 0.0,
+   "end": 5.0,
+   "lines": []
+  },
+  {
+   "name": "portal",
+   "start": 5.0,
+   "end": 13.0,
+   "lines": [
+    {
+     "a": 5.9,
+     "b": 11.53,
+     "text": "Dockentra WMS runs the whole warehouse, and gives every client their own portal.",
+     "file": "portal0.wav"
+    }
+   ]
+  },
+  {
+   "name": "shops",
+   "start": 13.0,
+   "end": 21.463,
+   "lines": [
+    {
+     "a": 13.9,
+     "b": 20.263,
+     "text": "It's built to connect to a client's Shopify, TikTok Shop, Amazon, eBay or WooCommerce store.",
+     "file": "shops0.wav"
+    }
+   ]
+  },
+  {
+   "name": "order",
+   "start": 21.463,
+   "end": 29.463,
+   "lines": [
+    {
+     "a": 22.363,
+     "b": 26.679,
+     "text": "Orders come in from the store, or straight from the portal, in a few taps.",
+     "file": "order0.wav"
+    }
+   ]
+  },
+  {
+   "name": "pick",
+   "start": 29.463,
+   "end": 37.463,
+   "lines": [
+    {
+     "a": 30.363,
+     "b": 34.611,
+     "text": "On the floor, the picker scans the tote, the location and the product.",
+     "file": "pick0.wav"
+    }
+   ]
+  },
+  {
+   "name": "pack",
+   "start": 37.463,
+   "end": 45.463,
+   "lines": [
+    {
+     "a": 38.363,
+     "b": 42.494,
+     "text": "Packing is scanned item by item, so the parcel matches the order.",
+     "file": "pack0.wav"
+    }
+   ]
+  },
+  {
+   "name": "label",
+   "start": 45.463,
+   "end": 53.463,
+   "lines": [
+    {
+     "a": 46.363,
+     "b": 50.239,
+     "text": "The software builds the shipment record and the carrier label.",
+     "file": "label0.wav"
+    }
+   ]
+  },
+  {
+   "name": "handover",
+   "start": 53.463,
+   "end": 61.463,
+   "lines": [
+    {
+     "a": 54.363,
+     "b": 59.992,
+     "text": "At the courier handover, every parcel is scanned again, so you know exactly what left the building.",
+     "file": "handover0.wav"
+    }
+   ]
+  },
+  {
+   "name": "track",
+   "start": 61.463,
+   "end": 69.463,
+   "lines": [
+    {
+     "a": 62.363,
+     "b": 66.088,
+     "text": "Clients see every shipment's status, right up to the handover.",
+     "file": "track0.wav"
+    }
+   ]
+  },
+  {
+   "name": "billing",
+   "start": 69.463,
+   "end": 80.048,
+   "lines": [
+    {
+     "a": 70.363,
+     "b": 73.947,
+     "text": "Every operation is logged and billed automatically.",
+     "file": "billing0.wav"
+    },
+    {
+     "a": 74.397,
+     "b": 78.848,
+     "text": "The warehouse drafts the invoice, and the client sees the month's estimate.",
+     "file": "billing1.wav"
+    }
+   ]
+  },
+  {
+   "name": "trust",
+   "start": 80.048,
+   "end": 89.84,
+   "lines": [
+    {
+     "a": 80.948,
+     "b": 83.389,
+     "text": "Clients never see each other's data.",
+     "file": "trust0.wav"
+    },
+    {
+     "a": 83.84,
+     "b": 88.64,
+     "text": "The software is built and tested, and our warehouse is opening in Limerick.",
+     "file": "trust1.wav"
+    }
+   ]
+  }
+ ],
+ "logo": {
+  "start": 89.84,
+  "axis": 91.44,
+  "settle": 92.04,
+  "card": 93.84
+ },
+ "endLine": {
+  "a": 93.44,
+  "b": 99.298,
+  "text": "This is Dockentra: fulfilment for small sellers, powered by software we built ourselves.",
+  "file": "end0.wav"
+ },
+ "subs": [
+  [
+   5.9,
+   8.99,
+   "Dockentra WMS runs the whole warehouse,"
+  ],
+  [
+   9.04,
+   11.53,
+   "and gives every client their own portal."
+  ],
+  [
+   13.9,
+   17.28,
+   "It's built to connect to a client's Shopify,"
+  ],
+  [
+   17.33,
+   20.263,
+   "TikTok Shop, Amazon, eBay or WooCommerce store."
+  ],
+  [
+   22.363,
+   24.11,
+   "Orders come in from the store,"
+  ],
+  [
+   24.16,
+   26.679,
+   "or straight from the portal, in a few taps."
+  ],
+  [
+   30.363,
+   34.373,
+   "On the floor, the picker scans the tote,"
+  ],
+  [
+   34.423,
+   34.611,
+   "the location and the product."
+  ],
+  [
+   38.363,
+   40.673,
+   "Packing is scanned item by item,"
+  ],
+  [
+   40.723,
+   42.494,
+   "so the parcel matches the order."
+  ],
+  [
+   46.363,
+   50.239,
+   "The software builds the shipment record and the carrier label."
+  ],
+  [
+   54.363,
+   57.703,
+   "At the courier handover, every parcel is scanned again,"
+  ],
+  [
+   57.753,
+   59.992,
+   "so you know exactly what left the building."
+  ],
+  [
+   62.363,
+   63.153,
+   "Clients see every shipment's status,"
+  ],
+  [
+   63.203,
+   66.088,
+   "right up to the handover."
+  ],
+  [
+   70.363,
+   73.947,
+   "Every operation is logged and billed automatically."
+  ],
+  [
+   74.397,
+   76.467,
+   "The warehouse drafts the invoice,"
+  ],
+  [
+   76.517,
+   78.848,
+   "and the client sees the month's estimate."
+  ],
+  [
+   80.948,
+   83.389,
+   "Clients never see each other's data."
+  ],
+  [
+   83.84,
+   86.189,
+   "The software is built and tested,"
+  ],
+  [
+   86.239,
+   88.64,
+   "and our warehouse is opening in Limerick."
+  ]
+ ]
+}

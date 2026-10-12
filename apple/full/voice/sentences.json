@@ -1,0 +1,93 @@
+[
+ {
+  "scene": "portal",
+  "k": 0,
+  "text": "Dockentra WMS runs the whole warehouse, and gives every client their own portal.",
+  "file": "portal0.wav",
+  "dur": 5.63
+ },
+ {
+  "scene": "shops",
+  "k": 0,
+  "text": "It's built to connect to a client's Shopify, TikTok Shop, Amazon, eBay or WooCommerce store.",
+  "file": "shops0.wav",
+  "dur": 6.363
+ },
+ {
+  "scene": "order",
+  "k": 0,
+  "text": "Orders come in from the store, or straight from the portal, in a few taps.",
+  "file": "order0.wav",
+  "dur": 4.316
+ },
+ {
+  "scene": "pick",
+  "k": 0,
+  "text": "On the floor, the picker scans the tote, the location and the product.",
+  "file": "pick0.wav",
+  "dur": 4.248
+ },
+ {
+  "scene": "pack",
+  "k": 0,
+  "text": "Packing is scanned item by item, so the parcel matches the order.",
+  "file": "pack0.wav",
+  "dur": 4.132
+ },
+ {
+  "scene": "label",
+  "k": 0,
+  "text": "The software builds the shipment record and the carrier label.",
+  "file": "label0.wav",
+  "dur": 3.876
+ },
+ {
+  "scene": "handover",
+  "k": 0,
+  "text": "At the courier handover, every parcel is scanned again, so you know exactly what left the building.",
+  "file": "handover0.wav",
+  "dur": 5.63
+ },
+ {
+  "scene": "track",
+  "k": 0,
+  "text": "Clients see every shipment's status, right up to the handover.",
+  "file": "track0.wav",
+  "dur": 3.725
+ },
+ {
+  "scene": "billing",
+  "k": 0,
+  "text": "Every operation is logged and billed automatically.",
+  "file": "billing0.wav",
+  "dur": 3.584
+ },
+ {
+  "scene": "billing",
+  "k": 1,
+  "text": "The warehouse drafts the invoice, and the client sees the month's estimate.",
+  "file": "billing1.wav",
+  "dur": 4.451
+ },
+ {
+  "scene": "trust",
+  "k": 0,
+  "text": "Clients never see each other's data.",
+  "file": "trust0.wav",
+  "dur": 2.442
+ },
+ {
+  "scene": "trust",
+  "k": 1,
+  "text": "The software is built and tested, and our warehouse is opening in Limerick.",
+  "file": "trust1.wav",
+  "dur": 4.801
+ },
+ {
+  "scene": "end",
+  "k": 0,
+  "text": "This is Dockentra: fulfilment for small sellers, powered by software we built ourselves.",
+  "file": "end0.wav",
+  "dur": 5.858
+ }
+]
