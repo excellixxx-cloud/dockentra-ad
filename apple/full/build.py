@@ -2,7 +2,8 @@
   remotion/src/apple/full.json   scene times, VO lines and subtitle cues the animation keys off
   apple/full/out/narration.wav   voice, 48 kHz, -16 LUFS
   apple/full/out/mix-master.wav  voice + calm music bed, -14 LUFS, <= -1 dBTP
-    python3 apple/full/build.py"""
+    python3 apple/full/build.py              lay out the voice and rebuild everything
+    python3 apple/full/build.py --mix-only   keep full.json (e.g. after revoice.py), rebuild the audio only"""
 import json, subprocess, sys, tempfile, wave
 from pathlib import Path
 import numpy as np
@@ -41,58 +42,68 @@ def cues(text, x, a, sr=24000, maxlen=44):
     g = min(gaps, key=lambda g: abs(g - want)) * .01 if gaps else want * .01
     return [[a, a + g, first], [a + g + .05, a + len(x) / sr, second]]
 
-scenes, subs, t = [{"name": "open", "start": 0.0, "end": OPEN, "lines": []}], [], OPEN
-for name in ORDER:
-    ss = [s for s in sents if s["scene"] == name]; start = t; u = t + LEAD; lines = []
-    for k, s in enumerate(ss):
-        x = wav(s["file"]); lines.append({"a": round(u, 3), "b": round(u + len(x) / 24000, 3), "text": s["text"], "file": s["file"]})
-        subs += cues(s["text"], x, u); u += len(x) / 24000 + (GAP if k < len(ss) - 1 else 0)
-    end = max(start + MIN, u + TAIL)
-    scenes.append({"name": name, "start": round(start, 3), "end": round(end, 3), "lines": lines}); t = end
-logo = round(t, 3)
-endline = [s for s in sents if s["scene"] == "end"][0]
-ea = logo + 3.6
-lines = [{"a": round(ea, 3), "b": round(ea + endline["dur"], 3), "text": endline["text"], "file": endline["file"]}]
-total = round(logo + LOGO + END, 3)
-tl = {"total": total, "scenes": scenes, "logo": {"start": logo, "axis": round(logo + 1.6, 3), "settle": round(logo + 2.2, 3), "card": round(logo + LOGO, 3)},
-      "endLine": lines[0], "subs": [[round(a, 3), round(b, 3), c] for a, b, c in subs]}
-(ROOT / "remotion/src/apple/full.json").write_text(json.dumps(tl, indent=1))
+def layout():
+    scenes, subs, t = [{"name": "open", "start": 0.0, "end": OPEN, "lines": []}], [], OPEN
+    for name in ORDER:
+        ss = [s for s in sents if s["scene"] == name]; start = t; u = t + LEAD; lines = []
+        for k, s in enumerate(ss):
+            x = wav(s["file"]); lines.append({"a": round(u, 3), "b": round(u + len(x) / 24000, 3), "text": s["text"], "file": s["file"]})
+            subs += cues(s["text"], x, u); u += len(x) / 24000 + (GAP if k < len(ss) - 1 else 0)
+        end = max(start + MIN, u + TAIL)
+        scenes.append({"name": name, "start": round(start, 3), "end": round(end, 3), "lines": lines}); t = end
+    logo = round(t, 3)
+    endline = [s for s in sents if s["scene"] == "end"][0]
+    ea = logo + 3.6
+    lines = [{"a": round(ea, 3), "b": round(ea + endline["dur"], 3), "text": endline["text"], "file": endline["file"]}]
+    total = round(logo + LOGO + END, 3)
+    tl = {"total": total, "scenes": scenes, "logo": {"start": logo, "axis": round(logo + 1.6, 3), "settle": round(logo + 2.2, 3), "card": round(logo + LOGO, 3)},
+          "endLine": lines[0], "subs": [[round(a, 3), round(b, 3), c] for a, b, c in subs]}
+    (ROOT / "remotion/src/apple/full.json").write_text(json.dumps(tl, indent=1))
+    return tl
 
-# narration
-sr = 24000; y = np.zeros(int(total * sr) + sr, np.float32)
-for sc in scenes:
-    for l in sc["lines"]:
-        x = wav(l["file"]); i = int(l["a"] * sr); y[i:i + len(x)] += x
-x = wav(endline["file"]); i = int(ea * sr); y[i:i + len(x)] += x
-out = ROOT / "apple/full/out"; out.mkdir(parents=True, exist_ok=True)
-with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:
-    with wave.open(tmp.name, "wb") as w:
-        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes((np.clip(y, -1, 1) * 32767).astype("<i2").tobytes())
-    loudnorm(tmp.name, out / "narration.wav", I=-16, TP=-2.0, channels=1)
 
-# calm bed: pads + soft arpeggio, dips under every line, fades on the end card
-tr = Track(total, 23)
-prog = [(gm.DMAJ9, 38), (gm.BM7, 35), (gm.GMAJ7, 31), (gm.ASUS, 33)]
-c, k = 0.0, 0
-chords = []
-while c < total:
-    n, b = prog[k % 4]; chords.append((c, min(total, c + 5.0), n, b)); c += 5.0; k += 1
-tr.chords(chords); tr.arpeggio(1.0, total - 2.5); tr.music *= 0.8
-for sc in scenes:
-    for l in sc["lines"]: tr.duck(l["a"], l["b"], 0.35, edge=.3)
-tr.duck(ea, ea + endline["dur"], 0.35, edge=.3)
-fo = int(2.5 * SR); tr.music[-fo:] *= np.linspace(1, 0, fo)[:, None] ** 1.5
-with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:
-    m = tr.music / np.abs(tr.music).max() * 0.7
-    with wave.open(tmp.name, "wb") as w:
-        w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR); w.writeframes((m * 32767).astype("<i2").tobytes())
-    il, _ = measure(tmp.name)
-    subprocess.run([FF, "-loglevel", "error", "-y", "-i", tmp.name, "-af", f"volume={-31 - il:.2f}dB", "-ar", "48000", str(out / "music.wav")], check=True)
-raw = out / "mix_raw.wav"
-subprocess.run([FF, "-v", "error", "-y", "-i", str(out / "narration.wav"), "-i", str(out / "music.wav"),
-                "-filter_complex", f"[0:a]aformat=channel_layouts=stereo[v];[v][1:a]amix=inputs=2:duration=longest:normalize=0,atrim=0:{total}[a]",
-                "-map", "[a]", "-ar", "48000", "-c:a", "pcm_s16le", str(raw)], check=True)
-loudnorm(raw, out / "mix-master.wav", I=-14, TP=-1.0); raw.unlink()
-for sc in scenes: print(f"{sc['name']:9s} {sc['start']:6.2f}-{sc['end']:6.2f}")
-print("logo", logo, "total", total, "| mix", measure(out / "mix-master.wav"))
-for s in tl["subs"]: print(f"  {s[0]:6.2f}-{s[1]:6.2f} {s[2]}")
+def mix(tl):
+    scenes, total = tl["scenes"], tl["total"]
+    # narration
+    sr = 24000; y = np.zeros(int(total * sr) + sr, np.float32)
+    for sc in scenes:
+        for l in sc["lines"]:
+            x = wav(l["file"]); i = int(l["a"] * sr); y[i:i + len(x)] += x
+    el = tl["endLine"]; x = wav(el["file"]); i = int(el["a"] * sr); y[i:i + len(x)] += x
+    out = ROOT / "apple/full/out"; out.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:
+        with wave.open(tmp.name, "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes((np.clip(y, -1, 1) * 32767).astype("<i2").tobytes())
+        loudnorm(tmp.name, out / "narration.wav", I=-16, TP=-2.0, channels=1)
+
+    # calm bed: pads + soft arpeggio, dips under every line, fades on the end card
+    tr = Track(total, 23)
+    prog = [(gm.DMAJ9, 38), (gm.BM7, 35), (gm.GMAJ7, 31), (gm.ASUS, 33)]
+    c, k = 0.0, 0
+    chords = []
+    while c < total:
+        n, b = prog[k % 4]; chords.append((c, min(total, c + 5.0), n, b)); c += 5.0; k += 1
+    tr.chords(chords); tr.arpeggio(1.0, total - 2.5); tr.music *= 0.8
+    for sc in scenes:
+        for l in sc["lines"]: tr.duck(l["a"], l["b"], 0.35, edge=.3)
+    tr.duck(el["a"], el["b"], 0.35, edge=.3)
+    fo = int(2.5 * SR); tr.music[-fo:] *= np.linspace(1, 0, fo)[:, None] ** 1.5
+    with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:
+        m = tr.music / np.abs(tr.music).max() * 0.7
+        with wave.open(tmp.name, "wb") as w:
+            w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR); w.writeframes((m * 32767).astype("<i2").tobytes())
+        il, _ = measure(tmp.name)
+        subprocess.run([FF, "-loglevel", "error", "-y", "-i", tmp.name, "-af", f"volume={-31 - il:.2f}dB", "-ar", "48000", str(out / "music.wav")], check=True)
+    raw = out / "mix_raw.wav"
+    subprocess.run([FF, "-v", "error", "-y", "-i", str(out / "narration.wav"), "-i", str(out / "music.wav"),
+                    "-filter_complex", f"[0:a]aformat=channel_layouts=stereo[v];[v][1:a]amix=inputs=2:duration=longest:normalize=0,atrim=0:{total}[a]",
+                    "-map", "[a]", "-ar", "48000", "-c:a", "pcm_s16le", str(raw)], check=True)
+    loudnorm(raw, out / "mix-master.wav", I=-14, TP=-1.0); raw.unlink()
+    for sc in scenes: print(f"{sc['name']:9s} {sc['start']:6.2f}-{sc['end']:6.2f}")
+    print("logo", tl["logo"]["start"], "total", total, "| mix", measure(out / "mix-master.wav"))
+    for s in tl["subs"]: print(f"  {s[0]:6.2f}-{s[1]:6.2f} {s[2]}")
+
+
+if __name__ == "__main__":
+    tl = json.loads((ROOT / "remotion/src/apple/full.json").read_text()) if "--mix-only" in sys.argv else layout()
+    mix(tl)
