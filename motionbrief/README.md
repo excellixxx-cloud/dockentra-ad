@@ -22,3 +22,19 @@ Frame check against the brief:
 - Scene 7 timing sent: D alone 56.0–57.6, axis 57.6–58.2 (18 frames), hold 58.2–60.0.
 - No Submit button exists in either new-order screenshot; the scene 3 mint accent goes on the Recipient card instead.
 - VO lines and start times: `apple/tts.py` (George reads in `apple/voice/` for timing reference).
+
+## Full cut from Motion — `out/full-66s.mp4` (66.0 s, 1920x1080, 30 fps, AAC 48 kHz)
+Frame / audio check:
+- Logo (scene 7): EXACT.
+  - Hard cut to the Dock Ink D at 56.000. The D is pixel-identical 56.03–57.60 and never moves afterwards.
+  - The axis is 640x10 px, full length while travelling, behind the D. It enters from off-screen left at 57.600 and settles at 58.200 (18 frames).
+  - Measured path vs cubic-bezier(.22,1,.36,1): max error < 1 px.
+  - Rest: right end at x 1039 = right edge of the counter (expected 1040.4).
+  - Hold 58.2–60.0: zero changed pixels.
+- End card: text fade-up 60.03–60.57, then static; the D and axis do not move.
+- Background flat (244,245,248) on every corner. Headlines Manrope, subtitles Inter, ink. Subtitle bottom edge 245 px above the frame bottom.
+- Scene 3 mint outline on the Recipient card; scene 6 mint scan icon with a Dock Green "PICK & SCAN" caption.
+- Real screenshots, blur kept. No forbidden claims, no disclaimer.
+- VO: all 7 lines at the requested times (within ~0.2 s), read back by Whisper and Moonshine. The brand is heard as "Doc-Enthra" / "Doc-Entre": first-syllable stress OK, the final "-tra" is a little soft.
+- Mix: -14.1 LUFS integrated, -1.2 dBTP.
+- Motion in scenes 2–6 is slow drift; at full resolution every frame changes, so no frozen frames before the logo.
