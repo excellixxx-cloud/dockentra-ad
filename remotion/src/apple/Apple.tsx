@@ -188,7 +188,7 @@ const Subtitle: React.FC<{ T: number }> = ({ T }) => {
   if (!cue) return null;
   const k = ramp(T, cue[0], 0.15, EASE_APPEAR) * (1 - ramp(T, cue[1], 0.12, EASE_MOVE));
   return (
-    <div style={{ position: "absolute", left: 162, bottom: 245, width: 690, fontFamily: FONT.body, fontWeight: 500, fontSize: 32, lineHeight: 1.28, color: C.ink, opacity: k }}>{cue[2]}</div>
+    <div style={{ position: "absolute", left: 162, bottom: 245, width: 620, fontFamily: FONT.body, fontWeight: 500, fontSize: 32, lineHeight: 1.28, color: C.ink, opacity: k }}>{cue[2]}</div>
   );
 };
 
