@@ -1,0 +1,51 @@
+[
+ {
+  "id": "portal",
+  "a": 7.4,
+  "b": 11.686,
+  "text": "Dockentra WMS gives your brand its own client portal.",
+  "file": "portal.wav"
+ },
+ {
+  "id": "order",
+  "a": 17.4,
+  "b": 21.52,
+  "text": "Send a new order in a few taps. It goes straight to the warehouse.",
+  "file": "order.wav"
+ },
+ {
+  "id": "ship",
+  "a": 28.4,
+  "b": 32.475,
+  "text": "Every shipment shows its status, right up to the courier handover.",
+  "file": "ship.wav"
+ },
+ {
+  "id": "bill",
+  "a": 37.6,
+  "b": 43.275,
+  "text": "Charges are logged as the work is done, and you can see this month's estimate at any time.",
+  "file": "bill.wav"
+ },
+ {
+  "id": "floor1",
+  "a": 47.4,
+  "b": 49.81,
+  "text": "On the floor, every pick is scanned.",
+  "file": "floor1.wav"
+ },
+ {
+  "id": "floor2",
+  "a": 50.6,
+  "b": 55.401,
+  "text": "The software is built and tested, and our warehouse is opening in Limerick.",
+  "file": "floor2.wav"
+ },
+ {
+  "id": "end",
+  "a": 59.6,
+  "b": 65.349,
+  "text": "Dockentra. Fulfilment for small sellers, powered by software we built ourselves.",
+  "file": "end.wav"
+ }
+]
