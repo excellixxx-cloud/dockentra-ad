@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dockentra WMS sting</title>
+<style>
+  @font-face { font-family: "Inter"; src: url("assets/Inter.woff2") format("woff2"); font-weight: 100 900; }
+  html, body { margin: 0; padding: 0; background: #000; }
+  #stage { position: relative; width: 1080px; height: 1080px; overflow: hidden; font-family: "Inter", sans-serif; background: #F5F7F8; }
+  #stage * { box-sizing: border-box; }
+  .abs { position: absolute; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+/* Dockentra WMS — 12 s square product sting. Every frame is a pure function of the frame number f
+   (29.97 fps numbering, f0–f359; the 59.94 master renders half frames). No timers, no randomness. */
+
+/* ------------------------------------------------------------------ palette (Dockentra brand mapped onto the roles) */
+const P = {
+  page: "#F5F7F8", haze: "#BFE8D8", ice: "#E3F7EF", floor: "#D9F5EA",
+  sky0: "#0F5F4A", sky1: "#6CC4A4", deep: "#0B0D10", menubar: "#0B0D10",
+  mint: "#4FDCA9", green: "#0F5F4A", mintMid: "#2FA57E", white: "#FFFFFF", ink: "#0B0D10",
+  window: "#FCFDFD", band: "#EDF7F3", rim: "#E8E8EA", grey: "#BCBCBA",
+};
+
+/* ------------------------------------------------------------------ helpers */
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const E = {
+  lin: (x) => x,
+  out: (x) => 1 - Math.pow(1 - x, 3),
+  in: (x) => x * x * x,
+  io: (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
+  expo: (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -8 * x)),
+  inq: (x) => x * x,
+};
+/** keyframe table [[f, v, ease?], ...] — the ease on a row shapes the segment arriving at it */
+function kf(f, t, ease = E.lin) {
+  if (f <= t[0][0]) return t[0][1];
+  for (let i = 0; i < t.length - 1; i++) {
+    const [a, va] = t[i], [b, vb, e] = t[i + 1];
+    if (f <= b) return lerp(va, vb, (e || ease)(clamp((f - a) / (b - a))));
+  }
+  return t[t.length - 1][1];
+}
+const vel = (fn, f) => fn(f + 0.5) - fn(f - 0.5);          // px per frame
+function hash(n) { let x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.trunc(x); }   // seeded, no Math.random
+function mixc(a, b, k) {
+  const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const A = p(a), B = p(b);
+  return "#" + A.map((v, i) => Math.round(lerp(v, B[i], clamp(k))).toString(16).padStart(2, "0")).join("");
+}
+let FID = 0;
+let DEFS = [];
+/** directional (x/y) gaussian blur as an SVG filter usable from CSS */
+function dblur(sx, sy) {
+  if (sx < 0.05 && sy < 0.05) return "none";
+  const id = "b" + (FID++);
+  DEFS.push(`<filter id="${id}" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="${sx.toFixed(2)} ${sy.toFixed(2)}"/></filter>`);
+  return `url(#${id})`;
+}
+const rb = (r) => (r < 0.05 ? "none" : `blur(${r.toFixed(2)}px)`);
+
+/* text measurement (after fonts load) */
+const CV = document.createElement("canvas").getContext("2d");
+function tw(text, size, weight = 400) { CV.font = `${weight} ${size}px Inter`; return CV.measureText(text).width; }
+
+/* ------------------------------------------------------------------ shared pieces */
+const CURSOR = (x, y, rot = 0, sc = 1, op = 1, flt = "none") => `
+  <svg class="abs" width="60" height="70" viewBox="-6 -6 60 70" style="left:${x - 6}px;top:${y - 6}px;transform-origin:6px 6px;transform:rotate(${rot}deg) scale(${sc});opacity:${op};filter:${flt};overflow:visible">
+    <defs><filter id="cs${FID}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-color="#000" flood-opacity="0.28"/></filter></defs>
+    <path filter="url(#cs${FID++})" d="M0 0 L0 33.5 L8.4 25.4 L13.6 37.6 L18.6 35.4 L13.4 23.6 L25 23.6 Z" fill="#0B0D10" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/>
+  </svg>`;
+
+const DMARK = (x, y, h, white = false, extra = "") =>
+  `<img class="abs" src="assets/${white ? "d-white" : "d-color"}.png" style="left:${x}px;top:${y}px;height:${h}px;width:${h * 585 / 576}px;${extra}">`;
+
+/* ------------------------------------------------------------------ S1  header + hub window + click  (f0–71) */
+const NAME = "Dockentra WMS", PILL = "for 3PLs";
+let LOCK = null;
+function lockupLayout() {
+  // base design, then scaled uniformly to span x474–1063
+  const disc = 132, g1 = 26, nameSize = 66, g2 = 20, pillSize = 34, padX = 20, padY = 11;
+  const nw = tw(NAME, nameSize, 500), pw = tw(PILL, pillSize, 500) + 2 * padX;
+  const total = disc + g1 + nw + g2 + pw, s = (1063 - 474) / total;
+  return { s, disc: disc * s, g1: g1 * s, nameSize: nameSize * s, nw: nw * s, g2: g2 * s, pillSize: pillSize * s, pw: pw * s, padX: padX * s, padY: padY * s };
+}
+const lockY = (f) => (f <= 37 ? kf(f, [[0, 932], [2, 776], [5, 683], [10, 608], [24, 546, E.out], [37, 536, E.out]]) : 536 - (f - 37));
+const curX = (f) => kf(f, [[27, 891], [44, 770, E.expo], [47, 762], [51, 712, E.inq], [56, 629, E.lin], [59, 587, E.out], [71, 555, E.out]]);
+const curY = (f) => kf(f, [[27, 393], [44, 383, E.expo], [47, 392], [51, 452, E.inq], [56, 564, E.lin], [59, 546, E.out], [71, 531, E.out]]);
+function S1(f) {
+  const L = LOCK, y = lockY(f), vy = vel(lockY, f);
+  const bg = mixc(P.haze, P.page, E.out(clamp(f / 28)));
+  const zoom = f < 46 ? 1 : f <= 60 ? kf(f, [[46, 1], [60, 1.2, E.io]]) : f <= 61 ? 1.2 : kf(f, [[61, 1.2], [71, 1.04, E.inq]]);
+  const zblur = f > 61 ? Math.abs(kf(f + 0.5, [[61, 1.2], [71, 1.04, E.inq]]) - kf(f - 0.5, [[61, 1.2], [71, 1.04, E.inq]])) * 60 : 0;
+  const wop = kf(f, [[14, 0], [15, 0.53], [19, 0.7], [24, 1]]);
+  const vb = Math.min(Math.abs(vy) * 0.11, 16);
+  const nameOp = clamp((f - 2) / 1.5), nameBl = kf(f, [[2, 10], [9, 0, E.out]]);
+  const pillOp = clamp((f - 4) / 1.2), pillBl = kf(f, [[4, 18], [5, 14], [13, 0, E.out]]), pillDx = kf(f, [[4, 15], [13, 0, E.out]]);
+  const dx0 = 474, dcx = dx0 + L.disc / 2, dcy = y;
+  const ring = clamp((f - 53) / 5);
+  // cursor
+  let cur = "";
+  if (f >= 27) {
+    const cx = curX(f), cy = curY(f);
+    const rot = kf(f, [[46, 0], [51, -62, E.io], [58, -62], [63, -18, E.out]]);
+    const sc = kf(f, [[56, 1], [60, 1.55, E.out], [69, 1.55], [71, 1.55 * 0.85, E.in]]);
+    const sp = Math.hypot(vel(curX, f), vel(curY, f));
+    const op = clamp((f - 27) / 1.5);
+    cur = CURSOR(cx, cy, rot, sc, op, sp > 3 ? dblur(Math.min(sp * 0.12, 6), Math.min(sp * 0.06, 4)) : "none");
+  }
+  const lockF = vb > 0.05 ? dblur(0.2, vb) : "none";
+  return `
+  <div class="abs" style="inset:0;background:${bg}"></div>
+  <div class="abs" style="left:-200px;right:-200px;bottom:-260px;height:560px;background:radial-gradient(ellipse at 50% 70%, ${P.floor} 0%, rgba(217,245,234,0) 65%);opacity:${lerp(1, 0.75, clamp(f / 28))}"></div>
+  <div class="abs" style="inset:0;transform-origin:540px 540px;transform:scale(${zoom});filter:${zblur > 0.3 ? rb(Math.min(zblur, 6)) : "none"}">
+    <div class="abs" style="left:408px;top:405px;width:900px;height:900px;border-radius:93px;background:${P.window};opacity:${wop};box-shadow:0 40px 90px rgba(11,13,16,0.10), inset 0 0 0 1px #E6ECEA;overflow:hidden">
+      <div class="abs" style="left:0;right:0;top:0;height:46px;background:${P.band}"></div>
+      <div class="abs" style="left:0;right:0;bottom:0;height:420px;background:radial-gradient(ellipse at 40% 100%, ${P.floor} 0%, rgba(217,245,234,0) 70%)"></div>
+      <div class="abs" style="left:300px;top:8px;width:300px;height:30px;border-radius:15px;background:#fff;box-shadow:inset 0 0 0 1px #DCE7E2;display:flex;align-items:center;padding-left:14px;gap:8px;font-size:14px;color:#9AA6A1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA6A1" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Search
+      </div>
+      ${iconTile(537 - 408, 739 - 405, 1, "box")}
+      ${iconTile(537 - 408, 900 - 405, 0.38, "stack")}
+      <div class="abs" style="left:${764 - 408}px;top:${700 - 405}px;width:560px;height:520px;border-radius:40px;background:#fff;box-shadow:0 18px 40px rgba(11,13,16,0.10);overflow:hidden">
+        <img src="assets/hub-cover.jpg" class="abs" style="left:0;top:0;width:560px;height:292px;object-fit:cover;object-position:left top">
+        <div class="abs" style="left:28px;top:312px;font-weight:600;font-size:30px;color:${P.ink}">Client portal</div>
+        <div class="abs" style="left:28px;top:356px;font-weight:400;font-size:22px;color:#8C9592">Orders · Shipments · Invoices</div>
+      </div>
+    </div>
+    <div class="abs" style="left:0;top:0;width:1080px;height:1080px;filter:${lockF}">
+      ${ring > 0 ? `<div class="abs" style="left:${dcx - 87}px;top:${dcy - 87}px;width:174px;height:174px;border-radius:50%;background:radial-gradient(circle, #F4FFFA 52%, #CDF3E3 70%, rgba(205,243,227,0) 76%);opacity:${ring}"></div>` : ""}
+      <div class="abs" style="left:${dx0}px;top:${y - L.disc / 2}px;width:${L.disc}px;height:${L.disc}px;border-radius:50%;background:#FBFCFE;box-shadow:inset 0 0 0 1px ${P.rim}, 0 6px 18px rgba(11,13,16,0.06)"></div>
+      ${DMARK(dcx - L.disc * 0.29, y - L.disc * 0.285, L.disc * 0.57)}
+      <div class="abs" style="left:${dx0 + L.disc + L.g1}px;top:${y - L.nameSize * 0.62}px;font-weight:500;font-size:${L.nameSize}px;letter-spacing:-0.02em;color:${P.ink};white-space:nowrap;opacity:${nameOp};filter:${rb(nameBl)}">${NAME}</div>
+      <div class="abs" style="left:${dx0 + L.disc + L.g1 + L.nw + L.g2 + pillDx}px;top:${y - (L.pillSize * 1.2 + 2 * L.padY) / 2}px;height:${L.pillSize * 1.2 + 2 * L.padY}px;padding:0 ${L.padX}px;border-radius:999px;background:#2F2E2F;color:#fff;font-weight:500;font-size:${L.pillSize}px;line-height:${L.pillSize * 1.2 + 2 * L.padY}px;white-space:nowrap;opacity:${pillOp};filter:${rb(pillBl)}">${PILL}</div>
+    </div>
+    ${cur}
+  </div>`;
+}
+function iconTile(x, y, op, kind) {
+  const glyph = kind === "box"
+    ? `<path d="M4 8l8-4 8 4v8l-8 4-8-4z M4 8l8 4 8-4 M12 12v8" fill="none" stroke="${P.green}" stroke-width="2" stroke-linejoin="round"/>`
+    : `<path d="M4 7h16M4 12h16M4 17h16" stroke="${P.green}" stroke-width="2.2" stroke-linecap="round"/>`;
+  return `<div class="abs" style="left:${x - 34}px;top:${y - 34}px;width:68px;height:68px;border-radius:20px;background:#fff;box-shadow:0 6px 16px rgba(11,13,16,0.08), inset 0 0 0 1px #E3ECE8;opacity:${op};display:flex;align-items:center;justify-content:center">
+    <svg width="34" height="34" viewBox="0 0 24 24">${glyph}</svg></div>`;
+}
+
+/* ------------------------------------------------------------------ S2  app icon + orbit  (f72–100) */
+function S2(f) {
+  const size = f <= 86 ? kf(f, [[72, 276], [86, 178, E.expo]]) : kf(f, [[86, 178], [88, 176], [100, 40, E.in]]);
+  const halo = kf(f, [[72, 200], [75, 240], [86, 326, E.out], [88, 326], [100, 120, E.in]]);
+  const haloOp = kf(f, [[72, 0.6], [75, 1], [94, 1], [100, 0]]);
+  const blur = f < 88 ? 0 : kf(f, [[88, 0.3], [100, 6, E.in]]);
+  const cx = 540, cy = 540;
+  const spin = kf(f, [[72, 300], [86, 0, E.expo]]);               // degrees, counter-clockwise into place
+  const R = kf(f, [[72, 470], [86, 216, E.expo]]);
+  const sq0 = 92, rowK = f < 88 ? 0 : E.in(clamp((f - 88) / 12));
+  const icon = size;
+  const SQ = [
+    { c: "#FFFFFF", a: 180, edge: true },
+    { c: P.green, a: 90 },
+    { c: P.mint, a: 0 },
+    { c: P.ink, a: 270 },
+  ];
+  let squares = "";
+  SQ.forEach((q, i) => {
+    const ang = (q.a + spin) * Math.PI / 180;
+    let x = cx + R * Math.cos(ang), y = cy - R * Math.sin(ang);
+    let s = sq0;
+    // f88–100: into a row on the icon's right; the white one slips behind the icon
+    const rowS = icon * 0.42;
+    const order = { 1: 0, 2: 1, 3: 2 }[i];
+    const rx = i === 0 ? cx : cx + icon / 2 + rowS * 0.9 + (order) * rowS * 1.25;
+    x = lerp(x, rx, rowK); y = lerp(y, cy, rowK); s = lerp(sq0, rowS, rowK);
+    const z = i === 0 && rowK > 0.4 ? 1 : 3;
+    squares += `<div class="abs" style="z-index:${z};left:${x - s / 2}px;top:${y - s / 2}px;width:${s}px;height:${s}px;border-radius:${s * 26 / 92}px;background:${q.c};${q.edge ? "box-shadow:inset 0 0 0 1px #E3E8EF, 0 4px 14px rgba(11,13,16,0.10);" : ""}"></div>`;
+  });
+  return `
+  <div class="abs" style="inset:0;background:${P.page}"></div>
+  <div class="abs" style="inset:0;filter:${rb(blur)}">
+    <div class="abs" style="left:${cx - halo / 2}px;top:${cy - halo / 2}px;width:${halo}px;height:${halo}px;border-radius:50%;background:#E9E9E7;opacity:${haloOp}"></div>
+    ${squares}
+    <div class="abs" style="z-index:2;left:${cx - icon / 2}px;top:${cy - icon / 2}px;width:${icon}px;height:${icon}px;border-radius:${icon * 0.28}px;background:linear-gradient(160deg, #187A60 0%, ${P.green} 55%, #0C4A3A 100%);box-shadow:0 ${icon * 0.06}px ${icon * 0.16}px rgba(11,13,16,0.22)"></div>
+    ${`<div class="abs" style="z-index:2;left:0;top:0">${DMARK(cx - icon * 0.29, cy - icon * 0.285, icon * 0.57, true)}</div>`}
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ S3  menu bar + prompt  (f101–158) */
+const PROMPT = "Where is order ORD-000030?";
+function typed(f) {
+  if (f < 121) return 0;
+  let n = 6, pat = [1, 1, 0, 1, 1, 1, 0];
+  for (let k = 122; k <= f; k++) n += pat[(k - 122) % pat.length];
+  return Math.min(PROMPT.length, n);
+}
+function S3(f) {
+  const enterBl = kf(f, [[101, 3], [110, 0, E.out]]);
+  const pan = kf(f, [[115, 0], [130, 125, E.io]]);
+  const lift = f < 136 ? 0 : kf(f, [[136, 0], [158, -210, E.in]]);        // drift up → whip-tilt (≈25 px/frame at f158)
+  const vlift = Math.abs(vel((g) => (g < 136 ? 0 : kf(g, [[136, 0], [158, -210, E.in]])), f));
+  const tilt = vlift > 2 ? dblur(0.3, Math.min(vlift * 0.3, 8)) : "none";
+  const tint = clamp((f - 154) / 4);
+  const vpan = Math.abs(vel((g) => kf(g, [[115, 0], [130, 125, E.io]]), f));
+  // glass box spring
+  const gw = kf(f, [[116, 40], [121, 520, E.out], [126, 744, E.out], [131, 716, E.io], [138, 726, E.io]]);
+  const gh = kf(f, [[116, 20], [121, 150, E.out], [126, 238, E.out], [131, 222, E.io], [138, 228, E.io]]);
+  const gcx = kf(f, [[116, 557 + 0], [126, 559, E.out]]), gtop = kf(f, [[116, 540], [126, 566, E.out], [138, 568, E.io]]);
+  const gop = clamp((f - 116) / 2);
+  const n = typed(f);
+  // cursor: rises from below, sits on the mark, presses
+  const mx = 557, my = 507;
+  const ccx = kf(f, [[102, 640], [111, mx + 6, E.expo]]), ccy = kf(f, [[102, 1120], [111, my + 10, E.expo]]);
+  const csc = kf(f, [[113, 1], [115, 0.85, E.out], [117, 1, E.out]]);
+  const cop = 1 - clamp((f - 120) / 4);
+  const wall = `
+    <div class="abs" style="left:-300px;top:538px;width:1680px;height:900px;background:linear-gradient(180deg, ${P.sky0} 0%, #2E8A6C 45%, ${P.sky1} 100%)"></div>
+    <div class="abs" style="left:780px;top:520px;width:520px;height:420px;background:radial-gradient(circle, rgba(79,220,169,0.45) 0%, rgba(79,220,169,0) 65%)"></div>
+    <svg class="abs" style="left:-300px;top:538px" width="1680" height="900" viewBox="0 0 1680 900" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2">
+      <circle cx="760" cy="520" r="360"/>
+      <path d="M0 250 H1680 M0 610 H1680 M1120 0 V900"/>
+      <path d="M1120 250 l0 -22 l6 16 l16 6 l-16 6 l-6 16 l-6 -16 l-16 -6 l16 -6 z" fill="rgba(255,255,255,0.9)" stroke="none"/>
+    </svg>`;
+  const menu = `
+    <div class="abs" style="left:-300px;top:477px;width:1680px;height:61px;background:${P.menubar}"></div>
+    <div class="abs" style="left:300px;top:477px;height:61px;display:flex;align-items:center;gap:30px">
+      <svg width="34" height="26" viewBox="0 0 34 26" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"><path d="M3 9a20 20 0 0 1 28 0M8 14a13 13 0 0 1 18 0M13 19a6 6 0 0 1 8 0"/><circle cx="17" cy="23" r="1.6" fill="#fff"/></svg>
+      <svg width="46" height="22" viewBox="0 0 46 22"><rect x="1" y="1" width="38" height="20" rx="6" fill="none" stroke="#fff" stroke-width="2"/><rect x="4" y="4" width="28" height="14" rx="3" fill="#fff"/><rect x="41" y="7" width="3" height="8" rx="1.5" fill="#fff"/></svg>
+      <svg width="40" height="26" viewBox="0 0 40 26" fill="none" stroke="#fff" stroke-width="2.4"><rect x="2" y="2" width="36" height="9" rx="4.5"/><circle cx="29" cy="6.5" r="2.6" fill="#fff"/><rect x="2" y="15" width="36" height="9" rx="4.5"/><circle cx="11" cy="19.5" r="2.6" fill="#fff"/></svg>
+    </div>
+    ${DMARK(531, 481, 52, true)}
+    <div class="abs" style="left:${612 - 18}px;top:${507 - 18}px;width:36px;height:36px;border-radius:50%;background:${P.mint}"></div>
+    <div class="abs" style="left:${661 - 18}px;top:${507 - 18}px;width:36px;height:36px;border-radius:50%;background:${P.mintMid}"></div>
+    <div class="abs" style="left:${709 - 18}px;top:${507 - 18}px;width:36px;height:36px;border-radius:50%;background:#F5F7F8"></div>
+    <div class="abs" style="left:752px;top:477px;height:61px;line-height:61px;font-size:34px;font-weight:500;color:#fff;white-space:nowrap">Mon Oct 12&nbsp;&nbsp;9:41 AM</div>`;
+  let glass = "";
+  if (f >= 116) {
+    const gl = gcx - gw / 2, gr = 60 * clamp(gw / 400);
+    const txt = PROMPT.slice(0, n);
+    glass = `
+    <div class="abs" style="left:${gl}px;top:${gtop}px;width:${gw}px;height:${gh}px;border-radius:${Math.min(60, gh / 2)}px;overflow:hidden;opacity:${gop};box-shadow:0 24px 60px rgba(4,30,22,0.35)">
+      <div class="abs" style="left:${-gl - pan}px;top:${-gtop}px;width:1080px;height:1080px;filter:blur(22px) brightness(1.22) saturate(1.1)">${wall}</div>
+      <div class="abs" style="inset:0;background:linear-gradient(180deg, rgba(255,255,255,0.30) 0%, rgba(235,250,244,0.16) 100%)"></div>
+      <div class="abs" style="inset:0;border-radius:inherit;box-shadow:inset 0 2px 0 rgba(255,255,255,0.95), inset 0 0 0 1.5px rgba(255,255,255,0.55)"></div>
+      <div class="abs" style="left:44px;top:44px;font-size:44px;font-weight:500;color:#fff;white-space:nowrap;letter-spacing:-0.01em">${txt}<span style="display:inline-block;width:3px;height:48px;background:#fff;vertical-align:-9px;margin-left:3px"></span></div>
+      <div class="abs" style="left:44px;bottom:30px;display:flex;gap:26px">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c3 3 3 14 0 17M12 3.5c-3 3-3 14 0 17"/></svg>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="4" y="5" width="16" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M5 17l5-4 4 3 3-2 3 2"/></svg>
+      </div>
+      <div class="abs" style="right:30px;bottom:26px;width:51px;height:51px;border-radius:50%;background:${P.green};display:flex;align-items:center;justify-content:center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+      </div>
+    </div>`;
+  }
+  return `
+  <div class="abs" style="inset:0;background:#fff"></div>
+  <div class="abs" style="inset:0;transform:translateY(${lift}px);filter:${tilt}">
+    <div class="abs" style="inset:0;filter:${enterBl > 0.05 ? rb(enterBl) : vpan > 2 ? dblur(Math.min(vpan * 0.35, 6), 0.2) : "none"}">
+      <div class="abs" style="left:0;top:0;width:1080px;height:1080px;transform:translateX(${pan}px)">
+        <div class="abs" style="left:-300px;top:0;width:1680px;height:425px;background:#fff"></div>
+        <div class="abs" style="left:-300px;top:425px;width:1680px;height:50px;background:#000;box-shadow:inset 0 2px 0 #686866"></div>
+        ${wall}${menu}
+      </div>
+    </div>
+    ${glass}
+    ${f < 124 ? CURSOR(ccx + pan, ccy, -8, csc, cop, dblur(0.2, Math.min(Math.abs(vel((g) => kf(g, [[102, 1120], [111, my + 10, E.expo]]), f)) * 0.08, 6))) : ""}
+  </div>
+  <div class="abs" style="inset:0;background:${P.ice};opacity:${tint * 0.85}"></div>`;
+}
+
+/* ------------------------------------------------------------------ S4  answer page  (f159–186) + S5 card (f187–214) */
+const BODY = "Picked at A-01-01-01 and scanned into a tote, it is waiting at the packing station. Every step is scanned, so the order can be traced unit by unit, from shelf to courier.";
+const KEY = "unit by unit";
+let PAGE = null;
+function pageLayout() {
+  // wrap body (47 px Inter 400, column x120, width 850) keeping the key phrase whole
+  const words = BODY.replace(KEY, "\u0001").split(" ");
+  const lines = []; let cur = [];
+  const width = (arr) => tw(arr.map((w) => w.replace("\u0001", KEY)).join(" "), 47, 400);
+  for (const w of words) { if (cur.length && width([...cur, w]) > 850) { lines.push(cur); cur = []; } cur.push(w); }
+  lines.push(cur);
+  const top = 330;
+  let key = null;
+  const html = lines.map((ln, i) => {
+    const y = top + i * 58;
+    const parts = ln.map((w) => {
+      if (w.includes("\u0001")) {
+        const before = ln.slice(0, ln.indexOf(w)).join(" ") + (ln.indexOf(w) ? " " : "");
+        const x0 = 120 + tw(before, 47, 400), kw = tw(KEY, 47, 600);
+        key = { x: x0 + kw / 2, y: y + 58 };
+        return w.replace("\u0001", `<span style="color:#0B0D10;font-weight:600">${KEY}</span>`);
+      }
+      return w;
+    }).join(" ");
+    return `<div class="abs" style="left:120px;top:${y}px;font-size:47px;line-height:58px;font-weight:400;color:${P.grey};white-space:nowrap">${parts}</div>`;
+  }).join("");
+  return { html, key };
+}
+function pageBlock() {
+  return `
+    <div class="abs" style="left:120px;top:150px;font-size:30px;font-weight:500;color:#A3ABA8">Orders&nbsp;&nbsp;›&nbsp;&nbsp;ORD-000030</div>
+    <div class="abs" style="left:116px;top:200px;font-size:76px;font-weight:700;letter-spacing:-0.03em;color:${P.ink}">ORD-000030 · Picked</div>
+    ${PAGE.html}`;
+}
+const scrollOff = (f) => (f <= 180
+  ? kf(f, [[159, 420], [160, 315], [161, 210], [162, 170], [163, 140], [164, 116], [165, 96], [166, 81], [167, 67], [168, 55], [169, 45], [170, 37], [171, 30], [172, 24], [173, 19], [174, 16], [175, 14], [176, 10], [177, 7], [178, 4], [179, 2], [180, 0]])
+  : -6 * E.out(clamp((f - 180) / 6)) - Math.max(0, f - 186) * 1.0);
+function S4(f, withCard) {
+  const off = scrollOff(f), voff = Math.abs(vel(scrollOff, f));
+  const bl = kf(f, [[159, 24], [160, 14], [161, 8], [162, 5], [163, 3.2], [164, 2.2], [165, 1.5], [168, 0, E.out]]);
+  const bg = mixc("#E3F7EF", P.page, E.out(clamp((f - 159) / 6)));
+  const pageBlur = withCard ? kf(f, [[187, 0], [193, 2.5, E.out]]) : 0;
+  const smear = bl > 0.05 ? dblur(bl * 0.4, bl) : voff > 2 ? dblur(0.2, Math.min(voff * 0.12, 5)) : "none";
+  // cursor pointing straight up rides the scroll, stops under the key phrase, then drifts right
+  const k = PAGE.key;
+  const cx = k.x + (f > 180 ? (f - 180) * 2.2 : 0), cy = k.y + 8 + off;
+  let card = "";
+  if (withCard) card = S5card(f);
+  const whole = withCard ? kf(f, [[207, 0], [208, 1], [214, 7, E.in]]) : 0;
+  return `
+  <div class="abs" style="inset:0;background:${bg}"></div>
+  <div class="abs" style="inset:0;filter:${whole > 0.05 ? rb(whole) : "none"}">
+    <div class="abs" style="inset:0;filter:${pageBlur > 0.05 ? rb(pageBlur) : "none"}">
+      <div class="abs" style="left:0;top:${off}px;width:1080px;height:1080px;filter:${smear}">${pageBlock()}</div>
+      ${CURSOR(cx, cy, 24, 1, 1, "none")}
+    </div>
+    ${card}
+  </div>`;
+}
+const coverTop = (f) => (f <= 205 ? kf(f, [[187, 642], [189, 520], [191, 456, E.out], [196, 395, E.out], [200, 369, E.out], [205, 348, E.out]]) : 348 - (f - 205) * 4 - (f > 207 ? Math.pow(f - 207, 2) * 1.6 : 0));
+function S5card(f) {
+  const ct = coverTop(f), v = Math.abs(vel(coverTop, f));
+  const bl = kf(f, [[187, 2.5], [189, 3.8], [195, 1.2, E.out], [201, 0]]);
+  const sc = kf(f, [[207, 1], [214, 0.95, E.in]]);
+  const top = ct - 40;
+  return `
+    <div class="abs" style="left:203px;top:${top}px;width:675px;height:1000px;border-radius:64px;background:#fff;box-shadow:0 -10px 60px rgba(11,13,16,0.16);transform-origin:540px 300px;transform:scale(${sc});filter:${bl > 0.05 ? dblur(bl * 0.6, bl + v * 0.05) : "none"}">
+      <div class="abs" style="left:${675 / 2 - 34}px;top:14px;width:68px;height:7px;border-radius:4px;background:#E2E6E4"></div>
+      <div class="abs" style="left:24px;top:40px;width:627px;height:536px;border-radius:44px;overflow:hidden;background:#EEF1F0">
+        <img src="assets/pick-cover.jpg" style="width:627px;height:536px;object-fit:cover;object-position:left top">
+      </div>
+      <div class="abs" style="left:36px;top:600px;font-size:38px;font-weight:600;color:${P.ink}">Pick &amp; scan</div>
+      <div class="abs" style="left:36px;top:650px;font-size:23px;font-weight:400;color:#8C9592">ORD-000030 · scanned into a tote</div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------------ S6  two cards with frosted-glass titles  (f215–244) */
+function artPacking(id) {
+  // isometric boxes on a green→mint field; no text
+  const box = (x, y, s, i) => {
+    const t = `M${x} ${y} l${s} ${-s / 2} l${s} ${s / 2} l${-s} ${s / 2} z`;
+    const l = `M${x} ${y} l${s} ${s / 2} l0 ${s} l${-s} ${-s / 2} z`;
+    const r = `M${x + s} ${y + s / 2} l${s} ${-s / 2} l0 ${s} l${-s} ${s / 2} z`;
+    const k = hash(i) * 0.12;
+    return `<path d="${t}" fill="${mixc("#FFFFFF", P.mint, 0.15 + k)}"/><path d="${l}" fill="${mixc(P.mint, P.green, 0.25 + k)}"/><path d="${r}" fill="${mixc(P.mint, P.green, 0.55 + k)}"/>`;
+  };
+  return `<linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1C7A5E"/><stop offset="1" stop-color="#7FD9B6"/></linearGradient>
+    <rect width="538" height="348" fill="url(#${id}g)"/>
+    <circle cx="430" cy="70" r="120" fill="rgba(255,255,255,0.18)"/>
+    ${box(250, 120, 80, 1)}${box(170, 160, 80, 2)}${box(330, 160, 80, 3)}${box(250, 200, 80, 4)}${box(250, 40, 80, 5)}`;
+}
+function artShipping(id) {
+  return `<linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0B0D10"/><stop offset="0.55" stop-color="#0F5F4A"/><stop offset="1" stop-color="#4FDCA9"/></linearGradient>
+    <rect width="538" height="348" fill="url(#${id}g)"/>
+    <path d="M-20 260 C 120 120, 260 300, 400 140 S 560 60, 600 80" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+    <path d="M-20 300 C 140 200, 300 330, 600 180" fill="none" stroke="rgba(79,220,169,0.6)" stroke-width="3"/>
+    <circle cx="400" cy="140" r="16" fill="#fff"/><circle cx="400" cy="140" r="34" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"/>
+    <g transform="translate(120 70) rotate(-8)"><rect width="96" height="74" rx="8" fill="#F5F7F8"/><rect x="40" width="16" height="74" fill="${P.mint}"/><rect y="28" width="96" height="10" fill="rgba(11,13,16,0.10)"/></g>`;
+}
+function glassCard(id, art, pill, title) {
+  const fs = Math.min(168, 168 * 492 / (tw(title, 168, 800) - 0.04 * 168 * (title.length - 1)));   // fits the card width; only the bottom edge cuts it
+  return `<svg width="538" height="348" viewBox="0 0 538 348" style="display:block">
+    <defs>
+      <clipPath id="${id}c"><rect width="538" height="348" rx="57"/></clipPath>
+      <clipPath id="${id}t"><text x="24" y="${348 + fs * 0.2}" font-family="Inter" font-weight="800" font-size="${fs}" letter-spacing="${-0.04 * fs}">${title}</text></clipPath>
+      <filter id="${id}f" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="14"/><feComponentTransfer><feFuncR type="linear" slope="0.55" intercept="0.48"/><feFuncG type="linear" slope="0.55" intercept="0.48"/><feFuncB type="linear" slope="0.55" intercept="0.48"/></feComponentTransfer></filter>
+      <filter id="${id}p" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="10"/></filter>
+    </defs>
+    <g clip-path="url(#${id}c)">
+      <g>${art(id + "a")}</g>
+      <g clip-path="url(#${id}t)"><g filter="url(#${id}f)">${art(id + "b")}</g></g>
+      <text x="24" y="${348 + fs * 0.2}" font-family="Inter" font-weight="800" font-size="${fs}" letter-spacing="${-0.04 * fs}" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1.4">${title}</text>
+      <rect x="22" y="22" width="${tw(pill, 22, 600) + 40}" height="44" rx="22" fill="rgba(255,255,255,0.28)" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/>
+      <text x="42" y="51" font-family="Inter" font-weight="600" font-size="22" fill="#fff">${pill}</text>
+      <circle cx="${538 - 44}" cy="44" r="22" fill="rgba(255,255,255,0.28)" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/>
+      <g fill="#fff"><circle cx="${538 - 53}" cy="44" r="3"/><circle cx="${538 - 44}" cy="44" r="3"/><circle cx="${538 - 35}" cy="44" r="3"/></g>
+    </g>
+    <rect width="538" height="348" rx="57" fill="none" stroke="rgba(11,13,16,0.06)"/>
+  </svg>`;
+}
+const topY = (f) => (f <= 230 ? kf(f, [[215, 264], [224, 182, E.out], [230, 168, E.out]]) : 168 - (f - 230) * 3 - (f > 238 ? Math.pow(f - 238, 2.2) * 2.4 : 0));
+const botY = (f) => (f <= 230 ? kf(f, [[215, 927], [217, 860], [226, 575, E.out], [230, 552, E.out]]) : 552 - (f - 230) * 3 - (f > 238 ? Math.pow(f - 238, 2.2) * 2.4 : 0));
+let CARDS = null;
+function S6(f) {
+  const bl = kf(f, [[215, 12], [224, 0, E.out]]);
+  const out = f > 238 ? kf(f, [[238, 0], [244, 8, E.in]]) : 0;
+  const tsc = kf(f, [[215, 1.08], [226, 1, E.out]]);
+  const vt = Math.abs(vel(topY, f)), vb = Math.abs(vel(botY, f));
+  const fT = dblur(0.3 + bl * 0.6, bl + Math.min(vt * 0.12, 8) + out);
+  const fB = dblur(0.3 + bl * 0.6, bl + Math.min(vb * 0.12, 8) + out);
+  return `
+  <div class="abs" style="inset:0;background:${P.page}"></div>
+  <div class="abs" style="left:271px;top:${topY(f)}px;width:538px;height:348px;border-radius:57px;box-shadow:0 24px 60px rgba(11,13,16,0.14);transform:scale(${tsc});filter:${fT}">${CARDS[0]}</div>
+  <div class="abs" style="left:271px;top:${botY(f)}px;width:538px;height:348px;border-radius:57px;box-shadow:0 24px 60px rgba(11,13,16,0.14);filter:${fB}">${CARDS[1]}</div>`;
+}
+
+/* ------------------------------------------------------------------ S7  logo disc  (f245–300) */
+function S7(f) {
+  const top = f <= 269 ? kf(f, [[245, 569], [250, 491, E.out], [255, 468, E.out], [269, 456, E.out]]) : 456;
+  const d = f <= 287 ? 168 : kf(f, [[287, 168], [300, 123, E.in]]);
+  const cy = top + 84;
+  const smear = f < 246.5 ? dblur(0.4, 14 * (1 - clamp(f - 245))) : f < 269 ? dblur(0.1, Math.min(Math.abs(vel((g) => kf(g, [[245, 569], [250, 491, E.out], [255, 468, E.out], [269, 456, E.out]]), f)) * 0.15, 6)) : "none";
+  const shrinkBl = f > 287 ? kf(f, [[287, 0], [300, 1.6, E.in]]) : 0;
+  return `
+  <div class="abs" style="inset:0;background:#FDFDFB"></div>
+  <div class="abs" style="left:0;top:0;width:1080px;height:1080px;filter:${shrinkBl > 0.05 ? rb(shrinkBl) : smear}">
+    <div class="abs" style="left:${540 - d / 2}px;top:${cy - d / 2}px;width:${d}px;height:${d}px;border-radius:50%;background:#F6F6F6;box-shadow:inset 0 0 0 1px #ECECEC, 0 8px 24px rgba(11,13,16,0.06)"></div>
+    ${DMARK(540 - d * 0.29, cy - d * 0.285, d * 0.57)}
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ S8  end card  (f301–359) */
+const wordW = (f) => kf(f, [[301, 1650], [302, 1350], [303, 1110], [304, 1049], [309, 734, E.out], [311, 678], [320, 563, E.out], [342, 516], [350, 492], [355, 450, E.in], [359, 267, E.in]]);
+function S8(f) {
+  const W = wordW(f), base = tw(NAME, 100, 600), size = 100 * W / base;
+  const bl = f < 304 ? kf(f, [[301, 6], [304, 0.6]]) : f > 350 ? kf(f, [[350, 0], [359, 3.5, E.in]]) : 0;
+  const streaks = f < 305 ? Array.from({ length: 24 }, (_, i) => {
+    const k = 1 + (i + 1) * 0.035 * (1 - clamp((f - 301) / 4));
+    return `<div class="abs" style="left:540px;top:540px;transform:translate(-50%,-50%) scale(${k});font-weight:600;font-size:${size}px;color:#F3F3F5;white-space:nowrap;opacity:${0.05 * (1 - i / 24)}">${NAME}</div>`;
+  }).join("") : "";
+  const hx = f < 304 ? dblur(Math.max(0.5, (1 - clamp((f - 301) / 3)) * 20), 0.5) : "none";
+  return `
+  <div class="abs" style="inset:0;background:radial-gradient(circle at 50% 50%, #272729 0%, #151517 38%, #020204 100%)"></div>
+  <div class="abs" style="inset:0;filter:${hx}">
+    ${streaks}
+    <div class="abs" style="left:540px;top:540px;transform:translate(-50%,-50%);font-weight:600;font-size:${size}px;color:rgba(243,243,245,0.18);white-space:nowrap;filter:blur(${size * 0.32}px)">${NAME}</div>
+    <div class="abs" style="left:540px;top:540px;transform:translate(-50%,-50%);font-weight:600;font-size:${size}px;letter-spacing:-0.02em;color:#F3F3F5;white-space:nowrap;text-shadow:0 0 ${size * 0.08}px rgba(243,243,245,0.55);filter:${rb(bl)}">${NAME}</div>
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ shots + seek */
+const SHOTS = [
+  { f0: 0, f1: 71, render: S1 },
+  { f0: 72, f1: 100, render: S2 },
+  { f0: 101, f1: 158, render: S3 },
+  { f0: 159, f1: 186, render: (f) => S4(f, false) },
+  { f0: 187, f1: 214, render: (f) => S4(f, true) },
+  { f0: 215, f1: 244, render: S6 },
+  { f0: 245, f1: 300, render: S7 },
+  { f0: 301, f1: 359.99, render: S8 },
+];
+function seek(f) {
+  FID = 0; DEFS = [];
+  // a shot owns [f0, next f0): half frames before a cut still belong to the outgoing shot
+  let shot = SHOTS[0];
+  for (const s of SHOTS) if (f >= s.f0) shot = s;
+  const body = shot.render(f);
+  document.getElementById("stage").innerHTML = `<svg width="0" height="0" style="position:absolute"><defs>${DEFS.join("")}</defs></svg>` + body;
+}
+window.seek = seek;
+window.ready = document.fonts.load("500 40px Inter").then(() => document.fonts.load("600 40px Inter")).then(() => document.fonts.load("800 40px Inter")).then(() => document.fonts.ready).then(() => {
+  LOCK = lockupLayout();
+  PAGE = pageLayout();
+  CARDS = [glassCard("ca", artPacking, "Step 5", "Packing"), glassCard("cb", artShipping, "Step 6", "Shipping")];
+  const q = new URLSearchParams(location.search).get("f");
+  seek(q === null ? 0 : +q);
+  return true;
+});
+</script>
+</body>
+</html>
