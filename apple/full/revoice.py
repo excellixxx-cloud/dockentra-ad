@@ -3,7 +3,8 @@
     python3 apple/full/revoice.py TAKE.wav
 Splits the take at its pauses into the 13 lines, puts each line where the current line starts (scene times
 stay as they are), re-cuts the subtitles at the new pauses, and rebuilds narration + music + mix.
-Lines that would run into the next one are sped up slightly (at most 8 %)."""
+The end line may start earlier (not before the logo settles); other lines that would run into the next one
+are sped up slightly (at most 8 %)."""
 import json, subprocess, sys, tempfile, wave
 from pathlib import Path
 import numpy as np
@@ -56,6 +57,8 @@ subs = []
 starts = [l["a"] for l in slots] + [tl["total"] - 0.4]
 for i, (slot, x) in enumerate(zip(slots, lines)):
     room = starts[i + 1] - slot["a"] - 0.35
+    if slot is tl["endLine"] and len(x) / SR > room:         # the end line may start earlier, during the logo's hold
+        slot["a"] = round(max(tl["logo"]["settle"], starts[i + 1] - 0.35 - len(x) / SR), 3); room = starts[i + 1] - slot["a"] - 0.35
     if len(x) / SR > room:
         f = min(1.08, len(x) / SR / room); x = tempo(x, f); print(f"line {i + 1}: sped up x{f:.3f}")
     x = x / np.abs(x).max() * 0.89
