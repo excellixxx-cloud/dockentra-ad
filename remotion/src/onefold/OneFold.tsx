@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, Img, continueRender, delayRender, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { C, EASE_APPEAR, EASE_MOVE, clamp, lerp, ramp } from "../brand";
 import DM from "./dmark.json";
+import VO from "./vo.json";
 
 /* "One fold" — the Dockentra "D" builds the warehouse out of cards and folds back into the logo.
    15 s, 1080x1920, 30 fps, one typeface (Manrope, variable). Every scene grows out of the one before:
@@ -339,6 +340,19 @@ const Ending: React.FC<{ T: number }> = ({ T }) => {
   );
 };
 
+/* ================================================================ subtitles: white on a Dock Ink pill, bottom edge 240 px above the frame edge */
+const CUES = VO as [number, number, string][];
+const Subtitle: React.FC<{ T: number }> = ({ T }) => {
+  const c = CUES.find(([a, b]) => T >= a && T <= b + 0.15);
+  if (!c) return null;
+  const k = ramp(T, c[0], 0.18, EASE_APPEAR) * (1 - ramp(T, c[1] + 0.03, 0.12, EASE_MOVE));
+  return (
+    <div style={{ position: "absolute", left: 0, right: 0, bottom: 240, display: "flex", justifyContent: "center", opacity: k, transform: `translateY(${(1 - k) * 12}px)` }}>
+      <div style={{ maxWidth: 900, padding: "14px 28px", borderRadius: 22, background: "rgba(11,13,16,0.78)", fontFamily: F, fontWeight: 500, fontSize: 40, lineHeight: 1.25, color: C.white, textAlign: "center" }}>{c[2]}</div>
+    </div>
+  );
+};
+
 /* ================================================================ the film */
 export const OneFoldFilm: React.FC<{ T: number }> = ({ T }) => {
   const green = T >= 3.0 && T < 6.5, ink = T >= 6.5;
@@ -352,6 +366,7 @@ export const OneFoldFilm: React.FC<{ T: number }> = ({ T }) => {
       <Stamp T={T} />
       {T >= 10.7 && <AbsoluteFill style={{ background: C.ink }} />}
       <Ending T={T} />
+      <Subtitle T={T} />
     </AbsoluteFill>
   );
 };

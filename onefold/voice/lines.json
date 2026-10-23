@@ -1,0 +1,56 @@
+[
+ {
+  "i": 0,
+  "text": "Selling on TikTok Shop in Ireland?",
+  "spoken": "Selling on TikTok Shop in Ireland?",
+  "file": "l0.wav",
+  "a": 0.55,
+  "b": 2.786,
+  "dur": 2.236
+ },
+ {
+  "i": 1,
+  "text": "We're Dockentra.",
+  "spoken": "We're Dockentra.",
+  "file": "l1.wav",
+  "a": 3.0,
+  "b": 4.068,
+  "dur": 1.068
+ },
+ {
+  "i": 2,
+  "text": "Every delivery photographed on arrival.",
+  "spoken": "Every delivery photographed on arrival.",
+  "file": "l2.wav",
+  "a": 4.15,
+  "b": 6.448,
+  "dur": 2.298
+ },
+ {
+  "i": 3,
+  "text": "Three questions. Price by email.",
+  "spoken": "Three questions. Price, by email.",
+  "file": "l3.wav",
+  "a": 6.72,
+  "b": 9.257,
+  "dur": 2.537
+ },
+ {
+  "i": 4,
+  "text": "You sell. We ship.",
+  "spoken": "You sell. We ship.",
+  "file": "l4.wav",
+  "a": 10.6,
+  "b": 12.273,
+  "dur": 1.673
+ },
+ {
+  "i": 5,
+  "text": "dockentra.ie",
+  "spoken": "Dockentra, dot I E.",
+  "file": "l5.wav",
+  "a": 12.95,
+  "b": 14.789,
+  "dur": 1.839
+ }
+]
