@@ -1,6 +1,6 @@
 """Sound for "One fold": voice (George, offline) + a synthesized cue + SFX keyed to the picture.
 
-    python3 onefold/audio.py  ->  onefold/out/voice.wav (-16 LUFS, -2 dBTP), onefold/out/mix.wav (-14 LUFS, -1 dBTP, 48 kHz)
+    python3 onefold/audio.py [VOICE_DIR]  ->  onefold/out/voice.wav (-16 LUFS, -2 dBTP), onefold/out/mix.wav (-14 LUFS, -1 dBTP, 48 kHz)
                                   remotion/src/onefold/vo.json (subtitle cues)
 0.0–0.5 silence; soft pad + hats under the hook and the cards; the beat lands on the whip-pan (6.5 s);
 it drops out for the fold; a shimmer as the axis settles (13.5 s). Deterministic noise (seeded)."""
@@ -17,6 +17,7 @@ N = int(SR * DUR)
 rng = np.random.default_rng(15)
 BEAT = 60 / 120
 OUT = ROOT / "onefold/out"; OUT.mkdir(parents=True, exist_ok=True)
+VOICE = ROOT / (sys.argv[1] if len(sys.argv) > 1 else "onefold/voice")      # onefold/voice (George) or onefold/voice_motion
 
 def put(dst, x, at, gain=1.0, pan=0.0):
     i = int(round(at * SR))
@@ -102,10 +103,10 @@ put(sfx, tick(2400, 0.8), 8.9, 0.25); put(sfx, hit(), 10.12, 0.7)     # status s
 for t in (12.2, 12.45, 12.72): put(sfx, tick(1800, 1.0), t, 0.3)      # the fold
 
 # ------------------------------------------------------------------ voice
-lines = json.loads((ROOT / "onefold/voice/lines.json").read_text())
+lines = json.loads((VOICE / "lines.json").read_text())
 v = np.zeros(N, np.float32)
 for l in lines:
-    w = wave.open(str(ROOT / "onefold/voice" / l["file"])); x = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32768
+    w = wave.open(str(VOICE / l["file"])); x = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32768
     x = np.interp(np.arange(int(len(x) * 2)) / 2, np.arange(len(x)), x).astype(np.float32)   # 24 k -> 48 k
     i = int(l["a"] * SR); v[i:i + len(x)] += x[: N - i]
 with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:

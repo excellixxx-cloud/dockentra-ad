@@ -47,27 +47,32 @@ def tempo(x, f):
         subprocess.run([FF, "-v", "error", "-y", "-i", str(a), "-af", f"atempo={f:.4f}", str(b)], check=True)
         return load(b)
 
-tl_path = ROOT / "remotion/src/apple/full.json"
-tl = json.loads(tl_path.read_text())
-slots = [l for sc in tl["scenes"] for l in sc["lines"]] + [tl["endLine"]]
-lines = split(load(sys.argv[1]), len(slots))
-out = ROOT / "apple/full/voice_motion"; out.mkdir(exist_ok=True)
-from build import cues                                       # same subtitle cutting as the original build
-subs = []
-starts = [l["a"] for l in slots] + [tl["total"] - 0.4]
-for i, (slot, x) in enumerate(zip(slots, lines)):
-    room = starts[i + 1] - slot["a"] - 0.35
-    if slot is tl["endLine"] and len(x) / SR > room:         # the end line may start earlier, during the logo's hold
-        slot["a"] = round(max(tl["logo"]["settle"], starts[i + 1] - 0.35 - len(x) / SR), 3); room = starts[i + 1] - slot["a"] - 0.35
-    if len(x) / SR > room:
-        f = min(1.08, len(x) / SR / room); x = tempo(x, f); print(f"line {i + 1}: sped up x{f:.3f}")
-    x = x / np.abs(x).max() * 0.89
-    name = f"m{i:02d}.wav"
-    with wave.open(str(out / name), "wb") as w:
-        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((x * 32767).astype("<i2").tobytes())
-    slot["b"] = round(slot["a"] + len(x) / SR, 3); slot["file"] = "../voice_motion/" + name
-    if slot is not tl["endLine"]: subs += cues(slot["text"], x, slot["a"])
-    print(f"{i + 1:2d} {slot['a']:6.2f}-{slot['b']:6.2f} ({len(x) / SR:4.2f}s, room {room:4.2f}s)  {slot['text']}")
-tl["subs"] = [[round(a, 3), round(b, 3), c] for a, b, c in subs]
-tl_path.write_text(json.dumps(tl, indent=1))
-print("timeline updated; now run:  python3 apple/full/build.py --mix-only")
+def main():
+    tl_path = ROOT / "remotion/src/apple/full.json"
+    tl = json.loads(tl_path.read_text())
+    slots = [l for sc in tl["scenes"] for l in sc["lines"]] + [tl["endLine"]]
+    lines = split(load(sys.argv[1]), len(slots))
+    out = ROOT / "apple/full/voice_motion"; out.mkdir(exist_ok=True)
+    from build import cues                                       # same subtitle cutting as the original build
+    subs = []
+    starts = [l["a"] for l in slots] + [tl["total"] - 0.4]
+    for i, (slot, x) in enumerate(zip(slots, lines)):
+        room = starts[i + 1] - slot["a"] - 0.35
+        if slot is tl["endLine"] and len(x) / SR > room:         # the end line may start earlier, during the logo's hold
+            slot["a"] = round(max(tl["logo"]["settle"], starts[i + 1] - 0.35 - len(x) / SR), 3); room = starts[i + 1] - slot["a"] - 0.35
+        if len(x) / SR > room:
+            f = min(1.08, len(x) / SR / room); x = tempo(x, f); print(f"line {i + 1}: sped up x{f:.3f}")
+        x = x / np.abs(x).max() * 0.89
+        name = f"m{i:02d}.wav"
+        with wave.open(str(out / name), "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((x * 32767).astype("<i2").tobytes())
+        slot["b"] = round(slot["a"] + len(x) / SR, 3); slot["file"] = "../voice_motion/" + name
+        if slot is not tl["endLine"]: subs += cues(slot["text"], x, slot["a"])
+        print(f"{i + 1:2d} {slot['a']:6.2f}-{slot['b']:6.2f} ({len(x) / SR:4.2f}s, room {room:4.2f}s)  {slot['text']}")
+    tl["subs"] = [[round(a, 3), round(b, 3), c] for a, b, c in subs]
+    tl_path.write_text(json.dumps(tl, indent=1))
+    print("timeline updated; now run:  python3 apple/full/build.py --mix-only")
+
+
+if __name__ == "__main__":
+    main()
