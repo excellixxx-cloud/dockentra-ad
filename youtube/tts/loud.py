@@ -4,9 +4,11 @@
 Pass 1 measures; pass 2 applies the measured values (linear gain when the peak allows it,
 otherwise loudnorm's limiter holds the true-peak ceiling). Prints the result as measured on the output."""
 import json, re, subprocess, sys
-import imageio_ffmpeg
-
-FF = imageio_ffmpeg.get_ffmpeg_exe()
+try:
+    import imageio_ffmpeg
+    FF = imageio_ffmpeg.get_ffmpeg_exe()
+except ImportError:
+    FF = "ffmpeg"
 
 
 def measure(path):

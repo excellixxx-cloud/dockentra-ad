@@ -1,9 +1,24 @@
 // «ПРОФЕСІЯ» — one word typed into a DM becomes the whole film. Vertical 1080x1920, 60 fps, 900 frames.
 // Everything is driven by the absolute frame F; every element has its from-state at t=0 (seek-safe).
 import React, { useEffect, useState } from "react";
-import { AbsoluteFill, Easing, Img, Sequence, continueRender, delayRender, spring, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, Img, continueRender, delayRender, spring, staticFile, useCurrentFrame } from "remotion";
+import TIMING from "./timing.json";
 
-export const TOTAL = 900;
+/** virtual timeline length; the film plays it with reading holds inserted (timing.json) */
+const VTOTAL = 900;
+export const TOTAL: number = TIMING.total;
+const HOLDS = TIMING.holds as [number, number][];
+/** real frame → virtual frame: time stops at each hold point for `extra` frames */
+const virt = (r: number) => {
+  let v = r;
+  for (const [at, extra] of HOLDS) {
+    if (v <= at) break;
+    v = Math.max(at, v - extra);
+    if (v === at) break;
+  }
+  return v;
+};
+const RealFrame = React.createContext(0);
 const FPS = 60;
 const W = 1080, H = 1920;
 const C = { bg: "#0F1B2D", glow: "#16294A", text: "#F4F1EA", sub: "#9FB0C8", amber: "#F5B841", card: "#13243D" };
@@ -57,14 +72,15 @@ const fmt = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g
 
 // ---------------------------------------------------------------- camera (one transform, shared by every chapter)
 const cam = (F: number) => {
-  let s = 1 + 0.05 * (F / TOTAL); // slow continuous dolly-in
+  let s = 1 + 0.05 * (F / VTOTAL); // slow continuous dolly-in
   s *= lerp(1, 0.3, sp(F, 750, 24)); // 05: fast pull back
-  const rx = 11 - 3 * (F / TOTAL); // 11° → 8°
+  const rx = 11 - 3 * (F / VTOTAL); // 11° → 8°
   return { s, rx };
 };
 const Cam: React.FC<{ F: number; depth?: number; children: React.ReactNode }> = ({ F, depth = 1, children }) => {
+  const R = React.useContext(RealFrame);
   const c = cam(F);
-  const s = 1 + (c.s - 1) * depth;
+  const s = (1 + (c.s - 1) * depth) * (1 + 0.025 * depth * (R / TOTAL)); // the dolly keeps creeping during holds
   return (
     <AbsoluteFill style={{ perspective: 2400, perspectiveOrigin: "50% 50%" }}>
       <AbsoluteFill style={{ transform: `rotateX(${c.rx * depth}deg) scale(${s})`, transformOrigin: "50% 55%", transformStyle: "preserve-3d" }}>
@@ -134,7 +150,7 @@ const Background: React.FC = () => (
 const Grain: React.FC<{ F: number }> = ({ F }) => (
   <AbsoluteFill style={{ pointerEvents: "none" }}>
     <svg width={W} height={H} style={{ position: "absolute", inset: 0, opacity: 0.06, mixBlendMode: "overlay" }}>
-      <filter id="g"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed={F % 12} /><feColorMatrix type="saturate" values="0" /></filter>
+      <filter id="g"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed={Math.floor(F) % 12} /><feColorMatrix type="saturate" values="0" /></filter>
       <rect width="100%" height="100%" filter="url(#g)" />
     </svg>
     <AbsoluteFill style={{ background: "radial-gradient(ellipse 75% 62% at 50% 48%, rgba(0,0,0,0) 55%, rgba(4,9,18,.55) 100%)" }} />
@@ -143,7 +159,7 @@ const Grain: React.FC<{ F: number }> = ({ F }) => (
 
 const NAV = ["ПІДБІР", "НАПРЯМИ", "СУПРОВІД", "УМОВИ", "СТАРТ"];
 const BOUNDS = [210, 330, 450, 630, 750];
-const HUD: React.FC<{ F: number }> = ({ F }) => {
+const HUD: React.FC<{ F: number; R: number }> = ({ F, R }) => {
   const size = 21, track = 0.12;
   const sep = tw(" · ", size, 500, "mono", track);
   const widths = NAV.map((n) => tw(n, size, 500, "mono", track));
@@ -159,7 +175,7 @@ const HUD: React.FC<{ F: number }> = ({ F }) => {
     else { ux = lerp(ux, xs[i], p); uw = lerp(uw, widths[i] - track * size, p); }
   });
   const active = BOUNDS.filter((b) => F >= b).length - 1;
-  const tc = (F / FPS).toFixed(2).padStart(5, "0");
+  const tc = (R / FPS).toFixed(2).padStart(5, "0");
   const top = 96;
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>
@@ -242,8 +258,7 @@ const Pill: React.FC<{ chars: number; F: number; cursor: boolean; keyAt?: (i: nu
 };
 
 // ================================================================ 0–90 COLD OPEN
-const ColdOpen: React.FC = () => {
-  const F = useCurrentFrame();
+const ColdOpen: React.FC<{ F: number }> = ({ F }) => {
   const draw = sp(F, 0, 26); // bar draws upward from the bottom edge
   const bend = sp(F, 22, 20); // ... and bends into the cursor
   const pillIn = sp(F, 26, 22);
@@ -275,8 +290,9 @@ const HOOK = [
 ];
 const TICK = "ПРОДАЖІ В ПЕРЕПИСЦІ · ТАРГЕТ · TELEGRAM · CANVA + ШІ · ІНТЕРНЕТ-МАГАЗИН · ";
 const Ticker: React.FC<{ F: number; y: number; rot: number; dir: number }> = ({ F, y, rot, dir }) => {
+  const R = React.useContext(RealFrame);
   const unit = tw(TICK, 28, 500, "mono", 0.12);
-  const off = ((F * 3.2 * dir) % unit + unit) % unit;
+  const off = ((R * 3.2 * dir) % unit + unit) % unit;
   const open = sp(F, 100, 22);
   return (
     <Abs x={-200} y={y} w={W + 400} h={64}
@@ -287,8 +303,7 @@ const Ticker: React.FC<{ F: number; y: number; rot: number; dir: number }> = ({ 
     </Abs>
   );
 };
-const Hook: React.FC = () => {
-  const F = useCurrentFrame() + 90;
+const Hook: React.FC<{ F: number }> = ({ F }) => {
   const fly = sp(F, 92, 24);
   const scatter = ep(F, 114, 126);
   const bw = tw(WORD, TXT, 700) + 72;
@@ -309,7 +324,7 @@ const Hook: React.FC = () => {
       <Abs x={0} y={960 - fs * 0.55} w={W} style={{ textAlign: "center", transform: `scale(${drift})` }}>
         <span style={{ fontFamily: SANS, fontWeight: 800, fontSize: fs, letterSpacing: "-0.02em", lineHeight: 1.1, color: C.text, textShadow: RGB(split), whiteSpace: "nowrap" }}>
           {cur.t.split("").map((ch, i) => {
-            const p = idx === 0 ? sp(F, 116 + i * 1.5, 22) : 1;
+            const p = idx === 0 ? sp(F, 116 + i * 1.2, 18) : 1;
             return <span key={i} style={{ display: "inline-block", color: ch === "?" ? C.amber : undefined, opacity: cl(p * 2), transform: `translateY(${(1 - p) * 60}px) scale(${lerp(0.7, 1, p)})`, filter: p < 1 ? `blur(${(1 - p) * 10}px)` : undefined }}>{ch === " " ? " " : ch}</span>;
           })}
         </span>
@@ -363,8 +378,7 @@ const Bubble: React.FC<{ i: number; style?: React.CSSProperties; textO?: number 
     </Abs>
   );
 };
-const Pidbir: React.FC = () => {
-  const F = useCurrentFrame() + 210;
+const Pidbir: React.FC<{ F: number }> = ({ F }) => {
   const k = sp(F, 210, 22); // the flash collapses into the chat card
   const r = { x: lerp(0, CHAT.x, k), y: lerp(0, CHAT.y, k), w: lerp(W, CHAT.w, k), h: lerp(H, CHAT.h, k) };
   const tint = ep(F, 214, 232);
@@ -396,8 +410,7 @@ const fanPose = (i: number) => {
   const a = ((i - 2) * 11 * Math.PI) / 180;
   return { cx: 540 + Math.sin(a) * 960, cy: 1940 - Math.cos(a) * 960, rot: (i - 2) * 11 };
 };
-const Napryamy: React.FC = () => {
-  const F = useCurrentFrame() + 330;
+const Napryamy: React.FC<{ F: number }> = ({ F }) => {
   const m = sp(F, 334, 28); // bubbles → chips
   const fan = sp(F, 364, 26);
   const flip = ep(F, 384, 396, EIN);
@@ -469,7 +482,7 @@ const RowPanel: React.FC<{ r: { x: number; y: number; w: number; h: number }; o?
 const Week: React.FC<{ i: number; F: number; unfold: number; squeeze?: number }> = ({ i, F, unfold, squeeze = 0 }) => {
   const x0 = 40 + i * (colW + COLS.gap);
   const tx = (540 - (x0 + colW / 2)) * squeeze;
-  const ck = sp(F, 596 + i * 3, 20);
+  const ck = sp(F, 590 + i * 2, 18);
   return (
     <Abs x={x0} y={COLS.y} w={colW} h={COLS.h}
       style={{ transformOrigin: "50% 0", transform: `translateX(${tx}px) perspective(900px) rotateX(${-90 * (1 - unfold)}deg) scaleX(${1 - squeeze})`, borderRadius: 20, background: "rgba(255,255,255,.05)", border: BORDER, opacity: cl(unfold * 3) * (1 - squeeze) }}>
@@ -480,9 +493,8 @@ const Week: React.FC<{ i: number; F: number; unfold: number; squeeze?: number }>
     </Abs>
   );
 };
-const Suprovid: React.FC = () => {
-  const F = useCurrentFrame() + 450;
-  const push = sp(F, 490, 52) * (1 - sp(F, 552, 48)); // camera pushes toward step 4, then settles
+const Suprovid: React.FC<{ F: number }> = ({ F }) => {
+  const push = sp(F, 500, 52) * (1 - sp(F, 552, 48)); // camera pushes toward step 4, then settles
   const z = 1 + 0.1 * push;
   const lift = sp(F, 540, 44);
   const r = { x: lerp(rowRect0.x, rowRect1.x, lift), y: lerp(rowRect0.y, rowRect1.y, lift), w: lerp(rowRect0.w, rowRect1.w, lift), h: lerp(rowRect0.h, rowRect1.h, lift) };
@@ -499,7 +511,7 @@ const Suprovid: React.FC = () => {
             pose={(i) => { const p = sp(F, 452 + i * 3, 28); return { tf: `translateX(${-p * 1000}px) rotateY(${p * 22}deg)`, o: 1 - cl(p * 1.4), blur: p * 10 }; }} />}
           <Sliced src="ui/carousel_5.png" x={CARD.x} y={CARD.y} w={CARD.w} iw={1080} ih={1350} cuts={CUTS5} plate={sp(F, 480, 20) * (1 - lift * 0.6)}
             pose={(i) => {
-              const a = sp(F, 458 + i * 4, 32);
+              const a = sp(F, 458 + i * 3, 26);
               if (i === ROW) return { tf: `translateX(${(1 - a) * 1000}px) rotateY(${(1 - a) * -18}deg)`, o: lift > 0.02 ? 0 : cl(a * 2.2), blur: (1 - a) * 10 };
               const par = (i - ROW) * 14 * push; // parallax between slices while the camera pushes
               return { tf: `translateX(${(1 - a) * 1000}px) translateY(${par}px) rotateY(${(1 - a) * -18}deg)`, o: cl(a * 2.2) * (1 - 0.68 * lift), blur: (1 - a) * 10 + 7 * lift };
@@ -521,8 +533,7 @@ const lr = (a: typeof PRICE, b: typeof PRICE, t: number) => ({ x: lerp(a.x, b.x,
 const PriceCard: React.FC<{ r: typeof PRICE; children?: React.ReactNode; style?: React.CSSProperties }> = ({ r, children, style }) => (
   <Abs x={r.x} y={r.y} w={r.w} h={r.h} style={{ borderRadius: 28, background: C.card, border: BORDER, boxShadow: SHADOW, overflow: "hidden", ...style }}>{children}</Abs>
 );
-const Umovy: React.FC = () => {
-  const F = useCurrentFrame() + 630;
+const Umovy: React.FC<{ F: number }> = ({ F }) => {
   const comp = sp(F, 634, 30); // timeline compresses into the price card
   const count = ep(F, 656, 692, Easing.out(Easing.cubic));
   const split = sp(F, 698, 30);
@@ -624,8 +635,7 @@ const Wall: React.FC<{ F: number }> = ({ F }) => {
     </>
   );
 };
-const Start: React.FC = () => {
-  const F = useCurrentFrame() + 750;
+const Start: React.FC<{ F: number }> = ({ F }) => {
   const flat = sp(F, 774, 40);
   const collapse = ep(F, 810, 834, Easing.bezier(0.7, 0, 0.84, 0));
   const pillIn = sp(F, 826, 22);
@@ -678,26 +688,25 @@ const Start: React.FC = () => {
 };
 
 // ================================================================ composition
+const CHAPTERS: [number, number, React.FC<{ F: number }>][] = [
+  [0, 90, ColdOpen], [90, 210, Hook], [210, 330, Pidbir], [330, 450, Napryamy], [450, 630, Suprovid], [630, 750, Umovy], [750, 900, Start],
+];
 export const ProfesiiaReel: React.FC = () => {
   const ready = useFonts();
-  const F = useCurrentFrame();
+  const R = useCurrentFrame();
+  const F = virt(R);
   return (
     <AbsoluteFill style={{ background: C.bg, overflow: "hidden" }}>
       <Background />
       {ready && (
-        <>
-          <Sequence from={0} durationInFrames={90} layout="none"><ColdOpen /></Sequence>
-          <Sequence from={90} durationInFrames={120} layout="none"><Hook /></Sequence>
-          <Sequence from={210} durationInFrames={120} layout="none"><Pidbir /></Sequence>
-          <Sequence from={330} durationInFrames={120} layout="none"><Napryamy /></Sequence>
-          <Sequence from={450} durationInFrames={180} layout="none"><Suprovid /></Sequence>
-          <Sequence from={630} durationInFrames={120} layout="none"><Umovy /></Sequence>
-          <Sequence from={750} durationInFrames={150} layout="none"><Start /></Sequence>
+        <RealFrame.Provider value={R}>
+          {/* each chapter is its own sequence on the virtual timeline */}
+          {CHAPTERS.map(([a, b, Ch]) => (F >= a && F < b ? <Ch key={a} F={F} /> : null))}
           <Flash F={F} />
-          <HUD F={F} />
-        </>
+          <HUD F={F} R={R} />
+        </RealFrame.Provider>
       )}
-      <Grain F={F} />
+      <Grain F={R} />
     </AbsoluteFill>
   );
 };
