@@ -451,13 +451,15 @@ export const OneFold2Film: React.FC<{ T: number }> = ({ T }) => {
       <WhipBlur />
       {ok && T < 9 && (
         <AbsoluteFill style={{ transform: `translateX(${-wOut * 1500}px)`, filter: flt }}>
+          {T < 6 && <AbsoluteFill style={{ transform: `scale(${T < 2.6 ? 1 : pushA})`, transformOrigin: "540px 1150px" }}><Shape T={T} /></AbsoluteFill>}
+          {/* while the camera is still close, the room stays out of the headline's third */}
+          {T >= 6 && <AbsoluteFill style={{ WebkitMaskImage: "linear-gradient(to bottom, transparent 600px, #000 720px)", maskImage: "linear-gradient(to bottom, transparent 600px, #000 720px)" }}><Warehouse T={T} /></AbsoluteFill>}
+          {T >= 6 && <Hero T={T} />}
           <AbsoluteFill style={{ transform: `translateX(${-wOut * 120}px) scale(${1 + (pushA - 1) * 0.4})`, transformOrigin: "540px 460px" }}>
             <Headline T={T} a={0.2} b={2.95} size={H1} lines={["Orders in.", "Boxes out"]} />
             <Headline T={T} a={3.2} b={5.92} size={118} lines={["Photographed", "on arrival."]} />
             <Headline T={T} a={6.2} b={99} size={118} lines={["Picked. Packed.", "Labelled."]} />
           </AbsoluteFill>
-          {T < 6 && <AbsoluteFill style={{ transform: `scale(${T < 2.6 ? 1 : pushA})`, transformOrigin: "540px 1150px" }}><Shape T={T} /></AbsoluteFill>}
-          {T >= 6 && <><Warehouse T={T} /><Hero T={T} /></>}
         </AbsoluteFill>
       )}
       {ok && T >= 9 && (
