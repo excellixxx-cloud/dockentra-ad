@@ -13,6 +13,7 @@ import { AppleWms, AppleKey, TOTAL as APPLE_T } from "./apple/Apple";
 import { AppleFull, AppleFullKey, TOTAL as FULL_T } from "./apple/Full";
 import { OneFold, OneFoldKey, TOTAL as ONEFOLD_T } from "./onefold/OneFold";
 import { ProfesiiaReel, TOTAL as PROF_T } from "./profesiia/Profesiia";
+import { OneFold2, OneFold2Key, TOTAL as OF2_T } from "./onefold2/OneFold2";
 import { OpsChapter, OpsThumb, CHAPTERS as OPS_CH } from "./ops/Ops";
 import { OpsFrame, OpsStoryboardSheet, OW, OH, SHEET as OPS_SHEET } from "./ops/Storyboard";
 
@@ -43,6 +44,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="TwoBoxesKeyframe" component={TwoBoxesKeyframe} durationInFrames={1} fps={30} width={1080} height={1920} defaultProps={{ i: 0 }} />
     <Composition id="SameOrderThreeWays" component={SameOrderThreeWays} durationInFrames={36 * FPS} fps={FPS} width={W} height={H} />
     <Composition id="ProfesiiaReel" component={ProfesiiaReel} durationInFrames={PROF_T} fps={60} width={1080} height={1920} />
+    <Composition id="OneFold2" component={OneFold2} durationInFrames={OF2_T * 30} fps={30} width={1080} height={1920} />
+    <Composition id="OneFold2Key" component={OneFold2Key} durationInFrames={1} fps={30} width={1080} height={1920} defaultProps={{ t: 0 }} />
     <Composition id="HelloDockentra" component={HelloDockentra} durationInFrames={45} fps={30} width={1080} height={1920} />
   </>
 );
