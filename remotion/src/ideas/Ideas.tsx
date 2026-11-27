@@ -71,6 +71,22 @@ const Shot: React.FC<{ src: string; w: number; tilt?: number; style?: React.CSSP
   </div>
 );
 
+
+/** a phone showing a mobile WMS screen; the screen scrolls a little so it never sits still */
+const Phone: React.FC<{ src: string; t: number; at: number; w?: number; tilt?: number; scroll?: number; ar?: number }> = ({ src, t, at, w = 330, tilt = -6, scroll = 60, ar = 2532 / 1170 }) => {
+  const sw = w - 28, sh = Math.round(sw * 2.05);
+  const p = pop(t, at, 0.35), sc = scroll * ramp(t, at + 0.3, 2.5, EASE_MOVE);
+  return (
+    <div style={{ width: w, height: sh + 28, borderRadius: 54, background: "#0B0D10", padding: 14, boxSizing: "border-box", boxShadow: "0 40px 80px -20px rgba(0,0,0,.6), inset 0 0 0 3px #2C3036", transform: `perspective(1400px) rotateY(${tilt * 2}deg) rotate(${tilt}deg) translateY(${(1 - p) * 120 + 8 * wob(t, 2.4)}px) scale(${p})`, opacity: clamp(p * 2) }}>
+      <div style={{ position: "relative", width: sw, height: sh, borderRadius: 42, overflow: "hidden", background: "#F5F7F8" }}>
+        <Img src={staticFile(src)} style={{ position: "absolute", left: 0, top: 44 - sc, width: sw, height: sw * ar, display: "block" }} />
+        <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 44, background: "#F5F7F8" }} />
+        <div style={{ position: "absolute", left: sw / 2 - 52, top: 12, width: 104, height: 30, borderRadius: 15, background: "#0B0D10" }} />
+      </div>
+    </div>
+  );
+};
+
 /* ---------------------------------------------------------------- type */
 type Wd = { w: string; at: number; hi?: string };
 const words = (s: string, ats: number[], hi: Record<number, string> = {}): Wd[] => s.split(" ").map((w, i) => ({ w, at: ats[Math.min(i, ats.length - 1)], hi: hi[i] }));
@@ -128,7 +144,9 @@ const RoomBG: React.FC<{ zoom: number; fx: number; fy: number; fz?: number; blur
 /** the studio: Dock Green wall with slats, a glowing D sign, the shelving out of focus, warm key light, a desk */
 const Studio: React.FC<{ t: number }> = ({ t }) => (
   <AbsoluteFill style={{ background: "#0E2A23" }}>
-    <RoomBG t={t} zoom={2.6} fx={SHELF.x0 + 9} fy={SHELF.y0 + 3} fz={11} blur={14} filter="saturate(0.8) brightness(0.62)" />
+    <AbsoluteFill style={{ background: "linear-gradient(#124437, #0B2A23 85%)" }} />
+    <AbsoluteFill style={{ backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 5px, rgba(0,0,0,.10) 5px 9px, rgba(0,0,0,0) 9px 72px)", filter: "blur(1.2px)", transform: `translateX(${-6 * t}px)` }} />
+    {[[260, 300, 120, 0], [1560, 640, 90, 1], [1720, 300, 60, 2], [120, 760, 70, 3]].map(([x, y, r, ph], i) => <div key={i} style={{ position: "absolute", left: x + 12 * wob(t, 6, ph), top: y, width: r * 2, height: r * 2, borderRadius: "50%", background: "radial-gradient(rgba(255,214,160,.28), rgba(255,214,160,0) 70%)" }} />)}
     <AbsoluteFill style={{ background: "radial-gradient(ellipse 34% 52% at 50% 46%, rgba(255,214,160,.38), rgba(255,214,160,0) 70%), linear-gradient(90deg, rgba(8,30,24,.75), rgba(8,30,24,0) 30%, rgba(8,30,24,0) 70%, rgba(8,30,24,.75))" }} />
     {/* neon D sign on the back wall, right of her */}
     <div style={{ position: "absolute", right: 150, top: 150, filter: "blur(2.5px) drop-shadow(0 0 30px rgba(79,220,169,.75))", opacity: 0.85 + 0.08 * wob(t, 2.3), transform: "rotate(-3deg)" }}><DMark size={210} /></div>
@@ -185,7 +203,12 @@ const Backdrop: React.FC = () => {
     );
     case "sepia": return (
       <AbsoluteFill style={{ background: "#E9D9B6" }}>
-        <RoomBG t={t} zoom={1.25 + 0.03 * k} fx={30} fy={20} fz={4} filter="sepia(1) saturate(0.7) contrast(1.15) brightness(0.95)" />
+        <svg width={W} height={H} style={{ position: "absolute" }}>
+          <path d={`M0 ${700} Q 300 ${600 + 10 * wob(t, 3)} 640 690 T 1300 670 T 1920 640 L1920 1080 L0 1080 Z`} fill="#CDB487" stroke="#5B4220" strokeWidth={5} />
+          <path d="M0 830 Q 420 740 900 820 T 1920 790 L1920 1080 L0 1080 Z" fill="#B99A63" stroke="#5B4220" strokeWidth={5} />
+          {Array.from({ length: 9 }, (_, i) => <g key={i} transform={`translate(${120 + i * 210} ${860 + (i % 2) * 40})`}><path d="M0 0 C -6 -30, 6 -30, 0 -60" stroke="#5B4220" strokeWidth={4} fill="none" /><circle cy={-66} r={12} fill="#E9D9B6" stroke="#5B4220" strokeWidth={4} /></g>)}
+          {[[300, 180], [900, 120], [1250, 230]].map(([x, y], i) => <g key={i} transform={`translate(${x + 20 * wob(t, 5, i)} ${y})`}><ellipse rx={110} ry={40} fill="#F3E4C2" stroke="#5B4220" strokeWidth={4} /><ellipse cx={-50} cy={-22} rx={50} ry={34} fill="#F3E4C2" stroke="#5B4220" strokeWidth={4} /><ellipse cx={40} cy={-28} rx={58} ry={40} fill="#F3E4C2" stroke="#5B4220" strokeWidth={4} /></g>)}
+        </svg>
         <AbsoluteFill style={{ background: "radial-gradient(ellipse 75% 70% at 50% 50%, rgba(233,217,182,0) 50%, rgba(80,55,25,.6) 100%)" }} />
         {/* the old cartoon sun with a face */}
         <svg width={260} height={260} style={{ position: "absolute", left: 1560, top: 40, transform: `rotate(${6 * wob(t, 2)}deg)` }} viewBox="-130 -130 260 260">
@@ -209,7 +232,7 @@ const Backdrop: React.FC = () => {
     );
     case "manga": return (
       <AbsoluteFill style={{ background: "#fff" }}>
-        <RoomBG t={t} zoom={2.3} fx={SHELF.x0 + 10} fy={SHELF.y0 + 3} fz={10} blur={8} filter="grayscale(1) contrast(1.8) brightness(1.15)" />
+        <AbsoluteFill style={{ background: "radial-gradient(ellipse at 52% 48%, #fff 30%, #D9D9D9 100%)" }} />
         <AbsoluteFill style={{ background: `repeating-conic-gradient(from ${k * 2}deg at 52% 48%, rgba(0,0,0,.85) 0deg 1.2deg, rgba(0,0,0,0) 1.2deg 7deg)`, WebkitMaskImage: "radial-gradient(circle at 52% 48%, transparent 26%, #000 60%)", maskImage: "radial-gradient(circle at 52% 48%, transparent 26%, #000 60%)" }} />
         <Halftone color="#000" size={10} opacity={0.12} />
       </AbsoluteFill>
@@ -324,6 +347,7 @@ export const IdeasFG: React.FC = () => {
       </>}
       {s.id === "search" && <>
         <SearchBar t={t} />
+        {t >= 3.0 && <div style={{ position: "absolute", left: 1450, top: 330 }}><Phone src="wms/02-magaziny-phone.png" t={t} at={3.0} w={300} tilt={6} /></div>}
         <Cap t={t} ws={words("I think it's going to", [3.46, 3.56, 3.76, 3.96, 4.1])} x={1820} y={300} size={70} align="right" lines={[2]} width={600} />
       </>}
       {s.id === "chill" && <>
@@ -376,9 +400,7 @@ export const IdeasFG: React.FC = () => {
         {on(t, 17.58, 18.1) && <div style={{ position: "absolute", left: 1330, top: 160, transform: `scale(${pop(t, 17.58, 0.2)})` }}><Bubble w={380} tail="left" size={40}>IN THE BACK,</Bubble></div>}
         {on(t, 18.1, 19.0) && <div style={{ position: "absolute", left: 1330, top: 160, transform: `scale(${pop(t, 18.1, 0.2)})` }}><Bubble w={420} tail="left" size={40}>BUT, LIKE, YOU'LL BE LIKE,</Bubble></div>}
         <Cap t={t} ws={words("YOU CAN SEE YOUR ORDERS.", [19.04, 19.12, 19.26, 19.4, 19.54], { 4: "#E8262B" })} x={110} y={890} size={80} color="#fff" stroke="12px #0B0D10" />
-        {t >= 19.3 && <div style={{ position: "absolute", left: 1290, top: 110, width: 560, padding: 12, background: "#fff", border: "6px solid #0B0D10", boxShadow: "10px 10px 0 #0B0D10", transform: `rotate(3deg) scale(${pop(t, 19.3, 0.3)})` }}>
-          <Img src={staticFile("wms/09-shipments-desktop.png")} style={{ width: "100%", display: "block", filter: "grayscale(1) contrast(1.25)" }} />
-        </div>}
+        {t >= 19.25 && <div style={{ position: "absolute", left: 1460, top: 150 }}><Phone src="wms/09-shipments-phone.png" t={t} at={19.25} w={320} tilt={7} ar={2000 / 924} scroll={120} /></div>}
       </>}
       {s.id === "storm" && <>
         <div style={{ position: "absolute", left: 410, top: 770, transform: `rotate(-4deg) scale(${pop(t, 20.19, 0.12)})`, transformOrigin: "30% 50%" }}><Chunky text="OH, MY" size={190} fill="#E8262B" edge="#fff" outline="#2A1F6B" depth={10} /></div>
@@ -389,7 +411,7 @@ export const IdeasFG: React.FC = () => {
         <Cap t={t} ws={words("and I'll go like,", [22.36, 22.48, 22.62, 22.74])} x={100} y={300} size={70} until={23.1} />
         {t >= 23.1 && <>
           <div style={{ position: "absolute", left: 90, top: 240, transform: `rotate(-4deg) scale(${pop(t, 23.1, 0.3)})` }}><Chunky text="ALL PACKED." size={150} fill={C.mint} edge={C.green} depth={12} /></div>
-          <div style={{ position: "absolute", left: 1270, top: 260, transform: `scale(${pop(t, 23.2, 0.3)})` }}><Shot src="wms/04-upakovka-skan-desktop.png" w={560} tilt={5} /></div>
+          <div style={{ position: "absolute", left: 1460, top: 170 }}><Phone src="wms/04-upakovka-skan-phone.png" t={t} at={23.15} w={320} tilt={6} scroll={30} /></div>
         </>}
       </>}
       {s.id === "holo" && <>
@@ -409,13 +431,14 @@ export const IdeasFG: React.FC = () => {
         <Cap t={t} ws={words("Like, you can see", [25.2, 25.56, 25.68, 25.82])} x={90} y={300} size={70} color="#0B0D10" lines={[2]} width={620} />
         <Cap t={t} ws={words("the parcel,", [25.98, 26.12], { 1: C.green })} x={90} y={460} size={84} color="#0B0D10" />
         <Cap t={t} ws={words("is it in?", [26.46, 26.64, 26.76])} x={90} y={570} size={84} color="#0B0D10" />
-        {t >= 26.0 && <div style={{ position: "absolute", left: 1400, top: 300, transform: `rotate(7deg) scale(${pop(t, 26.0, 0.32)})` }}><Shot src="wms/06-etiketka-100x150.png" w={300} /></div>}
+        {t >= 25.95 && <div style={{ position: "absolute", left: 1440, top: 200 }}><Phone src="wms/05-kartochka-otgruzki-phone.png" t={t} at={25.95} w={320} tilt={7} scroll={80} /></div>}
       </>}
       {s.id === "regular" && <>
-        <Stamp t={t} at={28.42} text="OKAY." x={130} y={250} size={130} />
+        {t < 31.1 && <div style={{ opacity: 1 - ramp(t, 30.9, 0.2, EASE_MOVE), transform: `translateX(${-200 * ramp(t, 30.9, 0.2, EASE_MOVE)}px)` }}><Stamp t={t} at={28.42} text="OKAY." x={130} y={250} size={130} /></div>}
         <Cap t={t} ws={words("Or let's do, like, a", [29.5, 29.66, 29.94, 30.08, 30.26])} x={1820} y={250} size={68} align="right" lines={[3]} width={620} />
         <Cap t={t} ws={words("“regular,”", [30.44], { 0: "#E7FF52" })} x={1820} y={420} size={96} align="right" width={620} />
         {t >= 31.04 && <Cap t={t} ws={words("like", [31.04])} x={1820} y={540} size={68} align="right" width={620} />}
+        {t >= 31.1 && <div style={{ position: "absolute", left: 120, top: 330 }}><Phone src="wms/01-portal-klienta-phone.png" t={t} at={31.1} w={300} tilt={-7} scroll={90} /></div>}
         {t >= 31.22 && <div style={{ position: "absolute", left: 1150, top: 620, padding: "26px 34px", borderRadius: 26, background: "#fff", boxShadow: "0 20px 50px rgba(0,0,0,.45)", transform: `scale(${pop(t, 31.22, 0.35)})` }}><Logo h={92} fill={ramp(t, 31.3, 0.6, EASE_APPEAR)} /></div>}
       </>}
       {s.id === "noway" && <>
