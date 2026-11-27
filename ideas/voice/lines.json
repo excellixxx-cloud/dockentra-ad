@@ -1,0 +1,83 @@
+[
+ {
+  "i": 0,
+  "text": "Okay, warehouse, warehouse, warehouse ad.",
+  "start": 0.0,
+  "end": 2.204,
+  "window_end": 2.1,
+  "tempo": 1.25,
+  "ref_rms": 0.10456406325101852
+ },
+ {
+  "i": 1,
+  "text": "How to ship it all? I think it's going to be super chill, but I think we should make it like,",
+  "start": 2.26,
+  "end": 6.354,
+  "window_end": 6.82,
+  "tempo": 1.0,
+  "ref_rms": 0.1355564445257187
+ },
+ {
+  "i": 2,
+  "text": "like the boxes",
+  "start": 7.3,
+  "end": 7.976,
+  "window_end": 7.92,
+  "tempo": 1.25,
+  "ref_rms": 0.11287780851125717
+ },
+ {
+  "i": 3,
+  "text": "more like funny and animated, like more,",
+  "start": 10.1,
+  "end": 12.128,
+  "window_end": 13.58,
+  "tempo": 1.0,
+  "ref_rms": 0.12611058354377747
+ },
+ {
+  "i": 4,
+  "text": "you know what I mean? Is that cute?",
+  "start": 14.56,
+  "end": 16.073,
+  "window_end": 16.06,
+  "tempo": 1.231,
+  "ref_rms": 0.1352810114622116
+ },
+ {
+  "i": 5,
+  "text": "And like the shelves will be blurred out in the back, but like you'll be like, you can see your orders, like, oh my god, or should we do a really funny one and I'll go like, packed!",
+  "start": 16.28,
+  "end": 23.595,
+  "window_end": 23.6,
+  "tempo": 1.045,
+  "ref_rms": 0.12241475284099579
+ },
+ {
+  "i": 6,
+  "text": "Like you can see the parcel, is it in?",
+  "start": 25.4,
+  "end": 26.953,
+  "window_end": 27.52,
+  "tempo": 1.0,
+  "ref_rms": 0.1442534327507019
+ },
+ {
+  "i": 7,
+  "text": "Okay. Or let's do like a regular, like, Dockentra,",
+  "start": 28.56,
+  "end": 32.023,
+  "window_end": 33.02,
+  "tempo": 1.0,
+  "ref_rms": 0.09887082874774933
+ },
+ {
+  "i": 8,
+  "text": "you tell me.",
+  "start": 34.74,
+  "end": 35.375,
+  "window_end": 35.74,
+  "tempo": 1.0,
+  "ref_rms": 0.15730096399784088
+ }
+]
