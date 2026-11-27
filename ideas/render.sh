@@ -5,7 +5,7 @@ set -e
 S="$1"; cd "$(dirname "$0")/../remotion"
 BR=/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell
 [ -s ../ideas/render/bg.mp4 ] || npx remotion render src/index.ts IdeasBG ../ideas/render/bg.mp4 --muted --concurrency=4 --crf=12 --browser-executable=$BR 2>&1 | grep -v -i memory | tail -1
-npx remotion render src/index.ts IdeasFG ../ideas/render/fg --sequence --image-format=png --concurrency=4 --browser-executable=$BR 2>&1 | grep -v -i memory | tail -1
+npx remotion render src/index.ts IdeasFG /home/user/dockentra-ad/ideas/render/fg --sequence --image-format=png --concurrency=4 --browser-executable=$BR 2>&1 | grep -v -i memory | tail -1
 cd ../ideas
 # presenter = source frames + RVM alpha; hidden on the final grid (t >= 34.58 s)
 ffmpeg -loglevel error -y -i render/bg.mp4 -i "$S/upload_v/src.mp4" -framerate 24000/1001 -i "$S/rvm/alpha/%04d.png" -framerate 24000/1001 -i render/fg/element-%03d.png -i out/mix.wav \

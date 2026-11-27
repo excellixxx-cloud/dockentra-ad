@@ -474,7 +474,7 @@ const Grid: React.FC<{ t: number }> = ({ t }) => {
       <div style={{ position: "absolute", left: 90, top: 190 }}>
         <Cap t={t} ws={words("WHICH ONE?", [34.6, 34.68])} x={0} y={0} size={110} lines={[1]} />
         <Cap t={t} ws={words("YOU TELL ME.", [34.7, 34.86, 35.06])} x={0} y={260} size={110} color={C.mint} lines={[1]} />
-        {k > 0.9 && <div style={{ position: "absolute", left: 4, top: 560, fontFamily: "'IBM Plex Mono', monospace", fontSize: 28, color: "#fff", opacity: ramp(t, 35.5, 0.3), letterSpacing: "0.06em" }}>REPLY WITH A NUMBER</div>}
+        {k > 0.9 && <div style={{ position: "absolute", left: 4, top: 560, fontFamily: "'IBM Plex Mono', monospace", fontSize: 28, color: "#fff", opacity: ramp(t, 35.5, 0.3), letterSpacing: "0.06em", whiteSpace: "nowrap" }}>REPLY WITH A NUMBER</div>}
       </div>
       <div style={{ position: "absolute", left: 860, top: 150, display: "grid", gridTemplateColumns: "repeat(3, 320px)", gap: 22 }}>
         {THUMBS.map((id, i) => (
