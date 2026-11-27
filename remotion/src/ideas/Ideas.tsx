@@ -133,7 +133,7 @@ const AdCard: React.FC<{ src: string; t: number; at: number; end: number; w: num
 /** the ads that sit behind her (she reaches over them) */
 const BgAds: React.FC<{ t: number; id: SceneId }> = ({ t, id }) => (
   <>
-    {id === "chill" && <div style={{ position: "absolute", left: 1300, top: 380 }}><AdCard src="chill-photo.mp4" t={t} at={4.1} end={5.42} w={520} label="AD #1" tilt={4} /></div>}
+    {id === "chill" && <div style={{ position: "absolute", left: 1300, top: 380 }}><AdCard src="chill-wms.mp4" t={t} at={4.1} end={5.42} w={520} label="AD #1" tilt={4} /></div>}
     {id === "sepia" && <div style={{ position: "absolute", left: 1400, top: 330 }}><AdCard src="sepia-box.mp4" t={t} at={11.05} end={14.47} w={400} frame="tv" label="AD #3" tilt={3} filter="sepia(0.85) contrast(1.05)" /></div>}
     {id === "manga" && <div style={{ position: "absolute", left: 50, top: 120 }}><AdCard src="manga-wms-phone.mp4" t={t} at={16.18} end={20.19} w={400} ar={2} frame="manga" label="AD #5 · WMS" tilt={-3} /></div>}
   </>
