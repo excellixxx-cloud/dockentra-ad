@@ -22,7 +22,7 @@ LINES = [
     (7.30, 7.92, "like the boxes", "+10%"),
     (10.10, 13.58, "more like funny and animated, like more,", "+4%"),
     (14.56, 16.06, "you know what I mean? Is that cute?", "+10%"),
-    (16.28, 23.60, "And like the shelves will be blurred out in the back, but like you'll be like, you can see your orders, like, oh my god, or should we do a really funny one and I'll go like, packed!", "+14%"),
+    (16.28, 23.60, "And like the shelves will be blurred out in the back, but like you'll be like, you can see your orders, like, oh my god, or should we do a really funny one and I'll go like, all packed!", "+15%"),
     (25.40, 27.52, "Like you can see the parcel, is it in?", "+8%"),
     (28.56, 33.02, "Okay. Or let's do like a regular, like, Dockentra,", "+0%"),
     (34.74, 35.74, "you tell me.", "+4%"),
