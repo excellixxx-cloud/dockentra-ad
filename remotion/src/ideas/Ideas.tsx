@@ -5,7 +5,7 @@
      IdeasFG  — transparent overlays: captions, stickers, cards, HUD (in front of her)
    1920x1080 at 24000/1001 fps, 893 frames (37.25 s). Everything is a function of t = frame / fps (seek-safe). */
 import React from "react";
-import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { C, EASE_APPEAR, EASE_MOVE, clamp, lerp, ramp } from "../brand";
 import { loadBrandFonts } from "../fonts";
 import { Room, RoomState, RECV, SHELF, BIN } from "../warehouse/Room";
@@ -86,6 +86,58 @@ const Phone: React.FC<{ src: string; t: number; at: number; w?: number; tilt?: n
     </div>
   );
 };
+
+
+/** the "ad" she is pitching: a clip from an earlier Dockentra film in a sticker-style player that pops in */
+type Frame = "sticker" | "tv" | "polaroid" | "manga";
+const AdCard: React.FC<{ src: string; t: number; at: number; end: number; w: number; ar?: number; label: string; tilt?: number; frame?: Frame; filter?: string }> = ({ src, t, at, end, w, ar = 9 / 16, label, tilt = 0, frame = "sticker", filter }) => {
+  if (t < at) return null;
+  const p = pop(t, at, 0.32), prog = clamp((t - at) / (end - at));
+  const h = Math.round(w * ar);
+  const video = (
+    <div style={{ position: "relative", width: w, height: h, overflow: "hidden", borderRadius: frame === "tv" ? 26 : frame === "polaroid" ? 4 : 12, background: "#0B0D10" }}>
+      <Sequence from={Math.round(at * FPS_I)} layout="none">
+        <OffthreadVideo src={staticFile(`ideas/clips/${src}`)} muted style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", filter }} />
+      </Sequence>
+      {frame !== "polaroid" && frame !== "tv" && <div style={{ position: "absolute", left: 0, bottom: 0, height: 7, width: `${prog * 100}%`, background: "#FF3B3B" }} />}
+    </div>
+  );
+  const tag = <div style={{ position: "absolute", left: -14, top: -22, padding: "6px 14px", borderRadius: 10, background: C.mint, color: "#0B0D10", fontFamily: M, fontWeight: 800, fontSize: 24, border: "4px solid #0B0D10", transform: "rotate(-5deg)" }}>▶ {label}</div>;
+  const rot = tilt + 1.5 * wob(t, 1.7);
+  if (frame === "tv") return (
+    <div style={{ transform: `rotate(${rot}deg) scale(${p})`, padding: "26px 90px 26px 26px", borderRadius: 34, background: "linear-gradient(#8A6A3D, #5B4220)", border: "6px solid #3A2A12", boxShadow: "10px 12px 0 #3A2A12", position: "relative" }}>
+      {video}
+      <div style={{ position: "absolute", right: 22, top: 40, width: 44, height: 44, borderRadius: 22, background: "#C9A867", border: "4px solid #3A2A12" }} />
+      <div style={{ position: "absolute", right: 22, top: 104, width: 44, height: 44, borderRadius: 22, background: "#C9A867", border: "4px solid #3A2A12" }} />
+      {tag}
+    </div>
+  );
+  if (frame === "polaroid") return (
+    <div style={{ transform: `rotate(${rot}deg) scale(${p})`, padding: "18px 18px 70px", background: "#fff", borderRadius: 8, boxShadow: "0 24px 50px rgba(160,40,110,.35)", position: "relative" }}>
+      {video}
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: 14, textAlign: "center", fontFamily: "'Comic Sans MS', 'Comic Neue', Manrope", fontWeight: 800, fontSize: 34, color: "#E0478F" }}>so cute ♥</div>
+      {tag}
+    </div>
+  );
+  if (frame === "manga") return (
+    <div style={{ transform: `rotate(${rot}deg) scale(${p})`, padding: 14, background: "#fff", border: "7px solid #0B0D10", boxShadow: "12px 12px 0 #0B0D10", position: "relative" }}>
+      {video}{tag}
+    </div>
+  );
+  return (
+    <div style={{ transform: `rotate(${rot}deg) scale(${p})`, padding: 10, background: "#fff", borderRadius: 24, boxShadow: "0 26px 60px -12px rgba(0,0,0,.55), 0 0 0 4px #0B0D10", position: "relative" }}>
+      {video}{tag}
+    </div>
+  );
+};
+/** the ads that sit behind her (she reaches over them) */
+const BgAds: React.FC<{ t: number; id: SceneId }> = ({ t, id }) => (
+  <>
+    {id === "chill" && <div style={{ position: "absolute", left: 1300, top: 380 }}><AdCard src="chill-photo.mp4" t={t} at={4.1} end={5.42} w={520} label="AD #1" tilt={4} /></div>}
+    {id === "sepia" && <div style={{ position: "absolute", left: 1400, top: 330 }}><AdCard src="sepia-box.mp4" t={t} at={11.05} end={14.47} w={400} frame="tv" label="AD #3" tilt={3} filter="sepia(0.85) contrast(1.05)" /></div>}
+    {id === "manga" && <div style={{ position: "absolute", left: 50, top: 120 }}><AdCard src="manga-wms-phone.mp4" t={t} at={16.18} end={20.19} w={400} ar={2} frame="manga" label="AD #5 · WMS" tilt={-3} /></div>}
+  </>
+);
 
 /* ---------------------------------------------------------------- type */
 type Wd = { w: string; at: number; hi?: string };
@@ -175,6 +227,7 @@ export const IdeasBG: React.FC = () => {
   return (
     <AbsoluteFill>
       <Backdrop />
+      <BgAds t={t} id={s.id} />
       {s.id !== "grid" && <div style={{ position: "absolute", left: W / 2 - 150, top: 40, filter: "drop-shadow(0 4px 14px rgba(0,0,0,.35))" }}><Logo h={56} word={DARK.includes(s.id) ? "#fff" : "#0B0D10"} /></div>}
     </AbsoluteFill>
   );
@@ -225,7 +278,7 @@ const Backdrop: React.FC = () => {
           const x = (i * 211) % 1920, y = ((i * 137 + t * 40) % 1200) - 60;
           return <div key={i} style={{ position: "absolute", left: x, top: y, fontSize: 40 + (i % 3) * 18, color: i % 2 ? "#fff" : "#FF7FB8", fontFamily: M, transform: `rotate(${15 * wob(t, 3, i)}deg)` }}>{i % 3 ? "♥" : "✦"}</div>;
         })}
-        {[[110, 640, 230, 0], [1560, 600, 260, 1], [1300, 120, 150, 2]].map(([x, y, sz, ph], i) => (
+        {[[110, 640, 230, 0], [1330, 820, 170, 1], [1300, 90, 150, 2]].map(([x, y, sz, ph], i) => (
           <div key={i} style={{ position: "absolute", left: x, top: y + 16 * wob(t, 1.6, ph) }}><Parcel s={sz} face blush tint={i === 1 ? "#E58DBA" : "#F3A6CB"} t={t} /></div>
         ))}
       </AbsoluteFill>
@@ -347,8 +400,8 @@ export const IdeasFG: React.FC = () => {
       </>}
       {s.id === "search" && <>
         <SearchBar t={t} />
-        {t >= 3.0 && <div style={{ position: "absolute", left: 1450, top: 330 }}><Phone src="wms/02-magaziny-phone.png" t={t} at={3.0} w={300} tilt={6} /></div>}
-        <Cap t={t} ws={words("I think it's going to", [3.46, 3.56, 3.76, 3.96, 4.1])} x={1820} y={300} size={70} align="right" lines={[2]} width={600} />
+        {t >= 3.0 && <div style={{ position: "absolute", left: 1420, top: 250 }}><Phone src="wms/02-magaziny-phone.png" t={t} at={3.0} w={390} tilt={6} /></div>}
+        <Cap t={t} ws={words("I think it's going to", [3.46, 3.56, 3.76, 3.96, 4.1])} x={120} y={560} size={70} lines={[2]} width={600} />
       </>}
       {s.id === "chill" && <>
         <Cap t={t} ws={words("super", [4.05])} x={150} y={330} size={150} font="Georgia, 'DejaVu Serif', serif" weight={400} italic color="#FFF7EE" />
@@ -366,15 +419,12 @@ export const IdeasFG: React.FC = () => {
         <div style={{ position: "absolute", left: 60, top: 120, transform: `rotate(-6deg) scale(${pop(t, 7.84, 0.35) * (1 + 0.02 * wob(t, 0.8))})` }}>
           <Chunky text="SHIP IT!" size={230} fill="#FFC21A" edge="#E0590B" depth={18} />
         </div>
-        {[[90, 720, 200, 0], [1620, 640, 220, 1], [1700, 220, 150, 2]].map(([x, y, sz, ph], i) => (
+        {[[1620, 640, 220, 1], [1700, 220, 150, 2]].map(([x, y, sz, ph], i) => (
           <div key={i} style={{ position: "absolute", left: x, top: y - 30 * Math.abs(wob(t, 0.7, ph)), transform: `rotate(${10 * wob(t, 1.4, ph)}deg) scale(${pop(t, 7.9 + i * 0.12, 0.35)})` }}><Parcel s={sz} face t={t} /></div>
         ))}
-        <Cap t={t} ws={words("Or like", [10.02, 10.26])} x={110} y={880} size={84} color="#fff" stroke="10px #0B0D10" />
-        {t >= 9.9 && <div style={{ position: "absolute", left: 470, top: 640, transform: `rotate(-8deg) scale(${pop(t, 9.9, 0.3)})` }}>
-          <div style={{ width: 300, padding: 18, borderRadius: 20, background: "#fff", border: "5px solid #0B0D10", boxShadow: "6px 8px 0 #0B0D10", display: "flex", alignItems: "center", gap: 16 }}>
-            <DMark size={70} /><div style={{ fontFamily: M, fontWeight: 800, fontSize: 30, lineHeight: 1.05, color: "#0B0D10" }}>IDEA #2<br /><span style={{ color: C.green }}>LOCKED IN ✓</span></div>
-          </div>
-        </div>}
+        <Cap t={t} ws={words("Or like", [10.02, 10.26])} x={1860} y={880} size={84} color="#fff" stroke="10px #0B0D10" align="right" width={600} />
+        {(() => { const m = ramp(t, 9.8, 0.4, EASE_MOVE); const cx = lerp(250, 560, m), cy = lerp(700, 545, m) - 18 * Math.sin(Math.PI * m);
+          return <div style={{ position: "absolute", left: cx - 240, top: cy - 140 }}><AdCard src="shipit-packing.mp4" t={t} at={7.9} end={11.01} w={460} label="AD #2 · PACKED" tilt={lerp(-6, -3, m)} /></div>; })()}
       </>}
       {s.id === "sepia" && <>
         <div style={{ position: "absolute", left: 70, top: 150, transform: `rotate(-5deg) scale(${pop(t, 11.05, 0.35)})`, transformOrigin: "0 50%" }}>
@@ -382,7 +432,7 @@ export const IdeasFG: React.FC = () => {
           {t >= 11.35 && <div style={{ marginTop: -6, marginLeft: 90, padding: "8px 40px", background: "#F3E4C2", border: "6px solid #4A3416", borderRadius: 10, fontFamily: "Georgia, 'DejaVu Serif', serif", fontWeight: 800, fontSize: 64, color: "#4A3416", transform: `scale(${pop(t, 11.35, 0.3)})`, transformOrigin: "0 50%" }}>&amp; ANIMATED</div>}
         </div>
         <Cap t={t} ws={words("LIKE, MORE.", [11.62, 11.78])} x={90} y={900} size={70} font="Georgia, 'DejaVu Serif', serif" color="#4A3416" />
-        {[[1400, 760, 170, 0], [1640, 820, 140, 1]].map(([x, y, sz, ph], i) => (
+        {[[1440, 800, 150, 0], [1690, 840, 130, 1]].map(([x, y, sz, ph], i) => (
           <div key={i} style={{ position: "absolute", left: x + 30 * Math.sin(t * 2 + ph), top: y - 26 * Math.abs(Math.sin(t * 5 + ph)), filter: "sepia(1) saturate(0.6)" }}><Parcel s={sz} face t={t} /></div>
         ))}
       </>}
@@ -393,14 +443,14 @@ export const IdeasFG: React.FC = () => {
             {t >= 15.45 && <><br /><span style={{ color: "#E0478F" }}>{"Is that cute?".slice(0, Math.ceil(clamp((t - 15.45) / 0.4) * 13))}</span></>}
           </Bubble>
         </div>
+        <div style={{ position: "absolute", left: 1460, top: 300 }}><AdCard src="kawaii-mailer.mp4" t={t} at={14.5} end={16.14} w={300} ar={1.25} frame="polaroid" label="AD #4" tilt={6} /></div>
       </>}
       {s.id === "manga" && <>
         {on(t, 16.28, 17.15) && <div style={{ position: "absolute", left: 1290, top: 140, transform: `scale(${pop(t, 16.28, 0.25)})` }}><Bubble w={520} tail="left" size={38} font="'Comic Sans MS', 'Comic Neue', Manrope">AND, LIKE, THE SHELVES WILL BE...</Bubble></div>}
-        {on(t, 17.2, 18.95) && <div style={{ position: "absolute", left: 150, top: 760, transform: `rotate(-6deg) scale(${pop(t, 17.2, 0.25)})` }}><Chunky text="BLURRED OUT" size={110} fill="#E8262B" edge="#fff" outline="#0B0D10" depth={8} /></div>}
+        {on(t, 17.2, 18.95) && <div style={{ position: "absolute", left: 760, top: 800, transform: `rotate(-6deg) scale(${pop(t, 17.2, 0.25)})` }}><Chunky text="BLURRED OUT" size={110} fill="#E8262B" edge="#fff" outline="#0B0D10" depth={8} /></div>}
         {on(t, 17.58, 18.1) && <div style={{ position: "absolute", left: 1330, top: 160, transform: `scale(${pop(t, 17.58, 0.2)})` }}><Bubble w={380} tail="left" size={40}>IN THE BACK,</Bubble></div>}
         {on(t, 18.1, 19.0) && <div style={{ position: "absolute", left: 1330, top: 160, transform: `scale(${pop(t, 18.1, 0.2)})` }}><Bubble w={420} tail="left" size={40}>BUT, LIKE, YOU'LL BE LIKE,</Bubble></div>}
-        <Cap t={t} ws={words("YOU CAN SEE YOUR ORDERS.", [19.04, 19.12, 19.26, 19.4, 19.54], { 4: "#E8262B" })} x={110} y={890} size={80} color="#fff" stroke="12px #0B0D10" />
-        {t >= 19.25 && <div style={{ position: "absolute", left: 1460, top: 150 }}><Phone src="wms/09-shipments-phone.png" t={t} at={19.25} w={320} tilt={7} ar={2000 / 924} scroll={120} /></div>}
+        <Cap t={t} ws={words("YOU CAN SEE YOUR ORDERS.", [19.04, 19.12, 19.26, 19.4, 19.54], { 4: "#E8262B" })} x={1880} y={880} size={80} color="#fff" stroke="12px #0B0D10" align="right" width={1100} />
       </>}
       {s.id === "storm" && <>
         <div style={{ position: "absolute", left: 410, top: 770, transform: `rotate(-4deg) scale(${pop(t, 20.19, 0.12)})`, transformOrigin: "30% 50%" }}><Chunky text="OH, MY" size={190} fill="#E8262B" edge="#fff" outline="#2A1F6B" depth={10} /></div>
@@ -411,7 +461,7 @@ export const IdeasFG: React.FC = () => {
         <Cap t={t} ws={words("and I'll go like,", [22.36, 22.48, 22.62, 22.74])} x={100} y={300} size={70} until={23.1} />
         {t >= 23.1 && <>
           <div style={{ position: "absolute", left: 90, top: 240, transform: `rotate(-4deg) scale(${pop(t, 23.1, 0.3)})` }}><Chunky text="ALL PACKED." size={150} fill={C.mint} edge={C.green} depth={12} /></div>
-          <div style={{ position: "absolute", left: 1460, top: 170 }}><Phone src="wms/04-upakovka-skan-phone.png" t={t} at={23.15} w={320} tilt={6} scroll={30} /></div>
+          <div style={{ position: "absolute", left: 1420, top: 110 }}><Phone src="wms/04-upakovka-skan-phone.png" t={t} at={23.15} w={400} tilt={6} scroll={30} /></div>
         </>}
       </>}
       {s.id === "holo" && <>
@@ -428,17 +478,17 @@ export const IdeasFG: React.FC = () => {
             </div>
           ))}
         </div>
-        <Cap t={t} ws={words("Like, you can see", [25.2, 25.56, 25.68, 25.82])} x={90} y={300} size={70} color="#0B0D10" lines={[2]} width={620} />
-        <Cap t={t} ws={words("the parcel,", [25.98, 26.12], { 1: C.green })} x={90} y={460} size={84} color="#0B0D10" />
-        <Cap t={t} ws={words("is it in?", [26.46, 26.64, 26.76])} x={90} y={570} size={84} color="#0B0D10" />
-        {t >= 25.95 && <div style={{ position: "absolute", left: 1440, top: 200 }}><Phone src="wms/05-kartochka-otgruzki-phone.png" t={t} at={25.95} w={320} tilt={7} scroll={80} /></div>}
+        <Cap t={t} ws={words("Like, you can see", [25.2, 25.56, 25.68, 25.82])} x={1880} y={300} size={70} color="#0B0D10" lines={[2]} width={540} align="right" />
+        <Cap t={t} ws={words("the parcel,", [25.98, 26.12], { 1: C.green })} x={1880} y={460} size={84} color="#0B0D10" align="right" width={540} />
+        <Cap t={t} ws={words("is it in?", [26.46, 26.64, 26.76])} x={1880} y={570} size={84} color="#0B0D10" align="right" width={540} />
+        <div style={{ position: "absolute", left: 60, top: 330 }}><AdCard src="holo-batchphoto.mp4" t={t} at={23.85} end={27.9} w={480} label="AD #6 · ON ARRIVAL" tilt={-4} /></div>
       </>}
       {s.id === "regular" && <>
         {t < 31.1 && <div style={{ opacity: 1 - ramp(t, 30.9, 0.2, EASE_MOVE), transform: `translateX(${-200 * ramp(t, 30.9, 0.2, EASE_MOVE)}px)` }}><Stamp t={t} at={28.42} text="OKAY." x={130} y={250} size={130} /></div>}
         <Cap t={t} ws={words("Or let's do, like, a", [29.5, 29.66, 29.94, 30.08, 30.26])} x={1820} y={250} size={68} align="right" lines={[3]} width={620} />
         <Cap t={t} ws={words("“regular,”", [30.44], { 0: "#E7FF52" })} x={1820} y={420} size={96} align="right" width={620} />
         {t >= 31.04 && <Cap t={t} ws={words("like", [31.04])} x={1820} y={540} size={68} align="right" width={620} />}
-        {t >= 31.1 && <div style={{ position: "absolute", left: 120, top: 330 }}><Phone src="wms/01-portal-klienta-phone.png" t={t} at={31.1} w={300} tilt={-7} scroll={90} /></div>}
+        {t >= 31.1 && <div style={{ position: "absolute", left: 90, top: 230 }}><Phone src="wms/01-portal-klienta-phone.png" t={t} at={31.1} w={380} tilt={-7} scroll={90} /></div>}
         {t >= 31.22 && <div style={{ position: "absolute", left: 1150, top: 620, padding: "26px 34px", borderRadius: 26, background: "#fff", boxShadow: "0 20px 50px rgba(0,0,0,.45)", transform: `scale(${pop(t, 31.22, 0.35)})` }}><Logo h={92} fill={ramp(t, 31.3, 0.6, EASE_APPEAR)} /></div>}
       </>}
       {s.id === "noway" && <>
