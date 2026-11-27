@@ -15,6 +15,7 @@ import { OneFold, OneFoldKey, TOTAL as ONEFOLD_T } from "./onefold/OneFold";
 import { ProfesiiaReel, TOTAL as PROF_T } from "./profesiia/Profesiia";
 import { OneFold2, OneFold2Key, TOTAL as OF2_T } from "./onefold2/OneFold2";
 import { SorokKhvylyn, TOTAL as SOROK_T } from "./sorok/Sorok";
+import { IdeasBG, IdeasFG, FPS_I, TOTAL_I } from "./ideas/Ideas";
 import { OpsChapter, OpsThumb, CHAPTERS as OPS_CH } from "./ops/Ops";
 import { OpsFrame, OpsStoryboardSheet, OW, OH, SHEET as OPS_SHEET } from "./ops/Storyboard";
 
@@ -48,6 +49,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="OneFold2" component={OneFold2} durationInFrames={OF2_T * 30} fps={30} width={1080} height={1920} />
     <Composition id="OneFold2Key" component={OneFold2Key} durationInFrames={1} fps={30} width={1080} height={1920} defaultProps={{ t: 0 }} />
     <Composition id="SorokKhvylyn" component={SorokKhvylyn} durationInFrames={SOROK_T} fps={60} width={1080} height={1920} />
+    <Composition id="IdeasBG" component={IdeasBG} durationInFrames={TOTAL_I} fps={FPS_I} width={1920} height={1080} />
+    <Composition id="IdeasFG" component={IdeasFG} durationInFrames={TOTAL_I} fps={FPS_I} width={1920} height={1080} />
     <Composition id="HelloDockentra" component={HelloDockentra} durationInFrames={45} fps={30} width={1080} height={1920} />
   </>
 );
